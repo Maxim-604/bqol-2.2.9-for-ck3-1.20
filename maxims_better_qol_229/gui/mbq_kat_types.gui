@@ -1,0 +1,55 @@
+﻿# Better Quality of Life 2.0.0 (Maxim 15-10): Kategoriekopf mit Platz fuer Zahnraeder vor dem Pfeil. Kopie von V gui/hud_outliner.gui:147-193.
+# PATCH CHECK: nach jedem CK3-Patch mit Vanilla vergleichen (Assert in build_loesegeld.py). margin_left/margin_right wie V chariot_race_widget_types.gui:43, popup.gui:76.
+types MbqKatTypes
+{
+	type mbq_outliner_header = button_tab {
+		size = { 0 31 }
+
+		block "oh_button" {}
+
+		blockoverride "icon_visible" 
+		{
+			visible = no
+		}
+
+		hbox = {
+			size = { 100% 100% } # BQoL 15-10: hbox fuellt den Kopf, sonst schrumpft sie auf den Inhalt und steht mittig (Spieltest); V hud_outliner.gui:926
+			margin_left = 2 # BQoL: statt margin = { 15 0 } (V :158), Platz fuer die Zahnraeder
+			margin_right = 15
+			spacing = 2 # BQoL: statt 5 (V :159), Pfeil dicht an den Zahnraedern
+
+			using = tooltip_ws
+
+			block "mbq_vor_pfeil" {} # BQoL: Zahnraeder der Kategorie
+
+			button_expand = {
+				size = { 22 22 }
+				alwaystransparent = yes
+				block "button_expand_frame" {}
+			}
+
+			text_single = {
+				name = "category"
+				layoutpolicy_horizontal = expanding
+				align = left|nobaseline # BQoL: Text links direkt hinter dem Pfeil
+				default_format = "#high"
+
+				block "oh_name"
+				{
+					text = "DEFAULT_TEXT"
+				}
+			}
+
+			text_single = {
+				name = "count"
+				align = nobaseline
+
+				block "oh_count"
+				{
+					text = "DEFAULT_TEXT"
+				}
+			}
+
+		}
+	}
+}

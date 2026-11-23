@@ -1,0 +1,11 @@
+﻿l_polish:
+ MBQ_WIN_PRIO_1: "Priorytet 1"
+ MBQ_WIN_PRIO_2: "Priorytet 2"
+ MBQ_WIN_PRIO_3: "Priorytet 3"
+ MBQ_WIN_PRIO_4: "Priorytet 4"
+ MBQ_PRIO_OPT_0: "@cross_icon! Nic"
+ MBQ_PRIO_OPT_1: "@gold_icon! Zapłać żądane złoto"
+ MBQ_PRIO_OPT_2: "@weak_hook_icon! Użyj słabego haka"
+ MBQ_PRIO_OPT_3: "@unspent_strong_hook_icon! Użyj mocnego haka"
+ MBQ_PRIO_OPT_4: "@hook_on_me_icon! Udziel żądanej przysługi"
+ MBQ_TT_PRIO: "#T Priorytety: sprawdzane po kolei#!\n$EFFECT_LIST_BULLET$ Użyta zostanie pierwsza działająca opcja, potem następna\n$EFFECT_LIST_BULLET$ Jeśli nic nie działa, prośba zostaje odrzucona"

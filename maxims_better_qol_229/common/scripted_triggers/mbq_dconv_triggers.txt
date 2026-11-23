@@ -1,0 +1,51 @@
+﻿# Better Quality of Life 2.0.0 (Demand Conversion). Scope = Spieler. $R$ = Empfaenger, $I$ = Vanilla-Interaktion. Muster MDC mdc_chance_filter_triggers.txt:3-9.
+mbq_dc_min_ok_trigger = {
+	OR = {
+		AND = {
+			has_global_variable = mbq_dc_min_any
+			is_character_interaction_potentially_accepted = { recipient = $R$ interaction = $I$ ai_accept = 1 }
+		}
+		AND = {
+			has_global_variable = mbq_dc_min_60
+			is_character_interaction_potentially_accepted = { recipient = $R$ interaction = $I$ ai_accept = 60 }
+		}
+		AND = {
+			has_global_variable = mbq_dc_min_100
+			is_character_interaction_potentially_accepted = { recipient = $R$ interaction = $I$ ai_accept = 100 }
+		}
+		AND = {
+			NOR = { has_global_variable = mbq_dc_min_any has_global_variable = mbq_dc_min_60 has_global_variable = mbq_dc_min_100 }
+			is_character_interaction_potentially_accepted = { recipient = $R$ interaction = $I$ ai_accept = 80 }
+		}
+		# 2.0.23 (Maxim, Sammlung 1 B.1): bei "Automatisch antworten" wird zusaetzlich die Gegenforderung ohne Prozentzahl erfasst
+		# (maybe-Antwort, V 00_religious_interactions.txt:785 ai_maybe; required_response triggers.log:5174, = maybe wie V important_actions/00_diarchy_actions.txt:42, :52).
+		# Die Gegenforderung beantworten die Prioritaeten (events/mbq_silent_conversion_events.txt).
+		# 2.0.24 (Modder 2 t19): ohne ai_accept = 1, sonst hebelte der Zweig die Schwellen 60/80/100 oben aus; sie gelten unveraendert.
+		AND = {
+			has_global_variable = mbq_silent_conversion
+			is_character_interaction_potentially_accepted = { recipient = $R$ interaction = $I$ required_response = maybe }
+		}
+	}
+}
+
+# Mindestens ein Ziel angehakt (sonst rot, Lauf pausiert, MENUE_RICHTLINIE 5)
+mbq_dc_who_valid_trigger = {
+	NOR = {
+		AND = {
+			has_global_variable = mbq_dc_no_dir
+			has_global_variable = mbq_dc_no_ind
+			has_global_variable = mbq_dc_no_trib
+			has_global_variable = mbq_dc_no_court
+		}
+	}
+}
+# 2.1.5 Ritus-Automatik. Scope = Spieler, $R$ = Empfaenger, $I$ = sway_vassal_to_my_rite_interaction oder sway_courtier_to_my_rite_interaction.
+# Reihenfolge billig zuerst: Fruemmigkeit (Kosten plus Reserve), dann die Annahme-Schwelle wie bei der Glaubensbekehrung (mbq_dc_min_ok_trigger, Standard 60 Prozent),
+# weil die Fruemmigkeit auch bei Ablehnung abgebucht wird. Die gespeicherten Scopes gelten auch fuer die Pruefung der Interaktion, falls das Spiel sie dort braucht.
+mbq_dc_rite_ok_trigger = {
+	save_temporary_scope_as = puppet_or_actor
+	$R$ = { save_temporary_scope_as = recipient }
+	piety >= mbq_rite_piety_need_value
+	is_character_interaction_valid = { recipient = $R$ interaction = $I$ } # gezeigt und nutzbar: nichts senden, was das Spiel nicht erlauben wuerde (Maxim 21-10: original, 100 Prozent)
+	mbq_dc_min_ok_trigger = { R = $R$ I = $I$ }
+}

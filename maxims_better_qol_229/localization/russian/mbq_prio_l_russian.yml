@@ -1,0 +1,11 @@
+﻿l_russian:
+ MBQ_WIN_PRIO_1: "Приоритет 1"
+ MBQ_WIN_PRIO_2: "Приоритет 2"
+ MBQ_WIN_PRIO_3: "Приоритет 3"
+ MBQ_WIN_PRIO_4: "Приоритет 4"
+ MBQ_PRIO_OPT_0: "@cross_icon! Ничего"
+ MBQ_PRIO_OPT_1: "@gold_icon! Заплатить запрошенное золото"
+ MBQ_PRIO_OPT_2: "@weak_hook_icon! Использовать слабое влияние"
+ MBQ_PRIO_OPT_3: "@unspent_strong_hook_icon! Использовать сильное влияние"
+ MBQ_PRIO_OPT_4: "@hook_on_me_icon! Оказать запрошенную услугу"
+ MBQ_TT_PRIO: "#T Приоритеты: пробуются по порядку#!\n$EFFECT_LIST_BULLET$ Используется первый вариант, который подходит, затем следующий\n$EFFECT_LIST_BULLET$ Если ничего не подходит, просьба отклоняется"

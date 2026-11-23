@@ -1,0 +1,7 @@
+﻿# Better Quality of Life 0.3.15: own filter so the conversion summary goes to the feed like "Alliance Expired".
+# event_outcome would force a toast (00_message_filter_types.txt:930-933); feed + group as faith_excommunication (:539-541).
+# Loc: message_filter_<key> and _desc (_message_filter_types.info:1, message_filters_l_english.yml:267-268).
+mbq_conversion_summary = {
+	display = feed
+	group = religion
+}

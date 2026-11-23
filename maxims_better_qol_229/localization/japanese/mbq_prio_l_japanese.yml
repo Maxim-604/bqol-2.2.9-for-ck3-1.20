@@ -1,0 +1,11 @@
+﻿l_japanese:
+ MBQ_WIN_PRIO_1: "優先度 1"
+ MBQ_WIN_PRIO_2: "優先度 2"
+ MBQ_WIN_PRIO_3: "優先度 3"
+ MBQ_WIN_PRIO_4: "優先度 4"
+ MBQ_PRIO_OPT_0: "@cross_icon! なし"
+ MBQ_PRIO_OPT_1: "@gold_icon! 求められた金を支払う"
+ MBQ_PRIO_OPT_2: "@weak_hook_icon! 弱いフックを使う"
+ MBQ_PRIO_OPT_3: "@unspent_strong_hook_icon! 強いフックを使う"
+ MBQ_PRIO_OPT_4: "@hook_on_me_icon! 求められた貸しを与える"
+ MBQ_TT_PRIO: "#T 優先度：上から順に試す#!\n$EFFECT_LIST_BULLET$ 使える最初の選択肢が使われ、なければ次へ\n$EFFECT_LIST_BULLET$ どれも使えなければ、要求は拒否される"

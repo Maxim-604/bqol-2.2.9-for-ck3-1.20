@@ -1,0 +1,37 @@
+﻿# Better Quality of Life 0.3.14: the conversion summary (dev/bau_v0314_sammelmeldung.md 2c). Started by mbq_conv_log_effect with days = 3,
+# runs on the player; one feed message, then all collected variables are removed (a new phase starts with the next reply).
+namespace = mbq_conv
+
+mbq_conv.0001 = {
+	hidden = yes # false_conversion_events.txt:42
+	immediate = {
+		send_interface_message = { # as false_conversion_events.txt:564-568
+			type = mbq_conv_summary_message
+			title = mbq_conv_summary_title
+			desc = mbq_conv_summary_desc
+		}
+		if = { limit = { has_variable = mbq_conv_msg_pending } remove_variable = mbq_conv_msg_pending }
+		if = { limit = { has_variable = mbq_cv_conv } remove_variable = mbq_cv_conv }
+		if = { limit = { has_variable = mbq_cv_ref } remove_variable = mbq_cv_ref }
+		if = { limit = { has_variable = mbq_cv_conv_more } remove_variable = mbq_cv_conv_more }
+		if = { limit = { has_variable = mbq_cv_ref_more } remove_variable = mbq_cv_ref_more }
+		if = { limit = { has_variable = mbq_cc1 } remove_variable = mbq_cc1 }
+		if = { limit = { has_variable = mbq_cc2 } remove_variable = mbq_cc2 }
+		if = { limit = { has_variable = mbq_cc3 } remove_variable = mbq_cc3 }
+		if = { limit = { has_variable = mbq_cc4 } remove_variable = mbq_cc4 }
+		if = { limit = { has_variable = mbq_cc5 } remove_variable = mbq_cc5 }
+		if = { limit = { has_variable = mbq_cc6 } remove_variable = mbq_cc6 }
+		if = { limit = { has_variable = mbq_ck1 } remove_variable = mbq_ck1 }
+		if = { limit = { has_variable = mbq_ck2 } remove_variable = mbq_ck2 }
+		if = { limit = { has_variable = mbq_ck3 } remove_variable = mbq_ck3 }
+		if = { limit = { has_variable = mbq_ck4 } remove_variable = mbq_ck4 }
+		if = { limit = { has_variable = mbq_ck5 } remove_variable = mbq_ck5 }
+		if = { limit = { has_variable = mbq_ck6 } remove_variable = mbq_ck6 }
+		if = { limit = { has_variable = mbq_cr1 } remove_variable = mbq_cr1 }
+		if = { limit = { has_variable = mbq_cr2 } remove_variable = mbq_cr2 }
+		if = { limit = { has_variable = mbq_cr3 } remove_variable = mbq_cr3 }
+		if = { limit = { has_variable = mbq_cr4 } remove_variable = mbq_cr4 }
+		if = { limit = { has_variable = mbq_cr5 } remove_variable = mbq_cr5 }
+		if = { limit = { has_variable = mbq_cr6 } remove_variable = mbq_cr6 }
+	}
+}

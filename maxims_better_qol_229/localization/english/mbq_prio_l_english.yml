@@ -1,0 +1,11 @@
+﻿l_english:
+ MBQ_WIN_PRIO_1: "Priority 1"
+ MBQ_WIN_PRIO_2: "Priority 2"
+ MBQ_WIN_PRIO_3: "Priority 3"
+ MBQ_WIN_PRIO_4: "Priority 4"
+ MBQ_PRIO_OPT_0: "@cross_icon! Nothing"
+ MBQ_PRIO_OPT_1: "@gold_icon! Pay the gold they ask for"
+ MBQ_PRIO_OPT_2: "@weak_hook_icon! Use a weak hook"
+ MBQ_PRIO_OPT_3: "@unspent_strong_hook_icon! Use a strong hook"
+ MBQ_PRIO_OPT_4: "@hook_on_me_icon! Grant the favor they ask for"
+ MBQ_TT_PRIO: "#T Priorities: tried in order#!\n$EFFECT_LIST_BULLET$ The first option that works is used, then the next\n$EFFECT_LIST_BULLET$ If nothing works, the request is refused"

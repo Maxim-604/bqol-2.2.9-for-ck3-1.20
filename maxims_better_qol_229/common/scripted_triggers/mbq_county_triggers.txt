@@ -1,0 +1,634 @@
+﻿# Better Quality of Life 2.0.0 (Counties). Globale Variablen, ohne Variable gilt der Standard:
+# mbq_gr_auto, mbq_gr_quarterly, mbq_gr_ask_duchy (Frag mich Stufe 2: auch die Sitz-Grafschaft eines Herzogtums), mbq_gr_silent = gesetzt heisst an;
+# 2.1: Herzogtum- und Koenigreich-Automatik entfernt, nur Grafschaften und Baronien.
+# mbq_gr_no_county ("Counties over your domain limit: Never pass on"), mbq_gr_no_ask_val, mbq_gr_no_cul,
+# mbq_gr_no_fai, mbq_gr_no_avoid_pw = gesetzt heisst Haken weg bzw. aus. Empfaenger-Plaetze mbq_gr_p<Stufe><Platz>_is_<Wert> (unten generiert).
+
+# Rot 1 (Gruppe "Your limits"): die Grafschaftsstufe gibt ab (Nie abgeben aus). Scope = Spieler.
+mbq_gr_limits_ok_trigger = {
+	NOT = { has_global_variable = mbq_gr_no_county } # ab 2.1 gibt nur noch die Grafschaftsstufe ab
+}
+
+# Rot 2 (Gruppe "Recipients"): alle Plaetze "Nothing" oder kein Alter angehakt (empfaenger_konzept.md 10, erste Zeile). Scope = Spieler.
+# Trichter-Bau 14-10: Grafschaften nie rot, ohne Treffer bekommt sie ein neuer Adliger (Maxim 14-10).
+mbq_gr_slots_ok_trigger = {
+	trigger_if = { # Entschlackung 15-10: Grafschaften (Satz c) brauchen einen Platz ungleich Nothing; New noble allein genuegt (neuer Adliger)
+		limit = { NOT = { has_global_variable = mbq_gr_no_county } }
+		OR = { # Maxim 15-10: rot nur, wenn alle Plaetze Nothing UND New noble if nobody fits aus
+			mbq_gr_c_none_trigger = no
+			mbq_gr_c_has_nn_trigger = yes
+		}
+		mbq_gr_c_age_ok_trigger = yes # Feedback 15-10: kein Alters-Haken = niemand
+	}
+}
+
+# Gueltig = Lauf erlaubt; dieselben Trigger zeigt das Fenster ueber scripted guis (MENUE_RICHTLINIE 5: Rot aus denselben Variablen wie der Lauf).
+mbq_gr_what_valid_trigger = {
+	mbq_gr_limits_ok_trigger = yes
+	mbq_gr_slots_ok_trigger = yes
+}
+
+# Spieler (Scope = Spieler). Pausiert nur noch bei cannot_be_vassal_or_liege (GT:31-34). 2.1.19 (Maxim 22-10): Verwaltungs-, Nomaden- und Hirtenreiche pausieren NICHT mehr,
+# Vanilla verbietet das Verleihen dort nicht, sondern schraenkt nur die Empfaenger ein (siehe mbq_gr_recipient_valid_trigger). exists capital_province: ohne
+# Hauptstadt keine Hauptstadt-Schutzregel (Logik-Check L1).
+mbq_gr_player_ok_trigger = {
+	is_ai = no
+	is_landed = yes # T:5637
+	exists = capital_province
+	NOT = { government_has_flag = cannot_be_vassal_or_liege } # GT:33
+	is_imprisoned = no # Logikcheck M6: Hook pausiert in Haft wie der Takt (mbq_gr.0010)
+}
+
+# Empfaenger nach Vanilla-Regeln (GT is_valid_showing_failures_only :60-125 und Erbteilung :206-216). Scope = Empfaenger.
+# Kein Schummeln: wen Vanilla im Verleihen-Fenster ablehnt, nimmt auch die Automatik nicht.
+mbq_gr_recipient_valid_trigger = {
+	OR = {
+		can_be_granted_titles_by = { RULER = scope:mbq_gr_liege } # V 00_scripted_triggers.txt:305 (Geschlecht nach Glaube/Gesetz)
+		can_be_granted_theocratic_titles_by = { RULER = scope:mbq_gr_liege } # :368
+	}
+	NOT = { is_at_war_with = scope:mbq_gr_liege } # GT:73
+	# 2.1.19 (Maxim 22-10): Vanilla-Einschraenkungen fuer Verwaltungs-, Nomaden- und Hirten-Geber, GT = common/character_interactions/00_grant_titles_interaction.txt
+	trigger_if = { # GT:46-51: Geber mit Verwaltungsmechanik, Empfaenger darf keine haben (Statthalter laufen ueber grant_governorship, GT:1485 ff., hier nicht gebaut)
+		limit = {
+			scope:mbq_gr_liege = { government_has_mechanic = administrative }
+			NOT = { scope:mbq_gr_nn_new ?= this } # 2.2.1 (Diagnose Nikli 31-10): der eben erzeugte Adlige zaehlt als Verwaltung und fiel nur hier durch; Vanilla erzeugt ihn per Knopf ohne diese Pruefung (window_find_vassal.gui:41), als Halter hat er keine Verwaltungsmechanik (diag3)
+		}
+		NOT = { government_has_mechanic = administrative }
+	}
+	trigger_if = { # GT:52-57: Nomaden-Geber, Empfaenger kein Hirte
+		limit = { scope:mbq_gr_liege = { government_has_flag = government_is_nomadic } }
+		NOT = { government_has_flag = government_is_herder }
+	}
+	trigger_if = { # GT:163-185 (Geber ohne nomad_government :168, Holdings :173-174): Nomaden-/Hirten-Titel nur an Empfaenger, die schon Herrscher sind
+		limit = {
+			exists = scope:mbq_gr_grant_title
+			scope:mbq_gr_liege = { NOT = { has_government = nomad_government } }
+			scope:mbq_gr_grant_title.title_province ?= { OR = { has_holding_type = nomad_holding has_holding_type = herder_holding } }
+		}
+		is_ruler = yes
+	}
+	trigger_if = { # Hirten-Geber: herder_government hat kein use_as_base_on_landed (00_government_types.txt:738-793), die Regierung eines Unbelandeten ist nicht belegt, darum nur bestehende Herrscher
+		limit = { scope:mbq_gr_liege = { government_has_flag = government_is_herder } }
+		is_ruler = yes
+	}
+	target_is_liege_or_above = scope:mbq_gr_liege # Logikcheck M1: GT:36-43 nur eigenes Reich/Hof (T:7549); sperrte Dynastie an fremden Hoefen
+	trigger_if = { # Logikcheck 20 M2: nie an den, dem der Spieler diesen Titel eben widerrufen hat (Variable aus mbq_gr_on_title_revoked; Form V debate.txt:351, coronation.txt:3006)
+		limit = { exists = scope:mbq_gr_grant_title.var:mbq_gr_rev_from }
+		NOT = { this = scope:mbq_gr_grant_title.var:mbq_gr_rev_from }
+	}
+	NOT = { has_relation_rival = scope:mbq_gr_liege } # Logikcheck M2 (T:4294): nie an Rivalen
+	NOT = { has_relation_nemesis = scope:mbq_gr_liege } # T:4246
+	is_a_faction_member = no # Logikcheck M8 (T:4956): nie an Fraktionsmitglieder
+	OR = { # GT:74-77 Moenche
+		NOT = { has_trait = devoted }
+		scope:mbq_gr_liege = { government_has_flag = government_is_theocracy }
+	}
+	bp2_valid_for_standard_interactions_trigger = yes # GT:78
+	is_imprisoned = no # GT:79-82
+	is_hostage = no # R5 (empfaenger_konzept.md 4, T:5481): Geisel gehoert einem anderen Herrscher
+	is_foreign_court_or_pool_guest = no # R5 (T:5433): Gast reist wieder ab
+	is_acclaimed = no # GT:84-98: Vanilla sperrt nur fremde Ritter; Automatik landet nie einen Ritter mit Auszeichnung (Entscheidung Chef)
+	NOT = { has_trait = gallivanter } # GT:100
+	tgp_japan_grant_titles_restriction_trigger = { GRANTER = scope:mbq_gr_liege GRANTEE = this } # GT:102-105
+	NOT = { scope:mbq_gr_liege.player_heir ?= this } # R4: nie an den Haupterben, bei JEDEM Erbrecht (Vanilla nur Teilung GT:206-216)
+}
+
+# Titel nach Vanilla can_be_picked_title (GT:143-322). Scope = Titel.
+mbq_gr_title_ok_trigger = {
+	is_leased_out = no # GT:144 (Ordenslehen, Tempel-Lehen)
+	is_noble_family_title = no # GT:146-152
+	is_nomad_title = no # GT:177-182
+	is_head_of_faith = no # GT:184-193 (Kopf des Glaubens nie automatisch)
+	NOT = { has_variable = ceremonial_title } # GT:218-221
+	has_clerical_region = no # GT:223-228
+	pam_title_is_clerical_elector_trigger = no # GT:230-235
+	pam_title_is_antipope_office_trigger = no # GT:237-242
+	NOT = { has_variable = wagered_county } # GT:309-314
+	# 2.1.19: die pauschale Sperre der Nomaden-/Hirten-Holdings (bisher GT:154-175) entfaellt: Vanilla sperrt nur bei Gebern ohne nomad_government und nur gegenueber Empfaengern, die keine Herrscher sind (GT:163-185), geprueft in mbq_gr_recipient_valid_trigger
+	trigger_if = { # GT:256-269 Diarch
+		limit = { scope:mbq_gr_liege = { has_active_diarchy = yes } }
+		NOT = { any_dejure_vassal_title_holder = { this = scope:mbq_gr_liege.diarch } }
+	}
+	NOT = { has_variable = mbq_gr_kept } # "Behalten" im Rueckfrage-Event (Entscheidung Chef)
+	# 2.1.46 (Maxim 25-10): keine Vererbung von der Grafschaft an die Baronien. Jeder Besitz traegt seine eigene Marke (mbq_gr_kept), die Grafschaft ihre eigene; Altstaende stellt die einmalige
+	# Umstellung mbq_kept_migrate_2146_effect (mbq_new_game_defaults.txt) so um, dass der Schutz gleich bleibt. mbq_gr_free gibt es nicht mehr.
+	is_contested = no # Logikcheck M7 (T:8684): umkaempfte Titel (Kriegsziel) nie mitten im Krieg abgeben
+	trigger_if = { # Logikcheck M5: Stadt-/Tempelbaronien nie automatisch (Regierung waehlt Vanilla im Code, GT:3 scope:government_type)
+		limit = { tier = tier_barony }
+		title_province ?= { # V common/holdings/00_holdings.txt:83, :135; Maxim 15-10: nur Holdings, die fuer den Spieler gueltig sind
+			# 2.1.44 (Maxim 25-10): Stadt-Baronien gibt die Automatik jetzt auch an Lehensherren ab. Vanilla verbietet das nicht: Besitz vom falschen Typ soll man vergeben (holding_view_l_english.yml:229,
+			# 00_realm_actions.txt:213-257 'Holdings of Wrong Type'), can_be_picked_title (00_grant_titles_interaction.txt:152-315) sperrt keine Holding-Art. Handtest Modder 2: Stadt-Baronie im Vergeben-Fenster waehlbar.
+			trigger_if = { # Tempel: ein weltlicher Herrscher haelt sie dauerhaft nur, wenn sein Glaube Laienklerus hat (allowed_holding_types church_holding, V religion/doctrine_types/20_doctrines.txt:1279, Erklaerung _doctrine_types.info:244-248)
+				# oder seine Regierung Tempel als Haupt-/gueltigen Besitz fuehrt (V governments/02_theocratic_government_types.txt:13 und :94 primary_holding, 00_government_types.txt:426 Monastic, :591 Landless Adventurer, :946 Mandala). Sonst verpachtet das Spiel den Tempel in ein bis zwei Tagen an den Kleriker (RevokeTitlesForTheocraticLease)
+				limit = { has_holding_type = church_holding }
+				mbq_gr_church_allowed_trigger = yes # 2.1.45: eine Quelle fuer die Tempelregel (Titel-Trigger und Grund-Zeile der Vorschau)
+			}
+			trigger_else = { always = yes } # Burg u. a.: trigger_else_if verlangt trigger_else (error.log 15-10 "trigger_else_if with no trigger_else")
+		}
+	}
+}
+
+# 2.1.45: darf der Geber (scope:mbq_gr_liege) Tempel dauerhaft halten? Nur dann sind Tempelbaronien Kandidaten, sonst verpachtet das Spiel den Tempel in ein bis zwei Tagen (RevokeTitlesForTheocraticLease).
+# Laienklerus: einzige Doktrin mit allowed_holding_types church_holding (V religion/doctrine_types/20_doctrines.txt:1279, _doctrine_types.info:244-248); Regierungen mit Tempel als Haupt- oder gueltigem Besitz:
+# Theokratie und ecclesiastical (V governments/02_theocratic_government_types.txt:13, :94), Moenchsorden (00_government_types.txt:426), Landloser Abenteurer (:591), Mandala (:946).
+mbq_gr_church_allowed_trigger = {
+	OR = {
+		scope:mbq_gr_liege.faith = { has_doctrine_parameter = lay_clergy } # T:10192
+		scope:mbq_gr_liege = {
+			OR = {
+				government_has_flag = government_is_theocracy # theocracy_government und ecclesiastical_government (02_theocratic_government_types.txt:41, :132)
+				has_government = monastic_holy_order_government
+				has_government = landless_adventurer_government
+				has_government = mandala_government
+			}
+		}
+	}
+}
+
+# Heilige Staette des Spielerglaubens (T:8736 Barony-Scope; Grafschaft ueber Provinz.barony wie V coronation.txt:197). Scope = Titel.
+mbq_gr_holy_trigger = {
+	OR = {
+		AND = {
+			tier = tier_county
+			any_county_province = { barony ?= { is_holy_site_of = scope:mbq_gr_liege.faith } }
+		}
+		AND = {
+			tier = tier_barony
+			is_holy_site_of = scope:mbq_gr_liege.faith
+		}
+	}
+}
+
+# Wertvoll 1:1 aus S zz_mqol_title_gain.txt:77-112: Sonderbauwerk oder Bauplatz, bei Grafschaften auch der Sitz des de-jure-Herzogtums. Scope = Titel.
+mbq_gr_valuable_trigger = {
+	OR = {
+		AND = {
+			tier = tier_county
+			OR = {
+				any_county_province = { OR = { has_special_building = yes has_special_building_slot = yes } } # T:10828, :10834
+				AND = { # Maxim 16-10: Herzogtums-Sitz zaehlt nur bei Option 'Wertvolles und Herzogtuemer' (mbq_gr_ask_duchy)
+					de_jure_liege.title_capital_county ?= this
+					has_global_variable = mbq_gr_ask_duchy
+				}
+				mbq_gr_holy_trigger = yes # Logikcheck M3; 2.0.21: Haken gestrichen, heilige Staetten laufen ueber "Frag mich"
+			}
+		}
+		AND = {
+			tier = tier_barony
+			OR = {
+				title_province ?= { OR = { has_special_building = yes has_special_building_slot = yes } }
+				mbq_gr_holy_trigger = yes # Logikcheck M3
+			}
+		}
+	}
+}
+
+# Rueckfrage aus: Haken "Valuable holdings" weg oder Stumm-Modus.
+mbq_gr_no_ask_trigger = {
+	OR = {
+		has_global_variable = mbq_gr_no_ask_val
+		has_global_variable = mbq_gr_silent
+	}
+}
+
+# Kapital nie (S :64-68). Scope = Titel.
+mbq_gr_not_capital_trigger = {
+	NOT = { this = scope:mbq_gr_liege.capital_province.county }
+	NOT = { title_province ?= scope:mbq_gr_liege.capital_province }
+}
+
+# Aufraeumen und Vorschau: Grafschaft/Baronie, die abgegeben werden darf (S :430-477, wertvolle nur bei Rueckfrage aus). Scope = Titel.
+mbq_gr_county_cand_trigger = {
+	OR = {
+		tier = tier_county
+		tier = tier_barony
+	}
+	mbq_gr_not_capital_trigger = yes
+	# Hauptbaronie folgt ihrer Grafschaft, Vanilla verbietet Einzelvergabe (error.log 14-10 'capital barony'; triggers.log:8662 is_capital_barony)
+	trigger_if = { limit = { tier = tier_barony } is_capital_barony = no }
+	mbq_gr_title_ok_trigger = yes
+	trigger_if = { # 2.2.5 (Maxim 01-11): die Wertvoll-Regel entscheidet nur, WORUEBER gefragt wird. Nach der Antwort (mbq_gr_answered, gesetzt in mbq_gr.0001 after) zaehlt allein das Haeken mbq_gr_kept (oben in mbq_gr_title_ok_trigger)
+		limit = { NOT = { scope:mbq_gr_liege = { mbq_gr_no_ask_trigger = yes } } }
+		OR = {
+			mbq_gr_valuable_trigger = no
+			has_variable = mbq_gr_answered
+		}
+	}
+}
+
+# 2.2.3 (Maxim 01-11, Fehlerkorrektur): Rueckfrage aus der Automatik. Wertvoller Besitz, der bei 'Frag mich' nie abgegeben wird (mbq_gr_county_cand_trigger oben schliesst ihn aus) und weder markiert (mbq_gr_kept, steckt in mbq_gr_title_ok_trigger)
+# noch schon gefragt ist (mbq_gr_asked, faellt nach der Antwort in mbq_gr.0001 und bei Titelverlust, mbq_gr_on_title_lost_asked). Dieselben Vorbedingungen wie der Kandidat, sonst nur 'wertvoll' statt 'nicht wertvoll'. Scope = Titel, scope:mbq_gr_liege = Spieler.
+mbq_gr_ask_cand_trigger = {
+	OR = {
+		tier = tier_county
+		tier = tier_barony
+	}
+	mbq_gr_not_capital_trigger = yes
+	trigger_if = { limit = { tier = tier_barony } is_capital_barony = no }
+	mbq_gr_title_ok_trigger = yes
+	NOT = { has_variable = mbq_gr_asked } # 2.2.5: laeuft nach 30 Tagen von selbst ab (set_variable ... days = 30), dann wird erneut gefragt
+	NOT = { has_variable = mbq_gr_answered } # 2.2.5: beantwortete Titel werden nie wieder gefragt, nur ihr Haeken zaehlt
+	mbq_gr_valuable_trigger = yes
+}
+
+# Trichter-Bau 14-10: Kultur/Glaube jetzt Filter je Stufe (mbq_gr_filter_trigger, generiert G0), bisher mbq_gr_culture_faith_trigger.
+
+# Empfaenger-Kandidat fuer jeden Platz ausser "New noble" (empfaenger_konzept.md 2-4). Scope = Kandidat, scope:mbq_gr_grant_title = Titel.
+# Grundregeln 1:1 aus den bisherigen Triggern (Hoefling S :35-44, Dynastie S :184-199), dazu die roten Regeln und Obergrenzen der Stufe.
+mbq_gr_cand_ok_trigger = {
+	NOT = { this = scope:mbq_gr_liege }
+	is_alive = yes
+	mbq_gr_filter_trigger = yes # Erwachsen jetzt im Alter-Filter (Maxim 15-10: Under 16 waehlbar) # Filter der Stufe (Trichter-Bau G0); incapable, infirm, disloyal jetzt Haken (Standard an)
+	mbq_gr_recipient_valid_trigger = yes
+	mbq_gr_tier_rules_trigger = yes
+}
+
+# Option A (Maxim 15-10, konzept.md 10): Direktvasall des Spielers (is_vassal_of T:6058) oder Unbelandeter in seinem Reich
+# (is_ruler T:5893, target_is_liege_or_above T:7549). Nie belandete Untervasallen. Scope = Kandidat.
+mbq_gr_realm_member_trigger = {
+	OR = {
+		is_vassal_of = scope:mbq_gr_liege
+		AND = {
+			is_ruler = no
+			target_is_liege_or_above = scope:mbq_gr_liege
+		}
+	}
+}
+
+# 2.2.8: EINE Stelle fuer die Vasallenschwelle bei NEUEN Direktvasallen (Unbelandete als Empfaenger, Rueckfall "Neuer Adliger"). Scope = beliebig, scope:mbq_gr_liege = Spieler, scope:mbq_gr_grant_title = Titel.
+# Baronien: immer frei. Vanilla: die Vasallenschwelle zaehlt Direktvasallen "excluding barony-tier vassals" und darf ueberschritten werden (V localization/english/game_concepts_l_english.yml:109);
+# Vanilla-Verleihen prueft sie nur fuer unabhaengige Nomaden-Geber, als Hinweis (V 00_grant_titles_interaction.txt:330, :1158).
+# Grafschaften (2.2.9, Maxim 04-11: "vanilla folgen"): auch frei, die Schwelle darf ueberschritten werden (Strafe: weniger Steuern und Truppen, game_concepts_l_english.yml:109).
+# Zurueck zu "bremsen" (empfaenger_konzept.md 5.8) = die Zeile im trigger_else durch scope:mbq_gr_liege = { vassal_limit_available >= 1 } ersetzen; Zaehler mbq_gr_kept_full und Meldung mbq_gr_kept_full_line greifen dann wieder.
+mbq_gr_vassal_slot_ok_trigger = {
+	trigger_if = {
+		limit = {
+			exists = scope:mbq_gr_grant_title
+			scope:mbq_gr_grant_title.tier = tier_barony
+		}
+		always = yes
+	}
+	trigger_else = {
+		always = yes # <<< ENTSCHEIDUNG MAXIM 04-11 (Grafschaften): Vanilla folgen; bremsen = diese Zeile durch scope:mbq_gr_liege = { vassal_limit_available >= 1 } ersetzen
+	}
+}
+
+# Rote Regeln und Obergrenzen je Stufe (immer an). Scope = Kandidat.
+mbq_gr_tier_rules_trigger = {
+	trigger_if = { # 2.1.39: kein belandeter Minderjaehriger (Diagnose 2.1.38.10: Ewout, Alter unter 3, Herzog, Vergabe scheitert still)
+		limit = { is_ruler = yes }
+		is_adult = yes
+	}
+	trigger_if = { # Option A: Belandete nur als Direktvasall (Experte konzept.md 10, T:6058); Untervasallen wuerden samt Land Direktvasall
+		limit = { is_ruler = yes }
+		is_vassal_of = scope:mbq_gr_liege
+	}
+	trigger_if = { # 2.1.41 (Wurzel Delft, Handtest 25-10): Engine-Regel im Vanilla-Fenster, ein Herrscher bekommt eine Baronie nur mit der Grafschaft darueber
+		# (specialinteractions_l_english.yml:371 "must hold the [county] to receive [barony]", :370 "Barons can hold only 1 barony"); Unbelandete (Hoefling, Ritter) bleiben zulaessig
+		limit = {
+			is_ruler = yes
+			scope:mbq_gr_grant_title.tier = tier_barony
+		}
+		scope:mbq_gr_grant_title.de_jure_liege.holder ?= this
+	}
+	trigger_if = { # neuer Direktvasall (Hoefling, Unbelandeter): nur mit freiem Vasallenplatz (empfaenger_konzept.md 5.8, vassal_limit_available T:7865); 2.2.8: Baronien ausgenommen, Regel in mbq_gr_vassal_slot_ok_trigger
+		limit = { is_ruler = no }
+		mbq_gr_vassal_slot_ok_trigger = yes
+	}
+	trigger_if = { # C2 "Counties per vassal" (Standard 4)
+		limit = { scope:mbq_gr_grant_title.tier = tier_county }
+		mbq_gr_held_counties_value < mbq_gr_ccap_value
+	}
+}
+
+# Empfaenger (generiert, G0): Platz/Filter ohne Variable = Standard (Preset My family first). Entschlackung 15-10: Satz c gemeinsam, Satz d nur bei getrennt.
+mbq_gr_rc1_unset_trigger = {
+	NOR = {
+		has_global_variable = mbq_gr_rc1_is_0
+		has_global_variable = mbq_gr_rc1_is_1
+		has_global_variable = mbq_gr_rc1_is_2
+		has_global_variable = mbq_gr_rc1_is_3
+		has_global_variable = mbq_gr_rc1_is_4
+		has_global_variable = mbq_gr_rc1_is_5
+		has_global_variable = mbq_gr_rc1_is_6
+		has_global_variable = mbq_gr_rc1_is_7
+		has_global_variable = mbq_gr_rc1_is_9
+		has_global_variable = mbq_gr_rc1_is_10
+		has_global_variable = mbq_gr_rc1_is_11
+		has_global_variable = mbq_gr_rc1_is_12
+	}
+}
+mbq_gr_rc2_unset_trigger = {
+	NOR = {
+		has_global_variable = mbq_gr_rc2_is_0
+		has_global_variable = mbq_gr_rc2_is_1
+		has_global_variable = mbq_gr_rc2_is_2
+		has_global_variable = mbq_gr_rc2_is_3
+		has_global_variable = mbq_gr_rc2_is_4
+		has_global_variable = mbq_gr_rc2_is_5
+		has_global_variable = mbq_gr_rc2_is_6
+		has_global_variable = mbq_gr_rc2_is_7
+		has_global_variable = mbq_gr_rc2_is_9
+		has_global_variable = mbq_gr_rc2_is_10
+		has_global_variable = mbq_gr_rc2_is_11
+		has_global_variable = mbq_gr_rc2_is_12
+	}
+}
+mbq_gr_rc3_unset_trigger = {
+	NOR = {
+		has_global_variable = mbq_gr_rc3_is_0
+		has_global_variable = mbq_gr_rc3_is_1
+		has_global_variable = mbq_gr_rc3_is_2
+		has_global_variable = mbq_gr_rc3_is_3
+		has_global_variable = mbq_gr_rc3_is_4
+		has_global_variable = mbq_gr_rc3_is_5
+		has_global_variable = mbq_gr_rc3_is_6
+		has_global_variable = mbq_gr_rc3_is_7
+		has_global_variable = mbq_gr_rc3_is_9
+		has_global_variable = mbq_gr_rc3_is_10
+		has_global_variable = mbq_gr_rc3_is_11
+		has_global_variable = mbq_gr_rc3_is_12
+	}
+}
+mbq_gr_rc4_unset_trigger = {
+	NOR = {
+		has_global_variable = mbq_gr_rc4_is_0
+		has_global_variable = mbq_gr_rc4_is_1
+		has_global_variable = mbq_gr_rc4_is_2
+		has_global_variable = mbq_gr_rc4_is_3
+		has_global_variable = mbq_gr_rc4_is_4
+		has_global_variable = mbq_gr_rc4_is_5
+		has_global_variable = mbq_gr_rc4_is_6
+		has_global_variable = mbq_gr_rc4_is_7
+		has_global_variable = mbq_gr_rc4_is_9
+		has_global_variable = mbq_gr_rc4_is_10
+		has_global_variable = mbq_gr_rc4_is_11
+		has_global_variable = mbq_gr_rc4_is_12
+	}
+}
+mbq_gr_rc5_unset_trigger = {
+	NOR = {
+		has_global_variable = mbq_gr_rc5_is_0
+		has_global_variable = mbq_gr_rc5_is_1
+		has_global_variable = mbq_gr_rc5_is_2
+		has_global_variable = mbq_gr_rc5_is_3
+		has_global_variable = mbq_gr_rc5_is_4
+		has_global_variable = mbq_gr_rc5_is_5
+		has_global_variable = mbq_gr_rc5_is_6
+		has_global_variable = mbq_gr_rc5_is_7
+		has_global_variable = mbq_gr_rc5_is_9
+		has_global_variable = mbq_gr_rc5_is_10
+		has_global_variable = mbq_gr_rc5_is_11
+		has_global_variable = mbq_gr_rc5_is_12
+	}
+}
+mbq_gr_rc6_unset_trigger = {
+	NOR = {
+		has_global_variable = mbq_gr_rc6_is_0
+		has_global_variable = mbq_gr_rc6_is_1
+		has_global_variable = mbq_gr_rc6_is_2
+		has_global_variable = mbq_gr_rc6_is_3
+		has_global_variable = mbq_gr_rc6_is_4
+		has_global_variable = mbq_gr_rc6_is_5
+		has_global_variable = mbq_gr_rc6_is_6
+		has_global_variable = mbq_gr_rc6_is_7
+		has_global_variable = mbq_gr_rc6_is_9
+		has_global_variable = mbq_gr_rc6_is_10
+		has_global_variable = mbq_gr_rc6_is_11
+		has_global_variable = mbq_gr_rc6_is_12
+	}
+}
+mbq_gr_rc7_unset_trigger = {
+	NOR = {
+		has_global_variable = mbq_gr_rc7_is_0
+		has_global_variable = mbq_gr_rc7_is_1
+		has_global_variable = mbq_gr_rc7_is_2
+		has_global_variable = mbq_gr_rc7_is_3
+		has_global_variable = mbq_gr_rc7_is_4
+		has_global_variable = mbq_gr_rc7_is_5
+		has_global_variable = mbq_gr_rc7_is_6
+		has_global_variable = mbq_gr_rc7_is_7
+		has_global_variable = mbq_gr_rc7_is_9
+		has_global_variable = mbq_gr_rc7_is_10
+		has_global_variable = mbq_gr_rc7_is_11
+		has_global_variable = mbq_gr_rc7_is_12
+	}
+}
+mbq_gr_c_none_trigger = { # alle sieben Plaetze Nothing
+	has_global_variable = mbq_gr_rc1_is_0
+	has_global_variable = mbq_gr_rc2_is_0
+	has_global_variable = mbq_gr_rc3_is_0
+	has_global_variable = mbq_gr_rc4_is_0
+	OR = { has_global_variable = mbq_gr_rc5_is_0 mbq_gr_rc5_unset_trigger = yes }
+	OR = { has_global_variable = mbq_gr_rc6_is_0 mbq_gr_rc6_unset_trigger = yes }
+	OR = { has_global_variable = mbq_gr_rc7_is_0 mbq_gr_rc7_unset_trigger = yes }
+}
+mbq_gr_c_has_nn_trigger = { # Maxim 15-10 Spieltest: Haken New noble if nobody fits an (Standard aus)
+	has_global_variable = mbq_gr_nn_on
+}
+mbq_gr_filter_c_trigger = {
+	OR = { # rel: mindestens eine angehakte Stufe, nichts angehakt = Any
+		NOR = { NOT = { has_global_variable = mbq_gr_fc_rel_3_flip } NOT = { has_global_variable = mbq_gr_fc_rel_2_flip } has_global_variable = mbq_gr_fc_rel_1_flip has_global_variable = mbq_gr_fc_rel_0_flip }
+		AND = { NOT = { has_global_variable = mbq_gr_fc_rel_3_flip } rite = scope:mbq_gr_liege.rite } # event_targets.log:1614
+		AND = { NOT = { has_global_variable = mbq_gr_fc_rel_2_flip } faith = scope:mbq_gr_liege.faith } # event_targets.log:154
+		AND = { has_global_variable = mbq_gr_fc_rel_1_flip religion = scope:mbq_gr_liege.religion } # event_targets.log:1578
+		has_global_variable = mbq_gr_fc_rel_0_flip # Any
+	}
+	OR = { # cul: mindestens eine angehakte Stufe, nichts angehakt = Any
+		NOR = { NOT = { has_global_variable = mbq_gr_fc_cul_2_flip } has_global_variable = mbq_gr_fc_cul_1_flip has_global_variable = mbq_gr_fc_cul_0_flip }
+		AND = { NOT = { has_global_variable = mbq_gr_fc_cul_2_flip } culture = scope:mbq_gr_liege.culture } # event_targets.log:1608
+		AND = { has_global_variable = mbq_gr_fc_cul_1_flip culture = { has_same_culture_heritage = scope:mbq_gr_liege.culture } } # triggers.log:12444
+		has_global_variable = mbq_gr_fc_cul_0_flip # Any
+	}
+	OR = { # Alter (Haken, beliebig kombiniert)
+		AND = { # Alter 7 Under 16
+			has_global_variable = mbq_gr_fc_age_7_flip
+			is_adult = no # triggers.log:4990
+			NOR = { # Vanilla: Kinder keine Tempel-Baronie und keine Grafschaft mit Tempel-Hauptbaronie (GT:279-306)
+				scope:mbq_gr_grant_title = { tier = tier_barony title_province = { has_building_with_flag = temple } }
+				scope:mbq_gr_grant_title = { tier = tier_county title_province = { is_county_capital = yes has_building_with_flag = temple } }
+			}
+		}
+		AND = { NOT = { has_global_variable = mbq_gr_fc_age_8_flip } age >= 16 age <= 30 } # Alter 8
+		AND = { NOT = { has_global_variable = mbq_gr_fc_age_9_flip } age >= 31 age <= 45 } # Alter 9
+		AND = { NOT = { has_global_variable = mbq_gr_fc_age_10_flip } age >= 46 } # Alter 10
+	}
+	trigger_if = { # Skip bad vassal traits (dev/grafschaften/trait_filter_recherche.md B)
+		limit = { NOT = { has_global_variable = mbq_gr_c_badtr_flip } }
+		NOR = {
+			has_trait = ambitious # V common/traits/00_traits.txt:3588, opinion_of_liege -15 (:3629)
+			has_trait = disloyal # :12830, liege_opinion -15 (:12839), join_factions_more (:12841)
+			has_trait = arrogant # :3029, opinion_of_liege -5 (:3039)
+			has_trait = impatient # :2961, opinion_of_liege -5 (:2974), Feedback 15-10 (trait_filter_recherche.md D)
+			has_trait = stubborn # :4317, liege_opinion -5 (:4354), Feedback 15-10
+		}
+	}
+}
+mbq_gr_c_age_ok_trigger = { # mindestens ein Alters-Haken (Feedback 15-10: keiner = rot)
+	OR = {
+		has_global_variable = mbq_gr_fc_age_7_flip
+		NOT = { has_global_variable = mbq_gr_fc_age_8_flip }
+		NOT = { has_global_variable = mbq_gr_fc_age_9_flip }
+		NOT = { has_global_variable = mbq_gr_fc_age_10_flip }
+	}
+}
+mbq_gr_c_rel_narrow_trigger = { # Filter erlaubt nur die engste Stufe: Closest faith grau und ignoriert
+	NOT = { has_global_variable = mbq_gr_fc_rel_3_flip }
+	NOT = { NOT = { has_global_variable = mbq_gr_fc_rel_2_flip } }
+}
+mbq_gr_c_cul_narrow_trigger = { # Filter erlaubt nur die engste Stufe: Closest culture grau und ignoriert
+	NOT = { has_global_variable = mbq_gr_fc_cul_2_flip }
+	NOT = { has_global_variable = mbq_gr_fc_cul_1_flip }
+}
+mbq_gr_c_member_chosen_trigger = { # ein Platz waehlt eine Mitgliedschafts-Prioritaet (1-7)
+	OR = {
+		has_global_variable = mbq_gr_rc1_is_1
+		has_global_variable = mbq_gr_rc2_is_1
+		has_global_variable = mbq_gr_rc3_is_1
+		OR = { has_global_variable = mbq_gr_rc4_is_1 mbq_gr_rc4_unset_trigger = yes }
+		has_global_variable = mbq_gr_rc5_is_1
+		has_global_variable = mbq_gr_rc6_is_1
+		has_global_variable = mbq_gr_rc7_is_1
+		has_global_variable = mbq_gr_rc1_is_2
+		has_global_variable = mbq_gr_rc2_is_2
+		OR = { has_global_variable = mbq_gr_rc3_is_2 mbq_gr_rc3_unset_trigger = yes }
+		has_global_variable = mbq_gr_rc4_is_2
+		has_global_variable = mbq_gr_rc5_is_2
+		has_global_variable = mbq_gr_rc6_is_2
+		has_global_variable = mbq_gr_rc7_is_2
+		has_global_variable = mbq_gr_rc1_is_3
+		OR = { has_global_variable = mbq_gr_rc2_is_3 mbq_gr_rc2_unset_trigger = yes }
+		has_global_variable = mbq_gr_rc3_is_3
+		has_global_variable = mbq_gr_rc4_is_3
+		has_global_variable = mbq_gr_rc5_is_3
+		has_global_variable = mbq_gr_rc6_is_3
+		has_global_variable = mbq_gr_rc7_is_3
+		OR = { has_global_variable = mbq_gr_rc1_is_4 mbq_gr_rc1_unset_trigger = yes }
+		has_global_variable = mbq_gr_rc2_is_4
+		has_global_variable = mbq_gr_rc3_is_4
+		has_global_variable = mbq_gr_rc4_is_4
+		has_global_variable = mbq_gr_rc5_is_4
+		has_global_variable = mbq_gr_rc6_is_4
+		has_global_variable = mbq_gr_rc7_is_4
+		has_global_variable = mbq_gr_rc1_is_5
+		has_global_variable = mbq_gr_rc2_is_5
+		has_global_variable = mbq_gr_rc3_is_5
+		has_global_variable = mbq_gr_rc4_is_5
+		has_global_variable = mbq_gr_rc5_is_5
+		has_global_variable = mbq_gr_rc6_is_5
+		has_global_variable = mbq_gr_rc7_is_5
+		has_global_variable = mbq_gr_rc1_is_6
+		has_global_variable = mbq_gr_rc2_is_6
+		has_global_variable = mbq_gr_rc3_is_6
+		has_global_variable = mbq_gr_rc4_is_6
+		has_global_variable = mbq_gr_rc5_is_6
+		has_global_variable = mbq_gr_rc6_is_6
+		has_global_variable = mbq_gr_rc7_is_6
+		has_global_variable = mbq_gr_rc1_is_7
+		has_global_variable = mbq_gr_rc2_is_7
+		has_global_variable = mbq_gr_rc3_is_7
+		has_global_variable = mbq_gr_rc4_is_7
+		has_global_variable = mbq_gr_rc5_is_7
+		has_global_variable = mbq_gr_rc6_is_7
+		has_global_variable = mbq_gr_rc7_is_7
+	}
+}
+mbq_gr_c_sort_chosen_trigger = { # ein Platz waehlt eine Sortier-Prioritaet (9-11), graue zaehlen nicht
+	OR = {
+		has_global_variable = mbq_gr_rc1_is_9
+		has_global_variable = mbq_gr_rc2_is_9
+		has_global_variable = mbq_gr_rc3_is_9
+		has_global_variable = mbq_gr_rc4_is_9
+		has_global_variable = mbq_gr_rc5_is_9
+		has_global_variable = mbq_gr_rc6_is_9
+		has_global_variable = mbq_gr_rc7_is_9
+		AND = { has_global_variable = mbq_gr_rc1_is_10 NOT = { mbq_gr_c_rel_narrow_trigger = yes } }
+		AND = { has_global_variable = mbq_gr_rc2_is_10 NOT = { mbq_gr_c_rel_narrow_trigger = yes } }
+		AND = { has_global_variable = mbq_gr_rc3_is_10 NOT = { mbq_gr_c_rel_narrow_trigger = yes } }
+		AND = { has_global_variable = mbq_gr_rc4_is_10 NOT = { mbq_gr_c_rel_narrow_trigger = yes } }
+		AND = { has_global_variable = mbq_gr_rc5_is_10 NOT = { mbq_gr_c_rel_narrow_trigger = yes } }
+		AND = { has_global_variable = mbq_gr_rc6_is_10 NOT = { mbq_gr_c_rel_narrow_trigger = yes } }
+		AND = { has_global_variable = mbq_gr_rc7_is_10 NOT = { mbq_gr_c_rel_narrow_trigger = yes } }
+		AND = { has_global_variable = mbq_gr_rc1_is_11 NOT = { mbq_gr_c_cul_narrow_trigger = yes } }
+		AND = { has_global_variable = mbq_gr_rc2_is_11 NOT = { mbq_gr_c_cul_narrow_trigger = yes } }
+		AND = { has_global_variable = mbq_gr_rc3_is_11 NOT = { mbq_gr_c_cul_narrow_trigger = yes } }
+		AND = { has_global_variable = mbq_gr_rc4_is_11 NOT = { mbq_gr_c_cul_narrow_trigger = yes } }
+		AND = { has_global_variable = mbq_gr_rc5_is_11 NOT = { mbq_gr_c_cul_narrow_trigger = yes } }
+		AND = { has_global_variable = mbq_gr_rc6_is_11 NOT = { mbq_gr_c_cul_narrow_trigger = yes } }
+		AND = { has_global_variable = mbq_gr_rc7_is_11 NOT = { mbq_gr_c_cul_narrow_trigger = yes } }
+		has_global_variable = mbq_gr_rc1_is_12
+		has_global_variable = mbq_gr_rc2_is_12
+		has_global_variable = mbq_gr_rc3_is_12
+		has_global_variable = mbq_gr_rc4_is_12
+		has_global_variable = mbq_gr_rc5_is_12
+		has_global_variable = mbq_gr_rc6_is_12
+		has_global_variable = mbq_gr_rc7_is_12
+	}
+}
+mbq_gr_c_member_hit_trigger = { # Kandidat trifft eine gewaehlte Mitgliedschafts-Prioritaet (Teilwert > 0). Scope = Kandidat.
+	OR = {
+		AND = {
+			OR = { has_global_variable = mbq_gr_rc1_is_1 has_global_variable = mbq_gr_rc2_is_1 has_global_variable = mbq_gr_rc3_is_1 OR = { has_global_variable = mbq_gr_rc4_is_1 mbq_gr_rc4_unset_trigger = yes } has_global_variable = mbq_gr_rc5_is_1 has_global_variable = mbq_gr_rc6_is_1 has_global_variable = mbq_gr_rc7_is_1 }
+			mbq_gr_k1_value >= 1
+		}
+		AND = {
+			OR = { has_global_variable = mbq_gr_rc1_is_2 has_global_variable = mbq_gr_rc2_is_2 OR = { has_global_variable = mbq_gr_rc3_is_2 mbq_gr_rc3_unset_trigger = yes } has_global_variable = mbq_gr_rc4_is_2 has_global_variable = mbq_gr_rc5_is_2 has_global_variable = mbq_gr_rc6_is_2 has_global_variable = mbq_gr_rc7_is_2 }
+			mbq_gr_k2_value >= 1
+		}
+		AND = {
+			OR = { has_global_variable = mbq_gr_rc1_is_3 OR = { has_global_variable = mbq_gr_rc2_is_3 mbq_gr_rc2_unset_trigger = yes } has_global_variable = mbq_gr_rc3_is_3 has_global_variable = mbq_gr_rc4_is_3 has_global_variable = mbq_gr_rc5_is_3 has_global_variable = mbq_gr_rc6_is_3 has_global_variable = mbq_gr_rc7_is_3 }
+			mbq_gr_k3_value >= 1
+		}
+		AND = {
+			OR = { OR = { has_global_variable = mbq_gr_rc1_is_4 mbq_gr_rc1_unset_trigger = yes } has_global_variable = mbq_gr_rc2_is_4 has_global_variable = mbq_gr_rc3_is_4 has_global_variable = mbq_gr_rc4_is_4 has_global_variable = mbq_gr_rc5_is_4 has_global_variable = mbq_gr_rc6_is_4 has_global_variable = mbq_gr_rc7_is_4 }
+			mbq_gr_k4_value >= 1
+		}
+		AND = {
+			OR = { has_global_variable = mbq_gr_rc1_is_5 has_global_variable = mbq_gr_rc2_is_5 has_global_variable = mbq_gr_rc3_is_5 has_global_variable = mbq_gr_rc4_is_5 has_global_variable = mbq_gr_rc5_is_5 has_global_variable = mbq_gr_rc6_is_5 has_global_variable = mbq_gr_rc7_is_5 }
+			mbq_gr_k5_value >= 1
+		}
+		AND = {
+			OR = { has_global_variable = mbq_gr_rc1_is_6 has_global_variable = mbq_gr_rc2_is_6 has_global_variable = mbq_gr_rc3_is_6 has_global_variable = mbq_gr_rc4_is_6 has_global_variable = mbq_gr_rc5_is_6 has_global_variable = mbq_gr_rc6_is_6 has_global_variable = mbq_gr_rc7_is_6 }
+			mbq_gr_k6_value >= 1
+		}
+		AND = {
+			OR = { has_global_variable = mbq_gr_rc1_is_7 has_global_variable = mbq_gr_rc2_is_7 has_global_variable = mbq_gr_rc3_is_7 has_global_variable = mbq_gr_rc4_is_7 has_global_variable = mbq_gr_rc5_is_7 has_global_variable = mbq_gr_rc6_is_7 has_global_variable = mbq_gr_rc7_is_7 }
+			mbq_gr_k7_value >= 1
+		}
+	}
+}
+mbq_gr_c_qualify_trigger = { # qualifiziert: trifft eine Mitgliedschaft; ohne Mitgliedschafts-Platz, aber mit Sortier-Platz jeder
+	OR = {
+		mbq_gr_c_member_hit_trigger = yes
+		AND = {
+			mbq_gr_c_member_chosen_trigger = no
+			mbq_gr_c_sort_chosen_trigger = yes
+		}
+	}
+}
+mbq_gr_qualify_trigger = { # Logikcheck final M1+S2: ersetzt Rang >= 1. Scope = Kandidat, Satz wie mbq_gr_filter_trigger.
+	mbq_gr_c_qualify_trigger = yes
+}
+mbq_gr_filter_trigger = { # Filter fuer den Titel (Grafschaft/Baronie, Satz c). Scope = Kandidat.
+	mbq_gr_filter_c_trigger = yes
+	NOR = { # Entschlackung 15-10: fest, bisher Haken "Skip incapable rulers" (Standard an)
+		has_trait = incapable # 00_traits.txt:6381
+		has_trait = intellect_bad_3 # :7449 "Imbecile" (localization/english/traits_l_english.yml:600)
+		has_trait = lunatic_1 # :5426
+		has_trait = lunatic_genetic # :5458
+		has_trait = possessed_1 # :5495
+		has_trait = possessed_genetic # :5530
+		has_trait = infirm # :6039
+	}
+}
+mbq_gr_uses_dynasty_trigger = { # irgendein Platz steht auf Dynasty: nur dann die Dynastie durchsuchen (Leistung, empfaenger_konzept.md H2)
+	OR = {
+		has_global_variable = mbq_gr_rc1_is_1
+		has_global_variable = mbq_gr_rc2_is_1
+		has_global_variable = mbq_gr_rc3_is_1
+		OR = { has_global_variable = mbq_gr_rc4_is_1 mbq_gr_rc4_unset_trigger = yes }
+		has_global_variable = mbq_gr_rc5_is_1
+		has_global_variable = mbq_gr_rc6_is_1
+		has_global_variable = mbq_gr_rc7_is_1
+	}
+}

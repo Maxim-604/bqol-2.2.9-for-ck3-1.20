@@ -1,0 +1,124 @@
+﻿# Better Quality of Life 2.1.36: Hofaemter-Standard ohne geoeffnetes Fenster (Treiber mbq_cp_driver_b). Belege: dev/fixliste.md v2.1.36 (Vorlage Treiber).
+widget = {
+	name = "mbq_cp_driver_b"
+	size = { 1 1 }
+	visible = "[And( GetPlayer.IsValid, GetGlobalVariable( 'mbq_cp_dirty_b' ).IsSet )]"
+	state = {
+		name = _show
+		on_start = "[GetVariableSystem.Clear( 'mbq_cp_go' )]"
+		duration = 0.3
+		next = mbq_cp_go_an
+	}
+	state = {
+		name = mbq_cp_go_an
+		on_start = "[GetVariableSystem.Set( 'mbq_cp_go', 'yes' )]"
+		duration = 3
+		next = mbq_cp_fertig
+	}
+	state = {
+		name = mbq_cp_fertig
+		on_start = "[GetVariableSystem.Clear( 'mbq_cp_go' )]"
+		on_start = "[GetScriptedGui( 'mbq_cp_clean_b' ).Execute( GuiScope.SetRoot( GetPlayer.MakeScope ).End )]"
+	}
+	vbox = {
+		datamodel = "[GetPlayer.GetEmployedCourtPositions]"
+		item = {
+			widget = {
+				size = { 1 1 }
+				datacontext = "[CourtPosition.GetPositionType]"
+				widget = {
+					size = { 1 1 }
+					visible = "[And( GetVariableSystem.Exists( 'mbq_cp_go' ), And( CourtPosition.GetEmployee.IsValid, And( Or( And( GetGlobalVariable( 'mbq_cp_lvl_0' ).IsSet, Not( CourtPositionType.HasAutomationNone( GetPlayer ) ) ), Or( And( GetGlobalVariable( 'mbq_cp_lvl_1' ).IsSet, Not( CourtPositionType.HasAutomationShowEvent( GetPlayer ) ) ), Or( And( GetGlobalVariable( 'mbq_cp_lvl_2' ).IsSet, Not( CourtPositionType.HasAutomationAssignBest( GetPlayer ) ) ), And( GetGlobalVariable( 'mbq_cp_lvl_3' ).IsSet, Not( CourtPositionType.HasAutomationAssignBestOrEvent( GetPlayer ) ) ) ) ) ), IsValidCommand( CourtPositionType.ToggleAutomationCmd ) ) ) )]"
+					state = {
+						name = mbq_cp_s0_from1
+						trigger_when = "[And( CourtPositionType.HasAutomationShowEvent( GetPlayer ), And( GetGlobalVariable( 'mbq_cp_lvl_0' ).IsSet, And( Not( GetVariableSystem.Exists( Concatenate( Concatenate( 'mbq_cp_v_', CourtPositionType.GetKey ), '_t0_1' ) ) ), IsValidCommand( CourtPositionType.ToggleAutomationCmd ) ) ) )]"
+						on_start = "[GetVariableSystem.Set( Concatenate( Concatenate( 'mbq_cp_v_', CourtPositionType.GetKey ), '_t0_1' ), 'yes' )]"
+						on_start = "[PostCommand( CourtPositionType.ToggleAutomationCmd )]"
+					}
+					state = {
+						name = mbq_cp_s0_from2
+						trigger_when = "[And( CourtPositionType.HasAutomationAssignBest( GetPlayer ), And( GetGlobalVariable( 'mbq_cp_lvl_0' ).IsSet, And( Not( GetVariableSystem.Exists( Concatenate( Concatenate( 'mbq_cp_v_', CourtPositionType.GetKey ), '_t0_2' ) ) ), IsValidCommand( CourtPositionType.ToggleAutomationCmd ) ) ) )]"
+						on_start = "[GetVariableSystem.Set( Concatenate( Concatenate( 'mbq_cp_v_', CourtPositionType.GetKey ), '_t0_2' ), 'yes' )]"
+						on_start = "[PostCommand( CourtPositionType.ToggleAutomationCmd )]"
+					}
+					state = {
+						name = mbq_cp_s0_from3
+						trigger_when = "[And( CourtPositionType.HasAutomationAssignBestOrEvent( GetPlayer ), And( GetGlobalVariable( 'mbq_cp_lvl_0' ).IsSet, And( Not( GetVariableSystem.Exists( Concatenate( Concatenate( 'mbq_cp_v_', CourtPositionType.GetKey ), '_t0_3' ) ) ), IsValidCommand( CourtPositionType.ToggleAutomationCmd ) ) ) )]"
+						on_start = "[GetVariableSystem.Set( Concatenate( Concatenate( 'mbq_cp_v_', CourtPositionType.GetKey ), '_t0_3' ), 'yes' )]"
+						on_start = "[PostCommand( CourtPositionType.ToggleAutomationCmd )]"
+					}
+					state = {
+						name = mbq_cp_s1_from0
+						trigger_when = "[And( CourtPositionType.HasAutomationNone( GetPlayer ), And( GetGlobalVariable( 'mbq_cp_lvl_1' ).IsSet, And( Not( GetVariableSystem.Exists( Concatenate( Concatenate( 'mbq_cp_v_', CourtPositionType.GetKey ), '_t1_0' ) ) ), IsValidCommand( CourtPositionType.ToggleAutomationCmd ) ) ) )]"
+						on_start = "[GetVariableSystem.Set( Concatenate( Concatenate( 'mbq_cp_v_', CourtPositionType.GetKey ), '_t1_0' ), 'yes' )]"
+						on_start = "[PostCommand( CourtPositionType.ToggleAutomationCmd )]"
+					}
+					state = {
+						name = mbq_cp_s1_from2
+						trigger_when = "[And( CourtPositionType.HasAutomationAssignBest( GetPlayer ), And( GetGlobalVariable( 'mbq_cp_lvl_1' ).IsSet, And( Not( GetVariableSystem.Exists( Concatenate( Concatenate( 'mbq_cp_v_', CourtPositionType.GetKey ), '_t1_2' ) ) ), IsValidCommand( CourtPositionType.ToggleAutomationCmd ) ) ) )]"
+						on_start = "[GetVariableSystem.Set( Concatenate( Concatenate( 'mbq_cp_v_', CourtPositionType.GetKey ), '_t1_2' ), 'yes' )]"
+						on_start = "[PostCommand( CourtPositionType.ToggleAutomationCmd )]"
+					}
+					state = {
+						name = mbq_cp_s1_from3
+						trigger_when = "[And( CourtPositionType.HasAutomationAssignBestOrEvent( GetPlayer ), And( GetGlobalVariable( 'mbq_cp_lvl_1' ).IsSet, And( Not( GetVariableSystem.Exists( Concatenate( Concatenate( 'mbq_cp_v_', CourtPositionType.GetKey ), '_t1_3' ) ) ), IsValidCommand( CourtPositionType.ToggleAutomationCmd ) ) ) )]"
+						on_start = "[GetVariableSystem.Set( Concatenate( Concatenate( 'mbq_cp_v_', CourtPositionType.GetKey ), '_t1_3' ), 'yes' )]"
+						on_start = "[PostCommand( CourtPositionType.ToggleAutomationCmd )]"
+					}
+					state = {
+						name = mbq_cp_s2_from0
+						trigger_when = "[And( CourtPositionType.HasAutomationNone( GetPlayer ), And( GetGlobalVariable( 'mbq_cp_lvl_2' ).IsSet, And( Not( GetVariableSystem.Exists( Concatenate( Concatenate( 'mbq_cp_v_', CourtPositionType.GetKey ), '_t2_0' ) ) ), IsValidCommand( CourtPositionType.ToggleAutomationCmd ) ) ) )]"
+						on_start = "[GetVariableSystem.Set( Concatenate( Concatenate( 'mbq_cp_v_', CourtPositionType.GetKey ), '_t2_0' ), 'yes' )]"
+						on_start = "[PostCommand( CourtPositionType.ToggleAutomationCmd )]"
+					}
+					state = {
+						name = mbq_cp_s2_from1
+						trigger_when = "[And( CourtPositionType.HasAutomationShowEvent( GetPlayer ), And( GetGlobalVariable( 'mbq_cp_lvl_2' ).IsSet, And( Not( GetVariableSystem.Exists( Concatenate( Concatenate( 'mbq_cp_v_', CourtPositionType.GetKey ), '_t2_1' ) ) ), IsValidCommand( CourtPositionType.ToggleAutomationCmd ) ) ) )]"
+						on_start = "[GetVariableSystem.Set( Concatenate( Concatenate( 'mbq_cp_v_', CourtPositionType.GetKey ), '_t2_1' ), 'yes' )]"
+						on_start = "[PostCommand( CourtPositionType.ToggleAutomationCmd )]"
+					}
+					state = {
+						name = mbq_cp_s2_from3
+						trigger_when = "[And( CourtPositionType.HasAutomationAssignBestOrEvent( GetPlayer ), And( GetGlobalVariable( 'mbq_cp_lvl_2' ).IsSet, And( Not( GetVariableSystem.Exists( Concatenate( Concatenate( 'mbq_cp_v_', CourtPositionType.GetKey ), '_t2_3' ) ) ), IsValidCommand( CourtPositionType.ToggleAutomationCmd ) ) ) )]"
+						on_start = "[GetVariableSystem.Set( Concatenate( Concatenate( 'mbq_cp_v_', CourtPositionType.GetKey ), '_t2_3' ), 'yes' )]"
+						on_start = "[PostCommand( CourtPositionType.ToggleAutomationCmd )]"
+					}
+					state = {
+						name = mbq_cp_s3_from0
+						trigger_when = "[And( CourtPositionType.HasAutomationNone( GetPlayer ), And( GetGlobalVariable( 'mbq_cp_lvl_3' ).IsSet, And( Not( GetVariableSystem.Exists( Concatenate( Concatenate( 'mbq_cp_v_', CourtPositionType.GetKey ), '_t3_0' ) ) ), IsValidCommand( CourtPositionType.ToggleAutomationCmd ) ) ) )]"
+						on_start = "[GetVariableSystem.Set( Concatenate( Concatenate( 'mbq_cp_v_', CourtPositionType.GetKey ), '_t3_0' ), 'yes' )]"
+						on_start = "[PostCommand( CourtPositionType.ToggleAutomationCmd )]"
+					}
+					state = {
+						name = mbq_cp_s3_from1
+						trigger_when = "[And( CourtPositionType.HasAutomationShowEvent( GetPlayer ), And( GetGlobalVariable( 'mbq_cp_lvl_3' ).IsSet, And( Not( GetVariableSystem.Exists( Concatenate( Concatenate( 'mbq_cp_v_', CourtPositionType.GetKey ), '_t3_1' ) ) ), IsValidCommand( CourtPositionType.ToggleAutomationCmd ) ) ) )]"
+						on_start = "[GetVariableSystem.Set( Concatenate( Concatenate( 'mbq_cp_v_', CourtPositionType.GetKey ), '_t3_1' ), 'yes' )]"
+						on_start = "[PostCommand( CourtPositionType.ToggleAutomationCmd )]"
+					}
+					state = {
+						name = mbq_cp_s3_from2
+						trigger_when = "[And( CourtPositionType.HasAutomationAssignBest( GetPlayer ), And( GetGlobalVariable( 'mbq_cp_lvl_3' ).IsSet, And( Not( GetVariableSystem.Exists( Concatenate( Concatenate( 'mbq_cp_v_', CourtPositionType.GetKey ), '_t3_2' ) ) ), IsValidCommand( CourtPositionType.ToggleAutomationCmd ) ) ) )]"
+						on_start = "[GetVariableSystem.Set( Concatenate( Concatenate( 'mbq_cp_v_', CourtPositionType.GetKey ), '_t3_2' ), 'yes' )]"
+						on_start = "[PostCommand( CourtPositionType.ToggleAutomationCmd )]"
+					}
+					state = {
+						name = _hide
+						duration = 0.1
+						on_start = "[GetVariableSystem.Clear( Concatenate( Concatenate( 'mbq_cp_v_', CourtPositionType.GetKey ), '_t0_1' ) )]"
+						on_start = "[GetVariableSystem.Clear( Concatenate( Concatenate( 'mbq_cp_v_', CourtPositionType.GetKey ), '_t0_2' ) )]"
+						on_start = "[GetVariableSystem.Clear( Concatenate( Concatenate( 'mbq_cp_v_', CourtPositionType.GetKey ), '_t0_3' ) )]"
+						on_start = "[GetVariableSystem.Clear( Concatenate( Concatenate( 'mbq_cp_v_', CourtPositionType.GetKey ), '_t1_0' ) )]"
+						on_start = "[GetVariableSystem.Clear( Concatenate( Concatenate( 'mbq_cp_v_', CourtPositionType.GetKey ), '_t1_2' ) )]"
+						on_start = "[GetVariableSystem.Clear( Concatenate( Concatenate( 'mbq_cp_v_', CourtPositionType.GetKey ), '_t1_3' ) )]"
+						on_start = "[GetVariableSystem.Clear( Concatenate( Concatenate( 'mbq_cp_v_', CourtPositionType.GetKey ), '_t2_0' ) )]"
+						on_start = "[GetVariableSystem.Clear( Concatenate( Concatenate( 'mbq_cp_v_', CourtPositionType.GetKey ), '_t2_1' ) )]"
+						on_start = "[GetVariableSystem.Clear( Concatenate( Concatenate( 'mbq_cp_v_', CourtPositionType.GetKey ), '_t2_3' ) )]"
+						on_start = "[GetVariableSystem.Clear( Concatenate( Concatenate( 'mbq_cp_v_', CourtPositionType.GetKey ), '_t3_0' ) )]"
+						on_start = "[GetVariableSystem.Clear( Concatenate( Concatenate( 'mbq_cp_v_', CourtPositionType.GetKey ), '_t3_1' ) )]"
+						on_start = "[GetVariableSystem.Clear( Concatenate( Concatenate( 'mbq_cp_v_', CourtPositionType.GetKey ), '_t3_2' ) )]"
+					}
+				}
+			}
+		}
+	}
+}

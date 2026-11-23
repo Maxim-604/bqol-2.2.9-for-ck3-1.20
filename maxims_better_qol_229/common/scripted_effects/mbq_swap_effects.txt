@@ -1,0 +1,85 @@
+﻿# Better Quality of Life 2.1.35 (Maxim 25-10-2026): Tausch zweier Plaetze, ausgeloest von den Pfeilen im Fenster (scripted_guis/mbq_county.txt mbq_gr_swap_*, mbq_settings.txt mbq_prio_swap_*).
+# Nur die WERTE der zwei Plaetze werden vertauscht; jede Wahl bleibt so oft vorhanden wie vorher (Eindeutigkeit). Parameter: A, B = Platznummern, DA, DB = Wert eines UNGESETZTEN Platzes.
+mbq_gr_swap_effect = {
+	# ungesetzter Platz = sein Standardwert (Platz 1 bis 4 Kinder, Enkel, Haus, Dynastie, Platz 5 bis 7 Nichts): zuerst festschreiben, damit er mitwandert
+	if = { limit = { mbq_gr_rc$A$_unset_trigger = yes } set_global_variable = { name = mbq_gr_rc$A$_is_$DA$ value = yes } }
+	if = { limit = { mbq_gr_rc$B$_unset_trigger = yes } set_global_variable = { name = mbq_gr_rc$B$_is_$DB$ value = yes } }
+	# Durchgang 1: Wert von A und B in Zwischenvariablen, Platzvariablen weg
+	if = { limit = { has_global_variable = mbq_gr_rc$A$_is_0 } set_global_variable = { name = mbq_swa_0 value = yes } remove_global_variable = mbq_gr_rc$A$_is_0 }
+	if = { limit = { has_global_variable = mbq_gr_rc$A$_is_1 } set_global_variable = { name = mbq_swa_1 value = yes } remove_global_variable = mbq_gr_rc$A$_is_1 }
+	if = { limit = { has_global_variable = mbq_gr_rc$A$_is_2 } set_global_variable = { name = mbq_swa_2 value = yes } remove_global_variable = mbq_gr_rc$A$_is_2 }
+	if = { limit = { has_global_variable = mbq_gr_rc$A$_is_3 } set_global_variable = { name = mbq_swa_3 value = yes } remove_global_variable = mbq_gr_rc$A$_is_3 }
+	if = { limit = { has_global_variable = mbq_gr_rc$A$_is_4 } set_global_variable = { name = mbq_swa_4 value = yes } remove_global_variable = mbq_gr_rc$A$_is_4 }
+	if = { limit = { has_global_variable = mbq_gr_rc$A$_is_5 } set_global_variable = { name = mbq_swa_5 value = yes } remove_global_variable = mbq_gr_rc$A$_is_5 }
+	if = { limit = { has_global_variable = mbq_gr_rc$A$_is_6 } set_global_variable = { name = mbq_swa_6 value = yes } remove_global_variable = mbq_gr_rc$A$_is_6 }
+	if = { limit = { has_global_variable = mbq_gr_rc$A$_is_7 } set_global_variable = { name = mbq_swa_7 value = yes } remove_global_variable = mbq_gr_rc$A$_is_7 }
+	if = { limit = { has_global_variable = mbq_gr_rc$A$_is_9 } set_global_variable = { name = mbq_swa_9 value = yes } remove_global_variable = mbq_gr_rc$A$_is_9 }
+	if = { limit = { has_global_variable = mbq_gr_rc$A$_is_10 } set_global_variable = { name = mbq_swa_10 value = yes } remove_global_variable = mbq_gr_rc$A$_is_10 }
+	if = { limit = { has_global_variable = mbq_gr_rc$A$_is_11 } set_global_variable = { name = mbq_swa_11 value = yes } remove_global_variable = mbq_gr_rc$A$_is_11 }
+	if = { limit = { has_global_variable = mbq_gr_rc$A$_is_12 } set_global_variable = { name = mbq_swa_12 value = yes } remove_global_variable = mbq_gr_rc$A$_is_12 }
+	if = { limit = { has_global_variable = mbq_gr_rc$B$_is_0 } set_global_variable = { name = mbq_swb_0 value = yes } remove_global_variable = mbq_gr_rc$B$_is_0 }
+	if = { limit = { has_global_variable = mbq_gr_rc$B$_is_1 } set_global_variable = { name = mbq_swb_1 value = yes } remove_global_variable = mbq_gr_rc$B$_is_1 }
+	if = { limit = { has_global_variable = mbq_gr_rc$B$_is_2 } set_global_variable = { name = mbq_swb_2 value = yes } remove_global_variable = mbq_gr_rc$B$_is_2 }
+	if = { limit = { has_global_variable = mbq_gr_rc$B$_is_3 } set_global_variable = { name = mbq_swb_3 value = yes } remove_global_variable = mbq_gr_rc$B$_is_3 }
+	if = { limit = { has_global_variable = mbq_gr_rc$B$_is_4 } set_global_variable = { name = mbq_swb_4 value = yes } remove_global_variable = mbq_gr_rc$B$_is_4 }
+	if = { limit = { has_global_variable = mbq_gr_rc$B$_is_5 } set_global_variable = { name = mbq_swb_5 value = yes } remove_global_variable = mbq_gr_rc$B$_is_5 }
+	if = { limit = { has_global_variable = mbq_gr_rc$B$_is_6 } set_global_variable = { name = mbq_swb_6 value = yes } remove_global_variable = mbq_gr_rc$B$_is_6 }
+	if = { limit = { has_global_variable = mbq_gr_rc$B$_is_7 } set_global_variable = { name = mbq_swb_7 value = yes } remove_global_variable = mbq_gr_rc$B$_is_7 }
+	if = { limit = { has_global_variable = mbq_gr_rc$B$_is_9 } set_global_variable = { name = mbq_swb_9 value = yes } remove_global_variable = mbq_gr_rc$B$_is_9 }
+	if = { limit = { has_global_variable = mbq_gr_rc$B$_is_10 } set_global_variable = { name = mbq_swb_10 value = yes } remove_global_variable = mbq_gr_rc$B$_is_10 }
+	if = { limit = { has_global_variable = mbq_gr_rc$B$_is_11 } set_global_variable = { name = mbq_swb_11 value = yes } remove_global_variable = mbq_gr_rc$B$_is_11 }
+	if = { limit = { has_global_variable = mbq_gr_rc$B$_is_12 } set_global_variable = { name = mbq_swb_12 value = yes } remove_global_variable = mbq_gr_rc$B$_is_12 }
+	# Durchgang 2: gekreuzt zurueck, Zwischenvariablen weg
+	if = { limit = { has_global_variable = mbq_swa_0 } set_global_variable = { name = mbq_gr_rc$B$_is_0 value = yes } remove_global_variable = mbq_swa_0 }
+	if = { limit = { has_global_variable = mbq_swa_1 } set_global_variable = { name = mbq_gr_rc$B$_is_1 value = yes } remove_global_variable = mbq_swa_1 }
+	if = { limit = { has_global_variable = mbq_swa_2 } set_global_variable = { name = mbq_gr_rc$B$_is_2 value = yes } remove_global_variable = mbq_swa_2 }
+	if = { limit = { has_global_variable = mbq_swa_3 } set_global_variable = { name = mbq_gr_rc$B$_is_3 value = yes } remove_global_variable = mbq_swa_3 }
+	if = { limit = { has_global_variable = mbq_swa_4 } set_global_variable = { name = mbq_gr_rc$B$_is_4 value = yes } remove_global_variable = mbq_swa_4 }
+	if = { limit = { has_global_variable = mbq_swa_5 } set_global_variable = { name = mbq_gr_rc$B$_is_5 value = yes } remove_global_variable = mbq_swa_5 }
+	if = { limit = { has_global_variable = mbq_swa_6 } set_global_variable = { name = mbq_gr_rc$B$_is_6 value = yes } remove_global_variable = mbq_swa_6 }
+	if = { limit = { has_global_variable = mbq_swa_7 } set_global_variable = { name = mbq_gr_rc$B$_is_7 value = yes } remove_global_variable = mbq_swa_7 }
+	if = { limit = { has_global_variable = mbq_swa_9 } set_global_variable = { name = mbq_gr_rc$B$_is_9 value = yes } remove_global_variable = mbq_swa_9 }
+	if = { limit = { has_global_variable = mbq_swa_10 } set_global_variable = { name = mbq_gr_rc$B$_is_10 value = yes } remove_global_variable = mbq_swa_10 }
+	if = { limit = { has_global_variable = mbq_swa_11 } set_global_variable = { name = mbq_gr_rc$B$_is_11 value = yes } remove_global_variable = mbq_swa_11 }
+	if = { limit = { has_global_variable = mbq_swa_12 } set_global_variable = { name = mbq_gr_rc$B$_is_12 value = yes } remove_global_variable = mbq_swa_12 }
+	if = { limit = { has_global_variable = mbq_swb_0 } set_global_variable = { name = mbq_gr_rc$A$_is_0 value = yes } remove_global_variable = mbq_swb_0 }
+	if = { limit = { has_global_variable = mbq_swb_1 } set_global_variable = { name = mbq_gr_rc$A$_is_1 value = yes } remove_global_variable = mbq_swb_1 }
+	if = { limit = { has_global_variable = mbq_swb_2 } set_global_variable = { name = mbq_gr_rc$A$_is_2 value = yes } remove_global_variable = mbq_swb_2 }
+	if = { limit = { has_global_variable = mbq_swb_3 } set_global_variable = { name = mbq_gr_rc$A$_is_3 value = yes } remove_global_variable = mbq_swb_3 }
+	if = { limit = { has_global_variable = mbq_swb_4 } set_global_variable = { name = mbq_gr_rc$A$_is_4 value = yes } remove_global_variable = mbq_swb_4 }
+	if = { limit = { has_global_variable = mbq_swb_5 } set_global_variable = { name = mbq_gr_rc$A$_is_5 value = yes } remove_global_variable = mbq_swb_5 }
+	if = { limit = { has_global_variable = mbq_swb_6 } set_global_variable = { name = mbq_gr_rc$A$_is_6 value = yes } remove_global_variable = mbq_swb_6 }
+	if = { limit = { has_global_variable = mbq_swb_7 } set_global_variable = { name = mbq_gr_rc$A$_is_7 value = yes } remove_global_variable = mbq_swb_7 }
+	if = { limit = { has_global_variable = mbq_swb_9 } set_global_variable = { name = mbq_gr_rc$A$_is_9 value = yes } remove_global_variable = mbq_swb_9 }
+	if = { limit = { has_global_variable = mbq_swb_10 } set_global_variable = { name = mbq_gr_rc$A$_is_10 value = yes } remove_global_variable = mbq_swb_10 }
+	if = { limit = { has_global_variable = mbq_swb_11 } set_global_variable = { name = mbq_gr_rc$A$_is_11 value = yes } remove_global_variable = mbq_swb_11 }
+	if = { limit = { has_global_variable = mbq_swb_12 } set_global_variable = { name = mbq_gr_rc$A$_is_12 value = yes } remove_global_variable = mbq_swb_12 }
+	mbq_gr_custom_effect = yes  # wie jede Aenderung von Hand: Profil wird Eigene Wahl (mbq_county.txt:104)
+	mbq_gr_preview_effect = yes  # Vorschau und Erklaerung neu
+}
+
+# Bekehrung automatisch verlangen: Prioritaet A und B (mbq_pN_is_K)
+mbq_prio_swap_effect = {
+	# Durchgang 1: Wert von A und B in Zwischenvariablen, Platzvariablen weg
+	if = { limit = { has_global_variable = mbq_p$A$_is_0 } set_global_variable = { name = mbq_swa_0 value = yes } remove_global_variable = mbq_p$A$_is_0 }
+	if = { limit = { has_global_variable = mbq_p$A$_is_1 } set_global_variable = { name = mbq_swa_1 value = yes } remove_global_variable = mbq_p$A$_is_1 }
+	if = { limit = { has_global_variable = mbq_p$A$_is_2 } set_global_variable = { name = mbq_swa_2 value = yes } remove_global_variable = mbq_p$A$_is_2 }
+	if = { limit = { has_global_variable = mbq_p$A$_is_3 } set_global_variable = { name = mbq_swa_3 value = yes } remove_global_variable = mbq_p$A$_is_3 }
+	if = { limit = { has_global_variable = mbq_p$A$_is_4 } set_global_variable = { name = mbq_swa_4 value = yes } remove_global_variable = mbq_p$A$_is_4 }
+	if = { limit = { has_global_variable = mbq_p$B$_is_0 } set_global_variable = { name = mbq_swb_0 value = yes } remove_global_variable = mbq_p$B$_is_0 }
+	if = { limit = { has_global_variable = mbq_p$B$_is_1 } set_global_variable = { name = mbq_swb_1 value = yes } remove_global_variable = mbq_p$B$_is_1 }
+	if = { limit = { has_global_variable = mbq_p$B$_is_2 } set_global_variable = { name = mbq_swb_2 value = yes } remove_global_variable = mbq_p$B$_is_2 }
+	if = { limit = { has_global_variable = mbq_p$B$_is_3 } set_global_variable = { name = mbq_swb_3 value = yes } remove_global_variable = mbq_p$B$_is_3 }
+	if = { limit = { has_global_variable = mbq_p$B$_is_4 } set_global_variable = { name = mbq_swb_4 value = yes } remove_global_variable = mbq_p$B$_is_4 }
+	# Durchgang 2: gekreuzt zurueck, Zwischenvariablen weg
+	if = { limit = { has_global_variable = mbq_swa_0 } set_global_variable = { name = mbq_p$B$_is_0 value = yes } remove_global_variable = mbq_swa_0 }
+	if = { limit = { has_global_variable = mbq_swa_1 } set_global_variable = { name = mbq_p$B$_is_1 value = yes } remove_global_variable = mbq_swa_1 }
+	if = { limit = { has_global_variable = mbq_swa_2 } set_global_variable = { name = mbq_p$B$_is_2 value = yes } remove_global_variable = mbq_swa_2 }
+	if = { limit = { has_global_variable = mbq_swa_3 } set_global_variable = { name = mbq_p$B$_is_3 value = yes } remove_global_variable = mbq_swa_3 }
+	if = { limit = { has_global_variable = mbq_swa_4 } set_global_variable = { name = mbq_p$B$_is_4 value = yes } remove_global_variable = mbq_swa_4 }
+	if = { limit = { has_global_variable = mbq_swb_0 } set_global_variable = { name = mbq_p$A$_is_0 value = yes } remove_global_variable = mbq_swb_0 }
+	if = { limit = { has_global_variable = mbq_swb_1 } set_global_variable = { name = mbq_p$A$_is_1 value = yes } remove_global_variable = mbq_swb_1 }
+	if = { limit = { has_global_variable = mbq_swb_2 } set_global_variable = { name = mbq_p$A$_is_2 value = yes } remove_global_variable = mbq_swb_2 }
+	if = { limit = { has_global_variable = mbq_swb_3 } set_global_variable = { name = mbq_p$A$_is_3 value = yes } remove_global_variable = mbq_swb_3 }
+	if = { limit = { has_global_variable = mbq_swb_4 } set_global_variable = { name = mbq_p$A$_is_4 value = yes } remove_global_variable = mbq_swb_4 }
+}

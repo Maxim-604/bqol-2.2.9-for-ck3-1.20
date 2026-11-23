@@ -1,0 +1,7 @@
+﻿# 24-10-2026: loescht die Anforderung mbq_open_req nach dem Oeffnen des Fensters (GUI kann globale Variablen nicht selbst loeschen). Muster mbui_hp_open_clear (Better UI).
+mbq_open_clear = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_open_req } remove_global_variable = mbq_open_req }
+	}
+}

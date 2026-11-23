@@ -1,0 +1,7 @@
+﻿l_japanese:
+ MBQ_LOCK_DC: "#N ロック中：まず「$MBQ_DC_AUTO$」をチェックしてください。#!"
+ MBQ_LOCK_PRIO: "#N ロック中：まず「$MBQ_GEN_CONV_ANSWER$」をチェックしてください。#!"
+ MBQ_LOCK_AUTO: "#N ロック中：まず「$MBQ_GR_AUTO$」をチェックしてください。#!"
+ MBQ_LOCK_SILENT: "#N ロック中：まず「$MBQ_VS_MASTER$」をチェックしてください。#!"
+ MBQ_LOCK_TRIB: "#N ロック中：まず「$MBQ_VS_AUTO_TB$」または「$MBQ_VS_ACC_TB$」をチェックしてください。#!"
+ MBQ_LOCK_TAKEN: "#N ロック中：すでに別の場所で選択済み。#!"

@@ -1,0 +1,72 @@
+﻿# Better Quality of Life 2.0.0 Loesegeld-Automatik. Scope = Gefangener, root = Spieler (Kerkermeister).
+# Volle Vanilla-Summe: normal_ransom_cost_value (V common/script_values/00_interaction_values.txt:195), mit Dynastie-Vermaechtnis
+# fp1_pillage_legacy_3 increased_ransom_cost_value (:288-293), genau wie der Vanilla-Effekt waehlt (V common/scripted_effects/00_prison_effects.txt:24-41).
+mbq_rs_price = {
+	value = normal_ransom_cost_value
+	if = {
+		limit = { root.dynasty ?= { has_dynasty_perk = fp1_pillage_legacy_3 } }
+		value = increased_ransom_cost_value
+	}
+}
+
+# Gold des Zahlers. Zahler = Lehnsherr, wenn der Gefangene kein Herrscher ist (Weiterleitung V common/character_interactions/00_prison_interactions.txt:1893-1906).
+# value = liege.<...> wie V common/script_values/00_court_position_values.txt:107; gold als Wert wie V 00_basic_values.txt:458-461
+mbq_rs_payer_gold = {
+	value = gold
+	if = {
+		limit = { is_ruler = no exists = liege }
+		value = liege.gold
+	}
+	floor = yes # Logiktest 2 B2: abgerundet wie Vanillas Zahlung current_gold_value (V 00_basic_values.txt:458-461, gezahlt 00_prison_effects.txt:20-23, :172-174)
+}
+
+# Loesegeld (Maxim 14-10, BQoL 2.0): genau EINE Wahl, 100 Prozent oder gestaffelt. Globale Variable: keine = 100 Prozent (Standard), mbq_rs_min_staffel = gestaffelt.
+# (1.1.0 kannte zusaetzlich mbq_rs_min_75, _50 und _none, alle weg; Mindesthaft gestrichen.)
+# Gestaffelt nach Haftdauer (Maxim 14-10): 0 bis 2 Jahre 100 Prozent der vollen Summe, 2 bis 4 Jahre 75, 4 bis 6 Jahre 50, ab 6 Jahren jedes Loesegeld
+# (Hauptsache echtes Gold >= 1, dafuer min = 1 unten und mbq_rs_payer_gold >= 1 im Trigger). time_in_prison (triggers.log:7612, nur =,>,< dokumentiert,
+# darum NOT years < X; "years < 1" wie V common/character_interactions/00_revoke_title_interaction.txt:1319). Scope = Gefangener wie mbq_rs_price.
+# multiply in if wie V 00_activity_values.txt:174, min = 1 auf oberster Ebene wie V 00_activity_values.txt:1452 (Logiktest A1: nie unter 1 Gold).
+# Zahlung: Vanilla nimmt bei Gold >= Summe die volle Summe, sonst das ganze Gold (current_gold_value: V 00_prison_effects.txt:20-23, :43-49, :172-174),
+# also kann der Zahler bei 75 oder 50 Prozent MEHR zahlen als die Schwelle ("mindestens", Tooltip).
+#
+# Fassung 4 (Maxim 14-10, entscheidungen_maxim.md "Standardwerte und Ausnahmen"): DREI Optionen, genau eine: sofort (jedes Gold >= 1, Variable mbq_rs_min_now) |
+# 100 Prozent (Standard, keine Variable) | gestaffelt (mbq_rs_min_staffel). "Sofort" = Schwelle 0, wirksam bleibt nur min = 1 und mbq_rs_payer_gold >= 1.
+mbq_rs_threshold = {
+	value = mbq_rs_price
+	if = {
+		limit = { has_global_variable = mbq_rs_min_now }
+		multiply = 0
+	}
+	else_if = {
+		limit = { has_global_variable = mbq_rs_min_staffel }
+		if = {
+			limit = { NOT = { time_in_prison = { years < 6 } } }
+			multiply = 0
+		}
+		else_if = {
+			limit = { NOT = { time_in_prison = { years < 4 } } }
+			multiply = 0.5
+		}
+		else_if = {
+			limit = { NOT = { time_in_prison = { years < 2 } } }
+			multiply = 0.75
+		}
+	}
+	min = 1
+}
+
+# Erwarteter Betrag fuer die Sammelmeldung: volle Summe, sonst was der Zahler hat, unter 1 Gold ein Haken (00_prison_effects.txt:37-51).
+# Vergleich zweier Werte wie V common/character_interactions/02_ep1_interactions.txt:488
+mbq_rs_expected = {
+	value = mbq_rs_price
+	if = {
+		limit = { mbq_rs_payer_gold < mbq_rs_price }
+		value = mbq_rs_payer_gold
+	}
+	if = {
+		limit = { mbq_rs_payer_gold < 1 }
+		value = 0
+	}
+	floor = yes # wie current_gold_value (00_basic_values.txt:460)
+}
+

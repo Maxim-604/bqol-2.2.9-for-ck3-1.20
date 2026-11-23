@@ -1,0 +1,58 @@
+﻿# Better Quality of Life 2.1.36 (Maxim 25-10-2026, Race beim Klicken, Analyse U4): zwei Treiber A (mbq_cp_dirty) und B (mbq_cp_dirty_b) im Wechsel.
+mbq_cp_request_effect = {
+	if = {
+		limit = { OR = { has_global_variable = mbq_cp_dirty has_global_variable = mbq_cp_dirty_b } }
+		set_global_variable = { name = mbq_cp_again value = yes }  # es laeuft schon ein Treiber: danach noch ein Lauf
+	}
+	else = { set_global_variable = { name = mbq_cp_dirty value = yes } }
+}
+
+mbq_cp_finish_effect = {  # DONE = Variable des beendeten Treibers, NEXT = Variable des anderen Treibers
+	if = { limit = { has_global_variable = $DONE$ } remove_global_variable = $DONE$ }
+	if = {
+		limit = { has_global_variable = mbq_cp_again }
+		remove_global_variable = mbq_cp_again
+		set_global_variable = { name = $NEXT$ value = yes }
+	}
+}
+
+# 2.1.36: Vorgaengerstand dieser Automatik (vor 2.1.36): die Flaggen hiessen mqol_cp_lvl_0..3. Uebernimmt die gewaehlte Stufe (nur wenn noch keine neue gesetzt ist) und raeumt die alten globalen Variablen weg.
+# Aufgerufen beim Oeffnen der Liste (Zustand _show), beim Klick auf den Knopf und im Vierteljahrs-Puls; ohne alte Variablen passiert nichts. Die alte Merker-Variable mqol_cp_seen an Amtstraegern bleibt wirkungslos liegen (kein Lesezugriff mehr).
+mbq_cp_migrate_effect = {
+	if = {
+		limit = { has_global_variable = mqol_cp_lvl_0 }
+		remove_global_variable = mqol_cp_lvl_0
+		if = {
+			limit = { NOR = { has_global_variable = mbq_cp_lvl_0 has_global_variable = mbq_cp_lvl_1 has_global_variable = mbq_cp_lvl_2 has_global_variable = mbq_cp_lvl_3 } }
+			set_global_variable = { name = mbq_cp_lvl_0 value = yes }
+		}
+	}
+	if = {
+		limit = { has_global_variable = mqol_cp_lvl_1 }
+		remove_global_variable = mqol_cp_lvl_1
+		if = {
+			limit = { NOR = { has_global_variable = mbq_cp_lvl_0 has_global_variable = mbq_cp_lvl_1 has_global_variable = mbq_cp_lvl_2 has_global_variable = mbq_cp_lvl_3 } }
+			set_global_variable = { name = mbq_cp_lvl_1 value = yes }
+		}
+	}
+	if = {
+		limit = { has_global_variable = mqol_cp_lvl_2 }
+		remove_global_variable = mqol_cp_lvl_2
+		if = {
+			limit = { NOR = { has_global_variable = mbq_cp_lvl_0 has_global_variable = mbq_cp_lvl_1 has_global_variable = mbq_cp_lvl_2 has_global_variable = mbq_cp_lvl_3 } }
+			set_global_variable = { name = mbq_cp_lvl_2 value = yes }
+		}
+	}
+	if = {
+		limit = { has_global_variable = mqol_cp_lvl_3 }
+		remove_global_variable = mqol_cp_lvl_3
+		if = {
+			limit = { NOR = { has_global_variable = mbq_cp_lvl_0 has_global_variable = mbq_cp_lvl_1 has_global_variable = mbq_cp_lvl_2 has_global_variable = mbq_cp_lvl_3 } }
+			set_global_variable = { name = mbq_cp_lvl_3 value = yes }
+		}
+	}
+	if = { limit = { has_global_variable = mqol_cp_dirty } remove_global_variable = mqol_cp_dirty }
+	if = { limit = { has_global_variable = mqol_cp_dirty_b } remove_global_variable = mqol_cp_dirty_b }
+	if = { limit = { has_global_variable = mqol_cp_again } remove_global_variable = mqol_cp_again }
+	if = { limit = { has_global_variable = mqol_cp_gen } remove_global_variable = mqol_cp_gen }
+}

@@ -1,0 +1,39 @@
+﻿# Better Quality of Life 2.0.0 (Demand Conversion): Schleife nur am Spieler, Muster events/mbq_vassal_events.txt.
+namespace = mbq_dconv
+
+mbq_dconv.0001 = {
+	hidden = yes
+	immediate = {
+		if = {
+			limit = {
+				exists = scope:mbq_dc_gen
+				has_variable = mbq_dc_gen
+				scope:mbq_dc_gen = var:mbq_dc_gen
+			}
+			remove_variable = mbq_dc_armed
+			if = {
+				limit = {
+					has_global_variable = mbq_dc_auto
+					is_alive = yes
+					is_ai = no
+				}
+				mbq_dc_run_effect = yes
+				mbq_dc_arm_effect = yes
+			}
+		}
+		else_if = { # Termin ohne gespeicherte Generation (Laden): neu scharf schalten, kein Lauf (wie mbq_vassal.0001)
+			limit = {
+				NOT = { exists = scope:mbq_dc_gen }
+				has_global_variable = mbq_dc_auto
+				is_alive = yes
+				is_ai = no
+			}
+			mbq_dc_arm_effect = yes
+		}
+	}
+}
+
+mbq_dconv.0002 = {
+	hidden = yes
+	immediate = { mbq_dc_summary_effect = yes }
+}

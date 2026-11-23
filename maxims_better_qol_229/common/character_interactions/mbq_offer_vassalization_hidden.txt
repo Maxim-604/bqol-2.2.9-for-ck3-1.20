@@ -1,0 +1,519 @@
+﻿# Better Quality of Life 2.0.0 (Vassals): versteckte Kopie von offer_vassalization_interaction, Vanilla 1.20.1 common/character_interactions/00_character_interactions.txt:3-565
+# (md5 1e13a7392d57bd00ec5ea2550daf5378). Eigener Schluessel, Vanilla bleibt unberuehrt. Aenderungen: hidden = yes, beide trigger_event-Zeilen (V:511, V:528) entfernt, alle 8 send_option-Bloecke (V:401-504) entfernt,
+# send_option-Abfragen mit ?= (8 Stellen), ai_frequency_by_tier alle 0,
+# Vertragsstufe ueber var:mbq_vs_stufe am Spieler (ai_accept V:346-357, on_accept). WARTUNG: nach jedem Patch per Generator neu erzeugen (md5-Pruefung).
+mbq_offer_vassalization_interaction = {
+	hidden = yes # Info:110-111; Briefe kommen trotzdem nur ohne trigger_event (Experte 5a Frage 2)
+	category = interaction_category_vassal
+	icon = icon_vassal
+
+	desc = offer_vassalization_interaction_desc
+
+	ai_targets = {
+		ai_recipients = neighboring_rulers
+	}
+	ai_target_quick_trigger = {
+		adult = yes
+	}
+	ai_frequency_by_tier = { # mbq: alle 0, nur der Spieler ueber run_interaction
+		barony = 0
+		county = 0
+		duchy = 0
+		kingdom = 0
+		empire = 0
+		hegemony = 0
+	}
+
+	is_available = {
+		is_landed = yes
+		trigger_if = {
+			limit = { is_ai = yes }
+			highest_held_title_tier > tier_county
+			this = top_liege
+			vassal_limit_available > 1
+			is_adult = yes
+		}
+	}
+
+	is_shown = {
+		scope:recipient = {
+			this != scope:actor
+			is_playable_character = yes
+			OR = {
+				AND = {
+					top_liege ?= this
+					is_tributary = no
+				}
+				is_tributary_of_suzerain_or_above = scope:actor
+			}
+			trigger_if = {
+				limit = {
+					scope:actor = {
+						NOT = { government_has_flag = government_is_mandala }
+					}
+				}
+				highest_held_title_tier < scope:actor.highest_held_title_tier
+			}
+			NOR = {
+				government_has_flag = cannot_be_vassal_or_liege
+				government_has_flag = government_is_herder
+			}
+		}
+		# Temujin cannot make Jamukha his subject once he leaves him
+		NOT = {
+			scope:actor = {
+				has_variable = had_mpo_temujin_flavor_0010
+				var:had_mpo_temujin_flavor_0010 ?= scope:recipient
+			}
+		}
+	}
+
+	is_valid_showing_failures_only = {
+		scope:actor = {
+			trigger_if = {
+				limit = { is_confederation_member = yes }
+				exists = house.house_confederation
+			}
+			trigger_if = {
+				limit = {
+					has_title = title:h_china
+				}
+				situation:dynastic_cycle ?= {
+					NOT = {
+						situation_current_phase = situation_dynastic_cycle_phase_instability
+					}
+					trigger_if = {
+						limit = {
+							situation_current_phase = situation_dynastic_cycle_phase_stability_advancement
+						}
+						scope:recipient = {
+							custom_tooltip = {
+								text = recipient_is_not_celestial_desc
+								government_has_flag = government_is_celestial
+							}
+						}
+					}
+				}
+			}
+		}
+		scope:recipient = {
+			is_at_war = no
+			is_confederation_member = no
+
+			custom_description = {
+				text = was_recently_granted_independence
+				NOT = {
+					has_opinion_modifier = {
+						modifier = granted_independence_opinion
+						target = scope:actor
+					}
+				}
+			}
+			trigger_if = {
+				limit = { is_tributary = yes }
+				custom_tooltip = {
+					text = was_recently_granted_independence
+					scope:recipient.suzerain = scope:actor
+				}	
+			}
+			trigger_if = {
+				limit = {
+					scope:actor = { government_has_flag = government_is_mandala }
+				}
+				highest_held_title_tier < scope:actor.highest_held_title_tier
+			}
+		}
+	}
+
+	greeting = positive
+	notification_text = OFFER_VASSALIZATION_INTERACTION_NOTIFICATION
+
+	cost = {
+		influence = {
+			value = 0
+			if = {
+				limit = { scope:influence_send_option ?= yes }
+				add = scope:actor.medium_influence_value
+				desc = INFLUENCE_INTERACTION_ACCEPTANCE_SEND_OPTION
+			}
+		}
+		piety = {
+			value = 0
+			scope:actor = {
+				if = {
+					limit = { government_has_flag = government_is_mandala }
+					add = medium_piety_value
+				}
+			}
+		}
+	}
+
+	ai_min_reply_days = 5
+	ai_max_reply_days = 10
+
+	ai_accept = {
+		base = -50
+
+		# Military power difference modifier.
+		offer_vassalization_interaction_ai_acceptance_general = yes
+
+		#ALL these modifiers are also used in impress_intent_vassalization_acceptance_value, keep them synced
+
+
+		# OBEDIENCE
+		modifier = {
+			desc = obedient_interaction_reason
+			trigger = {
+				is_obedient_to = scope:actor
+			}
+			add = 20
+		}
+
+		modifier = {
+			desc = tenet_love_thy_neighbour_boon_reason
+			trigger = {
+				scope:actor = { has_personal_tenet_flag = tenet_love_thy_neighbour_vassalage_acceptance }
+			}
+			add = 15
+		}
+
+		modifier = { #Has no Available Vassal Limit
+			desc = offer_vassalization_interaction_aibehavior_vassal_limit_tt
+			trigger = {
+				scope:actor = {
+					vassal_limit_available < 1
+				}
+			}
+			add = {
+				value = -1000
+			}
+		}
+
+		# GOVERNMENT
+			modifier = { # I am Tribal and you are not
+				desc = interaction_tribal_vs_nontribal
+				trigger = {
+					scope:recipient = {
+						government_has_flag = government_is_tribal
+					}
+					scope:actor = {
+						NOT = { government_has_flag = government_is_tribal }
+					}
+				}
+				add = -20
+			}
+			modifier = { # You are Tribal and I am not
+				desc = interaction_nontribal_vs_tribal
+				trigger = {
+					scope:actor = {
+						government_has_flag = government_is_tribal
+					}
+					scope:recipient = {
+						NOT = { government_has_flag = government_is_tribal }
+					}
+				}
+				add = -20
+			}
+			modifier = { # I am Nomadic and you are Nomadic
+				desc = interaction_is_nomadic
+				trigger = {
+					scope:recipient = {
+						government_has_flag = government_is_nomadic
+					}
+					scope:actor = {
+						government_has_flag = government_is_nomadic
+					}
+				}
+				add = -50
+			}
+			modifier = { # I am Nomadic and you are not
+				desc = interaction_nomadic_vs_nonnomadic
+				trigger = {
+					scope:recipient = {
+						government_has_flag = government_is_nomadic
+					}
+					scope:actor = {
+						NOT = { government_has_flag = government_is_nomadic }
+					}
+				}
+				add = -75
+			}
+			modifier = { # You are Nomadic and I am not
+				desc = interaction_nonnomadic_vs_nomadic
+				trigger = {
+					scope:actor = {
+						government_has_flag = government_is_nomadic
+					}
+					scope:recipient = {
+						NOT = { government_has_flag = government_is_nomadic }
+					}
+				}
+				add = -75
+			}
+
+		modifier = { #Military Strength
+			desc = offer_vassalization_interaction_aibehavior_power_tt
+	  	  	add = {
+				value = 1
+				subtract = {
+					value = scope:recipient.max_military_strength # Intended for recipient to use max, to avoid having vassalizations become too easy for weakened realms
+					divide = { value = scope:actor.current_military_strength min = 1 }
+				}
+				multiply = 20
+				ceiling = yes
+	  		}
+		}
+
+		# TRAITS/PERSONALITY
+			modifier = { # Ambitious
+				desc = TAKE_THE_VOWS_AMBITIOUS
+				trigger = {
+					scope:recipient = {
+						has_trait = ambitious
+					}
+				}
+				add = -20
+			}
+			modifier = { # Paranoid
+				desc = INTERACTION_PARANOID
+				trigger = {
+					scope:recipient = {
+						has_trait = paranoid
+					}
+				}
+				add = -20
+			}
+			modifier = { # Arrogant
+				desc = INTERACTION_ARROGANT
+				trigger = {
+					scope:recipient = {
+						has_trait = arrogant
+					}
+				}
+				add = -20
+			}
+
+			modifier = { # Fickle
+				desc = INTERACTION_FICKLE
+				trigger = {
+					scope:recipient = {
+						has_trait = fickle
+					}
+				}
+				add = -10
+			}
+
+			modifier = { # Stubborn
+				desc = INTERACTION_STUBBORN
+				trigger = {
+					scope:recipient = {
+						has_trait = stubborn
+					}
+				}
+				add = -10
+			}
+
+			modifier = { # Trusting
+				desc = TAKE_THE_VOWS_TRUSTING
+				trigger = {
+					scope:recipient = {
+						has_trait = trusting
+					}
+				}
+				add = 5
+			}
+
+			modifier = { # Content
+				desc = INTERACTION_CONTENT
+				trigger = {
+					scope:recipient = {
+						has_trait = content
+					}
+				}
+				add = 5
+			}
+
+		# CONTRACT OPTIONS
+			modifier = {
+				add = 60
+				scope:recipient = {	government_has_flag = government_is_feudal }
+				scope:religious_exemption ?= yes
+				desc = CONTRACT_RELIGIOUS_EXEMPTION_REASON
+			}
+			modifier = {
+				add = 30
+				scope:recipient = {	government_has_flag = government_is_clan }
+				scope:religious_exemption_clan ?= yes
+				desc = CONTRACT_RELIGIOUS_EXEMPTION_REASON
+			}
+			modifier = {
+				add = 30
+				scope:recipient = {	government_has_flag = government_is_feudal }
+				scope:actor = { has_variable = mbq_vs_stufe var:mbq_vs_stufe = 1 } # mbq: statt scope:low_obligations (V:349)
+				desc = CONTRACT_LOW_TAXES_REASON
+			}
+			modifier = {
+				add = -40
+				scope:recipient = {	government_has_flag = government_is_feudal }
+				scope:actor = { has_variable = mbq_vs_stufe var:mbq_vs_stufe = 3 } # mbq: statt scope:high_obligations (V:355)
+				desc = CONTRACT_HIGH_TAXES_REASON
+			}
+
+		#ALL these modifiers are also used in impress_intent_vassalization_acceptance_value, keep them synced
+
+		#Mandala
+			#Mandala Tributaries should not want to be vassals
+			modifier = {
+				scope:recipient = { is_tributary_of = scope:actor }
+				scope:actor = { government_has_flag = government_is_mandala }
+				add = -35
+				desc = is_tributary_of_me_mandala
+			}
+
+			modifier = {
+				scope:recipient = { government_has_flag = government_is_mandala }
+				scope:actor = { government_has_flag = government_is_mandala }
+				add = -25
+				desc = is_mandala_government
+			}
+
+			#Your Radiance
+			modifier = {
+				scope:actor = { has_mandala_capital_trigger = yes }
+				add = scope:actor.mandala_radiance_value
+				desc = actor_positive_mandala_radiance
+			}
+
+			#Tributary Realm Size
+			subject_realm_size_lose_weight_modifier = {
+				DEVARAJA = scope:actor
+				SUBJECT = scope:recipient
+			}
+			
+			#Do they like you?
+			opinion_modifier = { 
+				trigger = {
+					scope:actor = { government_has_flag = government_is_mandala }
+				}
+				who = scope:recipient
+				opinion_target = scope:actor
+				multiplier = 1
+			}
+	}
+
+	# Low starting obligations
+	# mbq: send_option-Block entfernt (Release-Review M1, Chef 14-10)
+
+	# Medium starting obligations
+	# mbq: send_option-Block entfernt (Release-Review M1, Chef 14-10)
+
+	# High starting obligations
+	# mbq: send_option-Block entfernt (Release-Review M1, Chef 14-10)
+
+	# Low starting obligations + religious exemption
+	# mbq: send_option-Block entfernt (Release-Review M1, Chef 14-10)
+
+	# Religious exemption, for clans
+	# mbq: send_option-Block entfernt (Release-Review M1, Chef 14-10)
+
+	# Nothing, for clans
+	# mbq: send_option-Block entfernt (Release-Review M1, Chef 14-10)
+
+	# mbq: send_option-Block entfernt (Release-Review M1, Chef 14-10)
+	# mbq: send_option-Block entfernt (Release-Review M1, Chef 14-10)
+
+	send_options_exclusive = yes
+
+	on_accept = {
+		# mbq: Vertragsstufe aus mbq_vs_stufe am Spieler (Experte 5b, Vorbild 00_tributarize.txt:706)
+		if = {
+			limit = { scope:actor = { has_variable = mbq_vs_stufe var:mbq_vs_stufe = 3 } }
+			save_scope_value_as = { name = high_obligations value = yes }
+		}
+		else_if = {
+			limit = { scope:actor = { has_variable = mbq_vs_stufe var:mbq_vs_stufe = 1 } }
+			save_scope_value_as = { name = low_obligations value = yes }
+		}
+		offer_vassalization_interaction_effect = yes
+		# mbq: Stufe danach fest setzen (Probe S1 14-10: Normal ergab Steuern/Abgaben niedrig; run_interaction setzt bei
+		# send_options_exclusive offenbar selbst eine Option, die erste sichtbare ist low_obligations V:401-410).
+		# Gleiche Wirkung wie IE 00_interaction_effects.txt:2226-2272, Effekt vassal_contract_set_obligation_level effects.log:11000-11004,
+		# Stufen-Index feudal.txt: 0 befreit, 1 niedrig (:15), 2 normal default (:42-43), 3 hoch.
+		scope:recipient = {
+			if = {
+				limit = {
+					government_has_flag = government_is_feudal
+					top_liege != this
+				}
+				if = {
+					limit = { scope:actor = { has_variable = mbq_vs_stufe var:mbq_vs_stufe = 3 } }
+					vassal_contract_set_obligation_level = { type = feudal_government_taxes level = 3 }
+					vassal_contract_set_obligation_level = { type = feudal_government_levies level = 3 }
+				}
+				else_if = {
+					limit = { scope:actor = { has_variable = mbq_vs_stufe var:mbq_vs_stufe = 1 } }
+					vassal_contract_set_obligation_level = { type = feudal_government_taxes level = 1 }
+					vassal_contract_set_obligation_level = { type = feudal_government_levies level = 1 }
+				}
+				else = {
+					vassal_contract_set_obligation_level = { type = feudal_government_taxes level = 2 }
+					vassal_contract_set_obligation_level = { type = feudal_government_levies level = 2 }
+				}
+			}
+		}
+		scope:actor = {
+			# mbq: Antwortbrief entfernt (char_interaction.0001), Maxim 14-10, konzept.md Abschnitt 10
+
+			## Remove bonus, it's been used
+			if = {
+				limit = { has_character_modifier = event_bonus_to_vassal_accept }
+				remove_character_modifier = event_bonus_to_vassal_accept
+			}
+
+			if = { # FP3
+				limit = { any_character_struggle = { has_struggle_phase_parameter = offer_vassalization_removes_disloyalty } }
+				scope:recipient = { remove_trait = disloyal }
+			}
+		}
+	}
+
+	on_decline = {
+		scope:actor = {
+			# mbq: Antwortbrief entfernt (char_interaction.0002), Maxim 14-10, konzept.md Abschnitt 10
+		}
+	}
+
+	ai_will_do = {
+		base = 100
+
+		# AI prefers to receive higher obligations from their vassals when possible.
+		modifier = {
+			factor = 3
+			scope:normal_obligations ?= yes
+		}
+
+		modifier = {
+			factor = 4
+			scope:high_obligations ?= yes
+		}
+
+		# Cynical rulers are happy to offer religious protection to potential vassals, but only when it makes them accept a vassalization offer they would otherwise refuse.
+		# Zealous rulers become increasingly reluctant to offer religious protection, as they want to enforce religious homogeneity in their realm.
+		modifier = {
+			add = {
+				value = ai_zeal
+				multiply = -2
+				max = 1
+			}
+			scope:religious_exemption ?= yes
+		}
+
+
+		modifier = { # If the recipient is a player, do not bother sending
+			factor = 0
+			scope:recipient = {
+				is_ai = no
+			}
+		}
+	}
+}

@@ -1,0 +1,7 @@
+﻿l_spanish:
+ MBQ_VS_G_VASSALS: "Vasallos"
+ MBQ_VS_G_TRIBUTE: "Tributarios"
+ MBQ_VS_G_BOTH: "Para vasallos y tributarios"
+ MBQ_VS_G_NOW: "Ejecutar ahora"
+ MBQ_VS_MIN_LABEL: "Pacto: nunca por debajo"
+ MBQ_VS_NOW_NOTE: "También sin automatización"

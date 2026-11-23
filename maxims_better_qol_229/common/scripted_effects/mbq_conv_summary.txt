@@ -1,0 +1,52 @@
+﻿# Better Quality of Life 0.3.14: collect automatic conversion replies for one feed message 3 days after the first (dev/bau_v0314_sammelmeldung.md 2b).
+# Scope: the player (root of religious_interaction.2003/2011/2012), scope:recipient = the vassal. Variables on the player:
+#   mbq_cv_conv / mbq_cv_ref = counters, mbq_cc1-6 (character) + mbq_ck1-6 (kind) converted, mbq_cr1-6 refused (fixed slots: no loc
+#   function prints a variable list, data_types_internalclausewitzgui.txt:14393-14428). set_variable with days: effects.log:2797-2803,
+#   trigger_event with days: effects.log:2908-2914.
+# KIND: 1 gold, 2 weak hook, 3 strong hook, 4 favor (converted); 5 accepted without a counter-demand (2.1.1, 2002/0181); 11 refused legal, 12 refused crime, 13 they hooked out (refused)
+mbq_conv_log_effect = {
+	# 2.1.1 (Maxim 21-10): in "Automatic" and in "Mute letters" (the muted letters would otherwise leave no trace); before only "Automatic"
+	if = {
+		limit = {
+			OR = {
+				has_global_variable = mbq_silent_conversion
+				has_global_variable = mbq_silent_conversion_info_only
+			}
+			exists = scope:recipient # 0.3.25: never an empty entry in the summary (code report H1)
+		}
+		if = {
+			limit = { $KIND$ < 10 }
+			if = { limit = { NOT = { has_variable = mbq_cv_conv } } set_variable = { name = mbq_cv_conv value = 0 } }
+			change_variable = { name = mbq_cv_conv add = 1 }
+			if = { limit = { var:mbq_cv_conv = 1 } set_variable = { name = mbq_cc1 value = scope:recipient } set_variable = { name = mbq_ck1 value = $KIND$ } }
+			else_if = { limit = { var:mbq_cv_conv = 2 } set_variable = { name = mbq_cc2 value = scope:recipient } set_variable = { name = mbq_ck2 value = $KIND$ } }
+			else_if = { limit = { var:mbq_cv_conv = 3 } set_variable = { name = mbq_cc3 value = scope:recipient } set_variable = { name = mbq_ck3 value = $KIND$ } }
+			else_if = { limit = { var:mbq_cv_conv = 4 } set_variable = { name = mbq_cc4 value = scope:recipient } set_variable = { name = mbq_ck4 value = $KIND$ } }
+			else_if = { limit = { var:mbq_cv_conv = 5 } set_variable = { name = mbq_cc5 value = scope:recipient } set_variable = { name = mbq_ck5 value = $KIND$ } }
+			else_if = { limit = { var:mbq_cv_conv = 6 } set_variable = { name = mbq_cc6 value = scope:recipient } set_variable = { name = mbq_ck6 value = $KIND$ } }
+			else = { # 0.3.21: past slot 6 only count, for "+n more"
+				if = { limit = { NOT = { has_variable = mbq_cv_conv_more } } set_variable = { name = mbq_cv_conv_more value = 0 } }
+				change_variable = { name = mbq_cv_conv_more add = 1 }
+			}
+		}
+		else = {
+			if = { limit = { NOT = { has_variable = mbq_cv_ref } } set_variable = { name = mbq_cv_ref value = 0 } }
+			change_variable = { name = mbq_cv_ref add = 1 }
+			if = { limit = { var:mbq_cv_ref = 1 } set_variable = { name = mbq_cr1 value = scope:recipient } }
+			else_if = { limit = { var:mbq_cv_ref = 2 } set_variable = { name = mbq_cr2 value = scope:recipient } }
+			else_if = { limit = { var:mbq_cv_ref = 3 } set_variable = { name = mbq_cr3 value = scope:recipient } }
+			else_if = { limit = { var:mbq_cv_ref = 4 } set_variable = { name = mbq_cr4 value = scope:recipient } }
+			else_if = { limit = { var:mbq_cv_ref = 5 } set_variable = { name = mbq_cr5 value = scope:recipient } }
+			else_if = { limit = { var:mbq_cv_ref = 6 } set_variable = { name = mbq_cr6 value = scope:recipient } }
+			else = { # 0.3.21: past slot 6 only count, for "+n more"
+				if = { limit = { NOT = { has_variable = mbq_cv_ref_more } } set_variable = { name = mbq_cv_ref_more value = 0 } }
+				change_variable = { name = mbq_cv_ref_more add = 1 }
+			}
+		}
+		if = {
+			limit = { NOT = { has_variable = mbq_conv_msg_pending } }
+			set_variable = { name = mbq_conv_msg_pending value = yes days = 4 }   # safety net in case the event never fires
+			trigger_event = { id = mbq_conv.0001 days = 3 }
+		}
+	}
+}

@@ -1,0 +1,54 @@
+﻿# Better Quality of Life 0.3.18: can an option be used for this reply? (dev/bau_v0315_prioritaeten.md 4)
+# Scope: the player (root of religious_interaction.2003/2011/2012), scope:recipient = the vassal.
+# Gold: only if we can pay, the limit the AI uses (religious_interaction_events.txt:1665-1671; triggers.log:4795, :7675, :3347).
+mbq_opt_gold_ok_trigger = {
+	trigger_if = {
+		limit = { has_treasury = yes }
+		treasury >= mbq_conv_gold_need_value # 2.1.10: Summe plus Reserve 250 (mbq_gold_values.txt)
+	}
+	trigger_else = {
+		gold >= mbq_conv_gold_need_value # 2.1.10
+	}
+}
+# Hooks: like vanilla option d of 2003 no landless adventurer (religious_interaction_events.txt:1523); strong = triggers.log:4732, any = :4816
+# 0.3.21: a weak hook may also be used when we hold a strong one on the same person (Maxim's test: use_hook then spent the weak hook)
+mbq_opt_weak_ok_trigger = {
+	NOT = { has_government = landless_adventurer_government }
+	has_usable_hook = scope:recipient
+	mbq_has_weak_hook_trigger = yes
+}
+mbq_opt_strong_ok_trigger = {
+	NOT = { has_government = landless_adventurer_government }
+	has_strong_usable_hook = scope:recipient
+}
+# 0.3.25: do we hold a WEAK hook on scope:recipient? Every top-level hook type WITHOUT strong = yes in game/common/hook_types/
+# 00_hook_types.txt, read with a brace-counting parse (0.3.21 missed follower_oath_hook :214 and influence_hook :217 because the
+# one-line blocks at :214-215 broke a regex). Test hooks left out. has_hook_of_type as religious_interaction_events.txt:1736-1741.
+mbq_has_weak_hook_trigger = {
+	OR = {
+		has_hook_of_type = { target = scope:recipient type = weak_blackmail_hook } # 00_hook_types.txt:2
+		has_hook_of_type = { target = scope:recipient type = favor_hook } # 00_hook_types.txt:16
+		has_hook_of_type = { target = scope:recipient type = obligation_hook } # 00_hook_types.txt:31
+		has_hook_of_type = { target = scope:recipient type = indebted_hook } # 00_hook_types.txt:39
+		has_hook_of_type = { target = scope:recipient type = supporter_hook } # 00_hook_types.txt:48
+		has_hook_of_type = { target = scope:recipient type = threat_hook } # 00_hook_types.txt:60
+		has_hook_of_type = { target = scope:recipient type = manipulation_hook } # 00_hook_types.txt:77
+		has_hook_of_type = { target = scope:recipient type = house_head_hook } # 00_hook_types.txt:81
+		has_hook_of_type = { target = scope:recipient type = trial_by_combat_hook } # 00_hook_types.txt:90
+		has_hook_of_type = { target = scope:recipient type = sumptuary_crime_hook } # 00_hook_types.txt:94
+		has_hook_of_type = { target = scope:recipient type = minor_crime_accomplice_hook } # 00_hook_types.txt:98
+		has_hook_of_type = { target = scope:recipient type = suspicious_activity_hook } # 00_hook_types.txt:181
+		has_hook_of_type = { target = scope:recipient type = weak_prostitute_blackmail_hook } # 00_hook_types.txt:190
+		has_hook_of_type = { target = scope:recipient type = hostage_loyalty } # 00_hook_types.txt:210
+		has_hook_of_type = { target = scope:recipient type = follower_oath_hook } # 00_hook_types.txt:214
+		has_hook_of_type = { target = scope:recipient type = influence_hook } # 00_hook_types.txt:217
+		has_hook_of_type = { target = scope:recipient type = contact_list_weak_hook } # 00_hook_types.txt:227
+		has_hook_of_type = { target = scope:recipient type = weak_blackmail_hook_no_secret } # 00_hook_types.txt:231
+		has_hook_of_type = { target = scope:recipient type = filial_piety_hook } # 00_hook_types.txt:235
+		has_hook_of_type = { target = scope:recipient type = oath_claimant } # 00_hook_types.txt:241
+		has_hook_of_type = { target = scope:recipient type = oath_claimant_heir } # 00_hook_types.txt:245
+		has_hook_of_type = { target = scope:recipient type = spiritual_counsel_hook } # 00_hook_types.txt:254
+		has_hook_of_type = { target = scope:recipient type = legitimized_by_clergy_hook } # 00_hook_types.txt:259
+		has_hook_of_type = { target = scope:recipient type = granted_clerical_title_hook } # 00_hook_types.txt:264
+	}
+}

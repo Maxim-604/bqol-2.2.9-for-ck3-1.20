@@ -1,0 +1,113 @@
+﻿# Better Quality of Life 1.0.7 (the gear fades in only on its own place since 1.0.7; hover with hit areas since 1.0.6, on hover since 1.0.5): settings button at the bottom left, place 1 right above Spiritual Fulfillment (Maxim 10-10-2026; 1.0.1 covered it; before: round
+# button left of the outliner, top right). No vanilla file is replaced. Position not in pixels: an invisible twin of the vanilla column puts
+# our slot exactly where vanilla would put the next entry, at every column height (3, 4 or 2 entries).
+widget = {
+	name = "mbq_settings_button"
+	size = { 100% 100% }
+	layer = bottom # 16-10 Hof-Ansicht: wie Vanilla-Unterleiste hud.gui:1661-1665, Hof-Fenster window_royal_court.gui:3-5 deckt ab
+
+	flowcontainer = { # twin of type left_edge_tabs (hud.gui:3679-3688) placed as hud.gui:1829-1832
+		parentanchor = bottom|left
+		position = { -3 -110 }
+		visible = "[And(And( Not( IsPauseMenuShown ), And(And(IsDefaultGUIMode, GetPlayer.IsValid), Not(GetVariableSystem.Exists( 'hide_bottom_left_HUD')))), Not( GreaterThan_CFixedPoint( GetPlayer.MakeScope.Var('hide_ui_bottom_left_bar').GetValue, '(CFixedPoint)0' ) ))]" # hud.gui:3681, Character.IsValid -> GetPlayer.IsValid
+		visible_at_creation = no
+		ignoreinvisible = yes
+		allow_outside = yes
+		using = Animation_ShowHide_Standard # hud.gui:3688
+
+		widget = { # size of the vanilla background widget (hud.gui:3690-3692), no textures
+			parentanchor = left|top
+			size = { 100% 205% }
+			alwaystransparent = yes
+		}
+
+		flowcontainer = { # hud.gui:3728-3733, entries from top to bottom
+			parentanchor = bottom
+			ignoreinvisible = yes
+			allow_outside = yes
+			direction = vertical
+
+			widget = { # hover catcher of place 1 (gear) only, 1.0.7: own variable 'mbq_btn_hover', the gear shows only on its own place (Maxim)
+				size = { 52 52 }
+				allow_outside = yes
+				state = {
+					name = _mouse_hierarchy_enter
+					on_start = "[GetVariableSystem.Set( 'mbq_btn_hover', 'true' )]" # hud.gui:3741-3744
+				}
+				state = {
+					name = _mouse_hierarchy_leave
+					on_finish = "[GetVariableSystem.Clear( 'mbq_btn_hover' )]" # hud.gui:3746-3749
+				}
+				button = { # 1.0.1/1.0.6: invisible hit area (no texture, no click), so the catcher gets the hover while our button is hidden; declared first, the button above takes the clicks
+					size = { 52 52 }
+				}
+				widget = { # wrapper with the fades, the button inside
+					size = { 52 52 }
+					allow_outside = yes
+					visible = "[GetVariableSystem.Exists( 'mbq_btn_hover' )]" # 1.0.7: own place only
+					visible_at_creation = no
+					state = {
+						name = _show
+						using = Animation_FadeIn_Quick
+					}
+					state = {
+						name = _hide
+						using = Animation_FadeOut_Quick
+					}
+					button_hud_character_bar = { # vanilla round button of this column (hud.gui:5939-5969: 52 x 52, button_hud_character_sidebar.dds, slides 3 px on hover)
+						name = "mbq_settings_button"
+						onclick = "[GetVariableSystem.Toggle( 'mbq_settings_open' )]"
+						onclick = "[GetVariableSystem.Clear( 'mbq_dd_open' )]"
+						using = tooltip_es # as the culture button hud.gui:3889-3890
+						tooltip_offset = { 20 0 }
+						tooltip = "MBQ_WIN_HUD_TT"
+
+						highlight_icon = { # as the culture icon hud.gui:3909-3919
+							parentanchor = center
+							position = { 0 1 }
+							size = { 40 40 }
+							texture = "gfx/interface/skinned/hud_maintab/maintab_decisions.dds" # 1.0.7 (Maxim): vanilla decisions symbol 90 x 90, quill and ink pot (hud.gui:602, main tab Decisions); before the vanilla gear
+
+							glow = {
+								color = { 0 0 0 0.8 }
+								glow_radius = 3
+								using = Glow_Standard
+							}
+						}
+					}
+				}
+			}
+			widget = { size = { 52 52 } alwaystransparent = yes } # place of Spiritual Fulfillment (vanilla, on hover); 1.3.14/1.0.7: plain place holder, no catcher # 0.3.1/1.0.2 (Maxim 10-10-2026): place of Spiritual Fulfillment. The 48 x 48 button
+			# sits right on top of the faith button (hud.gui:3791-3799: widgetanchor = bottom|left, position = { 5 0 }), one place of this column is 52 (hud.gui:5943)
+			# the vanilla entries as invisible place holders with the vanilla visibility, so our slot sits right above them
+			widget = { size = { 52 52 } parentanchor = left alwaystransparent = yes } # faith button container hud.gui:3735-3739
+			widget = { size = { 52 52 } alwaystransparent = yes } # culture button hud.gui:3883-3887 (52 x 52 hud.gui:5943)
+			widget = { # confederation button hud.gui:3923-3927
+				size = { 52 52 }
+				parentanchor = left
+				alwaystransparent = yes
+				datacontext = "[GetPlayer.GetConfederation]"
+				visible = "[And(Confederation.IsValid, Not(Confederation.GetType.IsHouseBasedConfederation))]"
+			}
+			widget = { # house button hud.gui:3976-3980
+				size = { 52 52 }
+				parentanchor = left
+				alwaystransparent = yes
+				datacontext = "[GetPlayer.GetHouse]"
+				visible = "[DynastyHouse.IsValid]"
+			}
+			container = { # no house: theocratic or lowborn button hud.gui:4006-4016
+				datacontext = "[GetPlayer.GetHouse]"
+				visible = "[Not( DynastyHouse.IsValid )]"
+				parentanchor = left
+				ignoreinvisible = yes
+				widget = {
+					size = { 52 52 }
+					alwaystransparent = yes
+					datacontext = "[GetDecisionWithKey( 'pam_establish_theocratic_dynasty_decision' )]"
+					visible = "[Decision.IsShownForPlayer]"
+				}
+			}
+		}
+	}
+}

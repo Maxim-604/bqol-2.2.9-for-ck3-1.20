@@ -1,0 +1,5 @@
+﻿# Better Quality of Life 2.0.0 (Counties): eigener Filter, Gruppe title wie V common/message_filter_types/00_message_filter_types.txt:269-272.
+mbq_county_summary = {
+	display = feed
+	group = title
+}

@@ -1,0 +1,11 @@
+﻿l_french:
+ MBQ_WIN_PRIO_1: "Priorité 1"
+ MBQ_WIN_PRIO_2: "Priorité 2"
+ MBQ_WIN_PRIO_3: "Priorité 3"
+ MBQ_WIN_PRIO_4: "Priorité 4"
+ MBQ_PRIO_OPT_0: "@cross_icon! Rien"
+ MBQ_PRIO_OPT_1: "@gold_icon! Payer l’or demandé"
+ MBQ_PRIO_OPT_2: "@weak_hook_icon! Utiliser un hameçon faible"
+ MBQ_PRIO_OPT_3: "@unspent_strong_hook_icon! Utiliser un hameçon fort"
+ MBQ_PRIO_OPT_4: "@hook_on_me_icon! Accorder la faveur demandée"
+ MBQ_TT_PRIO: "#T Priorités : essayées dans l’ordre#!\n$EFFECT_LIST_BULLET$ La première option qui fonctionne est utilisée, sinon la suivante\n$EFFECT_LIST_BULLET$ Si rien ne fonctionne, la demande est refusée"

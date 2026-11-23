@@ -1,0 +1,45 @@
+﻿# BQoL 2.0 (Spieltest 2, Maxim): Knoepfe All/Reset im Block Ausnahmen. Variable mbq_rs_keep_<x> gesetzt = Haken weg (wie mbq_rs_toggle_*).
+mbq_rs_exc_all = {
+	scope = character
+	effect = {
+		remove_global_variable = mbq_rs_keep_war
+		remove_global_variable = mbq_rs_keep_claim
+		remove_global_variable = mbq_rs_keep_rival
+		remove_global_variable = mbq_rs_keep_dyn
+		remove_global_variable = mbq_rs_keep_faction
+		remove_global_variable = mbq_rs_keep_hook
+		remove_global_variable = mbq_rs_keep_vassal
+		remove_global_variable = mbq_rs_keep_subvassal
+		mbq_rs_preview_effect = yes
+	}
+}
+mbq_rs_exc_reset = { # 2.1.2 (Maxim 21-10): Knopf heisst Keine = alle Ausnahmen aus (Variable gesetzt = Haken weg)
+	scope = character
+	effect = {
+		set_global_variable = { name = mbq_rs_keep_war value = yes }
+		set_global_variable = { name = mbq_rs_keep_claim value = yes }
+		set_global_variable = { name = mbq_rs_keep_rival value = yes }
+		set_global_variable = { name = mbq_rs_keep_dyn value = yes }
+		set_global_variable = { name = mbq_rs_keep_faction value = yes }
+		set_global_variable = { name = mbq_rs_keep_hook value = yes }
+		set_global_variable = { name = mbq_rs_keep_vassal value = yes }
+		set_global_variable = { name = mbq_rs_keep_subvassal value = yes }
+		mbq_rs_preview_effect = yes
+	}
+}
+mbq_rs_who_all = { # 2.1.2: Alle / Keine auch bei Kerker und Hausarrest
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_rs_no_dungeon } remove_global_variable = mbq_rs_no_dungeon }
+		if = { limit = { has_global_variable = mbq_rs_no_house } remove_global_variable = mbq_rs_no_house }
+		mbq_rs_preview_effect = yes
+	}
+}
+mbq_rs_who_reset = { # Keine (ungueltig = rot, Automatik pausiert)
+	scope = character
+	effect = {
+		set_global_variable = { name = mbq_rs_no_dungeon value = yes }
+		set_global_variable = { name = mbq_rs_no_house value = yes }
+		mbq_rs_preview_effect = yes
+	}
+}

@@ -1,0 +1,293 @@
+﻿# Better Quality of Life 2.0.0 (Vassals): Zielpruefung Massen-Vasallisierung und Massen-Tribut. Scope = Kandidat, root = Spieler.
+# Einstellungen als globale Variablen (Muster mbq_ransom_triggers.txt). Ohne Variable gilt der Standard: alles an.
+# mbq_vs_no_nb / mbq_vs_no_trib = Zielgruppe weg; mbq_vs_no_t2..t5 = Rang weg; mbq_vs_keep_<x> = Ausnahme-Haken weg.
+# Reihenfolge billigstes zuerst, die Vanilla-Annahme zuletzt (konzept.md Abschnitt 7).
+
+mbq_vs_who_valid_trigger = {
+	OR = {
+		NOT = { has_global_variable = mbq_vs_no_nb }
+		NOT = { has_global_variable = mbq_vs_no_trib }
+	}
+}
+
+mbq_vs_rank_valid_trigger = {
+	OR = {
+		NOT = { has_global_variable = mbq_vs_no_t2 }
+		NOT = { has_global_variable = mbq_vs_no_t3 }
+		NOT = { has_global_variable = mbq_vs_no_t4 }
+	}
+}
+
+# Spieler (Scope = Spieler): unabhaengig (Sammler is_shown, konzept V10; is_independent_ruler triggers.log:5611), gelandet (triggers.log:5637),
+# nicht Mandala (Chef 14-10 Nr. 9: pausiert; Flagge wie V 00_character_interactions.txt:138).
+mbq_vs_player_ok_trigger = {
+	is_independent_ruler = yes
+	is_landed = yes
+	NOT = { government_has_flag = government_is_mandala }
+}
+
+# Rang des Ziels: hoechster Landtitel (triggers.log:4850; Stufen V common/script_values/00_title_tiers_values.txt:1-7). Kaiser und Hegemon werden nie gefragt (Rang gestrichen, Maxim 21-10-2026).
+mbq_vs_rank_ok_trigger = {
+	OR = {
+		AND = {
+			highest_held_title_tier = tier_county
+			NOT = { has_global_variable = mbq_vs_no_t2 }
+		}
+		AND = {
+			highest_held_title_tier = tier_duchy
+			NOT = { has_global_variable = mbq_vs_no_t3 }
+		}
+		AND = {
+			highest_held_title_tier = tier_kingdom
+			NOT = { has_global_variable = mbq_vs_no_t4 }
+		}
+	}
+}
+
+# Ausnahmen (Chef 14-10 Nr. 3, Haken = nie gefragt, Standard an). Muster mbq_ransom_triggers.txt.
+mbq_vs_except_ok_trigger = {
+	save_temporary_scope_as = mbq_vs_x
+	# Rivalen und Erzfeinde (triggers.log:4294, :4246; wechselseitig, siehe mbq_ransom_triggers.txt)
+	trigger_if = {
+		limit = { NOT = { has_global_variable = mbq_vs_keep_rival } }
+		NOT = { has_relation_rival = root }
+		NOT = { has_relation_nemesis = root }
+	}
+	# Anderer Glaube (Form wie V common/decisions/10_nomad_culture_and_faith_decisions.txt:78)
+	trigger_if = {
+		limit = { has_global_variable = mbq_vs_ex_faith_on } # Maxim 15-10: Standard AUS, gesetzt = Ausnahme aktiv
+		faith = root.faith
+	}
+	# Fraktionsfuehrer gegen den Spieler (any_targeting_faction triggers.log:2312, wie mbq_ransom_triggers.txt Ausnahme 6)
+	trigger_if = {
+		limit = { NOT = { has_global_variable = mbq_vs_keep_faction } }
+		NOT = {
+			root = {
+				any_targeting_faction = {
+					faction_leader = scope:mbq_vs_x
+				}
+			}
+		}
+	}
+	# Anspruch auf einen Titel des Spielers ab Grafschaft (any_claim triggers.log:1471, Form wie mbq_ransom_triggers.txt Ausnahme 2)
+	trigger_if = {
+		limit = { NOT = { has_global_variable = mbq_vs_keep_claim } }
+		NOT = {
+			any_claim = {
+				pressed = all
+				tier >= tier_county
+				exists = holder
+				holder = root
+			}
+		}
+	}
+}
+
+# Gemeinsame billige Bedingungen (Sammler mqol_valid_vassalize_target_trigger, zz_mqol_mass_actions_triggers.txt:6-20, ohne die Annahme)
+mbq_vs_target_base_trigger = {
+	is_alive = yes
+	is_landed = yes
+	is_at_war = no # triggers.log:5046
+	NOT = { target_is_liege_or_above = root } # triggers.log:7549
+	mbq_vs_rank_ok_trigger = yes
+	mbq_vs_except_ok_trigger = yes
+}
+
+# Vasallisierung: Rang unter dem eigenen (V offer_vassalization_interaction is_shown, 00_character_interactions.txt:35-43), Regierung darf Vasall sein
+# (Sammler :12), freier Vasallenplatz beim Spieler (KI-Wertung -1000 sonst, V:176-185; Vergleich wie V:181), zuletzt die Vanilla-Annahme der Kopie.
+mbq_vs_candidate_trigger = {
+	root = { vassal_limit_available >= 1 }
+	# Logikcheck 20 S9: Mandala-Froemmigkeitspruefung entfernt; Mandala pausiert den ganzen Lauf und die Vorschau (mbq_vs_player_ok_trigger)
+	highest_held_title_tier < root.highest_held_title_tier
+	NOT = { government_has_flag = cannot_be_vassal_or_liege }
+	mbq_vs_target_base_trigger = yes
+	root = {
+		is_character_interaction_potentially_accepted = { # triggers.log:5167-5177
+			recipient = prev
+			interaction = mbq_offer_vassalization_interaction
+			required_response = yes
+		}
+	}
+}
+
+# Tribut: noch kein Tributzahler (is_tributary triggers.log:5970), zuletzt die Vanilla-Annahme der Kopie (Rest prueft deren is_shown/is_valid).
+mbq_tb_candidate_trigger = {
+	is_tributary = no
+	root = { can_get_tributaries_peacefully_trigger = yes NOT = { government_has_flag = government_is_mandala } } # V mpo_scripted_triggers.txt:918-928 + is_shown 00_tributary_interactions.txt:870-878 (Mandala: always = no); Chef 14-10
+	root = { prestige >= minor_prestige_value } # Vanilla-Kosten :953-961 muessen bezahlbar sein
+	mbq_vs_target_base_trigger = yes
+	root = {
+		is_character_interaction_potentially_accepted = {
+			recipient = prev
+			interaction = mbq_demand_tributary_interaction
+			required_response = yes
+		}
+	}
+}
+
+# ---- Eingehend (Spiegel-Einstellungen, Maxim 15-10): Angebote an den Spieler. Hier gibt es kein root = Spieler, darum scope:actor (Anbieter)
+# und scope:recipient (Spieler) wie in den Interaktionen (offer_fealty V 00_character_interactions.txt:580-586, become_tributary 00_tributary_interactions.txt:14-23).
+# Ausnahmen wie mbq_vs_except_ok_trigger oben, nur root -> scope:recipient. Scope = Anbieter.
+mbq_vs_except_in_trigger = {
+	save_temporary_scope_as = mbq_vs_x
+	trigger_if = {
+		limit = { NOT = { has_global_variable = mbq_vs_keep_rival } }
+		NOT = { has_relation_rival = scope:recipient }
+		NOT = { has_relation_nemesis = scope:recipient }
+	}
+	trigger_if = {
+		limit = { has_global_variable = mbq_vs_ex_faith_on } # Maxim 15-10: Standard AUS, gesetzt = Ausnahme aktiv
+		faith = scope:recipient.faith
+	}
+	trigger_if = {
+		limit = { NOT = { has_global_variable = mbq_vs_keep_faction } }
+		NOT = {
+			scope:recipient = {
+				any_targeting_faction = {
+					faction_leader = scope:mbq_vs_x
+				}
+			}
+		}
+	}
+	trigger_if = {
+		limit = { NOT = { has_global_variable = mbq_vs_keep_claim } }
+		NOT = {
+			any_claim = {
+				pressed = all
+				tier >= tier_county
+				exists = holder
+				holder = scope:recipient
+			}
+		}
+	}
+}
+
+# Mindeststufe eingehend (gemeinsame Zeile "Contract: best for you first, never below"): Low = keine Variable = jedes Angebot.
+# Normal: Angebot hoch oder normal; High: nur hoch. Abfrage POSITIV mit ?= (wie mbq_offer_vassalization_hidden.txt): ob die send_option-Scopes
+# in auto_accept gesetzt sind, ist unbelegt (Sammler-README 98: ungetestet). Fehlen sie, nimmt die Automatik bei Normal/High nichts an und das Angebot
+# kommt wie in Vanilla hoch (sicher, nie ein schlechterer Vertrag als gewollt).
+# Lehnstreue: Stufen nur feudal (send_option is_shown V:920-952; Wirkung V 00_interaction_effects.txt:3092-3150: hoch 3/3, niedrig 1/1, normal 2/2,
+# religious_taxation 3/2 plus Religionsschutz). Religionsschutz (feudal) und Religionsausnahme (Clan, V:969-980) gelten als Zugestaendnis: nur bei Low.
+# Andere Regierungen ohne Zugestaendnis: normaler Vertrag, auf jeder Stufe angenommen (wie ausgehend: Stufen nur feudal).
+mbq_vs_in_level_ok_trigger = {
+	OR = {
+		NOR = {
+			has_global_variable = mbq_vs_min_high
+			has_global_variable = mbq_vs_min_normal
+		}
+		scope:actor = {
+			NOT = { government_has_flag = government_is_feudal }
+			NOT = { scope:religious_exemption_clan ?= yes }
+		}
+		AND = {
+			scope:actor = { government_has_flag = government_is_feudal }
+			scope:high_obligations ?= yes
+		}
+		AND = {
+			has_global_variable = mbq_vs_min_normal
+			scope:actor = { government_has_flag = government_is_feudal }
+			scope:normal_obligations ?= yes
+		}
+	}
+}
+
+# Tribut eingehend: Stufen fuer alle Regierungen (send_option ohne is_shown, V 00_tributary_interactions.txt:86-105).
+mbq_tb_in_level_ok_trigger = {
+	OR = {
+		NOR = {
+			has_global_variable = mbq_vs_min_high
+			has_global_variable = mbq_vs_min_normal
+		}
+		scope:high_obligations ?= yes
+		AND = {
+			has_global_variable = mbq_vs_min_normal
+			scope:normal_obligations ?= yes
+		}
+	}
+}
+
+# Lehnstreue automatisch annehmen (QOL-70/98, Haken "Accept fealty offers" = mbq_vs_acc). Freier Vasallenplatz wie ausgehend (mbq_vs_candidate_trigger),
+# sonst kaeme der Spieler ueber sein Vasallenlimit: dann kommt das Angebot normal hoch.
+mbq_vs_fealty_auto_trigger = {
+	mbq_vs_acc_on_trigger = yes # 2.1.2 Hauptschalter
+	scope:recipient = {
+		is_ai = no
+		vassal_limit_available >= 1
+	}
+	scope:actor = {
+		mbq_vs_rank_ok_trigger = yes
+		mbq_vs_except_in_trigger = yes
+	}
+	mbq_vs_in_level_ok_trigger = yes
+}
+
+# Tributangebote automatisch annehmen (basis 0.3.21: Nomaden = government_has_herd, Alle anderen = ohne Herde; Variablen unveraendert),
+# neu mit gemeinsamer Mindeststufe, Ausnahmen und Rang (Maxim 15-10).
+mbq_vs_silent_in_trigger = { # Hotfix 15-10: Haken "Ohne Fenster" an, KI an Spieler (eingehende Lehnstreue)
+	scope:actor = { is_ai = yes }
+	scope:recipient = { is_ai = no }
+	has_global_variable = mbq_tb_silent
+	mbq_vs_master_on_trigger = yes # 2.1.30 (Maxim 24-10): nur bei eingeschalteter Automatik; bei Automatik aus ist alles Vanilla (Angebote im Fenster), auch mit angehaktem Haken
+}
+mbq_tb_in_silent_trigger = { # Hotfix Maxim 15-10: Automatik an, Haken "Ohne Fenster" an (Variable mbq_tb_show_windows gesetzt = Haken weg), KI an Spieler, kein Hegemon (V :728)
+	scope:actor = { is_ai = yes }
+	scope:recipient = { is_ai = no highest_held_title_tier < tier_hegemony }
+	has_global_variable = mbq_tb_silent # Maxim 15-10: Standard aus (Variable gesetzt = Haken an)
+	mbq_vs_master_on_trigger = yes # 2.1.30 (Maxim 24-10): NUR bei eingeschalteter Automatik (vorher: unabhaengig von der Automatik, Angebote wurden bei Automatik aus still abgelehnt)
+}
+mbq_tb_in_auto_trigger = {
+	scope:recipient = { is_ai = no }
+	OR = {
+		AND = {
+			mbq_tribute_nomad_on_trigger = yes # 2.1.2 Hauptschalter
+			scope:actor = { government_has_flag = government_has_herd }
+		}
+		AND = {
+			mbq_tribute_all_on_trigger = yes # 2.1.2 Hauptschalter
+			scope:actor = { NOT = { government_has_flag = government_has_herd } }
+		}
+	}
+	scope:actor = {
+		mbq_vs_rank_ok_trigger = yes
+		mbq_vs_except_in_trigger = yes
+	}
+	mbq_tb_in_level_ok_trigger = yes
+}
+# 2.1.2 (Maxim 21-10): Hauptschalter "Automatik an" der Vasallen (mbq_vs_master). Nichts laeuft ohne ihn: Vasallentum anbieten, Tribut verlangen,
+# Treueschwuere und Tributangebote annehmen. Altspielstand vor der Uebernahme (mbq_menu_v2 fehlt): gilt als an, wenn eine der alten Automatiken an war,
+# damit zwischen Laden und erstem Fensteroeffnen nichts ausfaellt (mbq_menu_migrate_effect setzt den Schalter dann wirklich).
+mbq_vs_master_on_trigger = {
+	OR = {
+		has_global_variable = mbq_vs_master
+		AND = {
+			NOT = { has_global_variable = mbq_menu_v2 }
+			OR = {
+				has_global_variable = mbq_vs_auto
+				has_global_variable = mbq_tb_auto
+				has_global_variable = mbq_vs_acc
+				has_global_variable = mbq_auto_tribute
+				has_global_variable = mbq_auto_tribute_all
+			}
+		}
+	}
+}
+mbq_vs_auto_on_trigger = {
+	mbq_vs_master_on_trigger = yes
+	has_global_variable = mbq_vs_auto
+}
+mbq_tb_auto_on_trigger = {
+	mbq_vs_master_on_trigger = yes
+	has_global_variable = mbq_tb_auto
+}
+mbq_vs_acc_on_trigger = {
+	mbq_vs_master_on_trigger = yes
+	has_global_variable = mbq_vs_acc
+}
+mbq_tribute_nomad_on_trigger = {
+	mbq_vs_master_on_trigger = yes
+	has_global_variable = mbq_auto_tribute
+}
+mbq_tribute_all_on_trigger = {
+	mbq_vs_master_on_trigger = yes
+	has_global_variable = mbq_auto_tribute_all
+}

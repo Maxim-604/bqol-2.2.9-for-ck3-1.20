@@ -1,0 +1,7 @@
+﻿l_polish:
+ MBQ_LOCK_DC: "#N Zablokowane: najpierw zaznacz '$MBQ_DC_AUTO$'.#!"
+ MBQ_LOCK_PRIO: "#N Zablokowane: najpierw zaznacz '$MBQ_GEN_CONV_ANSWER$'.#!"
+ MBQ_LOCK_AUTO: "#N Zablokowane: najpierw zaznacz '$MBQ_GR_AUTO$'.#!"
+ MBQ_LOCK_SILENT: "#N Zablokowane: najpierw zaznacz '$MBQ_VS_MASTER$'.#!"
+ MBQ_LOCK_TRIB: "#N Zablokowane: najpierw zaznacz '$MBQ_VS_AUTO_TB$' lub '$MBQ_VS_ACC_TB$'.#!"
+ MBQ_LOCK_TAKEN: "#N Zablokowane: już wybrano w innym miejscu.#!"

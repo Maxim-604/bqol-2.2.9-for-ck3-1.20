@@ -1,0 +1,7 @@
+﻿l_english:
+ MBQ_VS_G_VASSALS: "Vassals"
+ MBQ_VS_G_TRIBUTE: "Tributaries"
+ MBQ_VS_G_BOTH: "For vassals and tributaries"
+ MBQ_VS_G_NOW: "Run now"
+ MBQ_VS_MIN_LABEL: "Contract: never below"
+ MBQ_VS_NOW_NOTE: "Works without automation too"

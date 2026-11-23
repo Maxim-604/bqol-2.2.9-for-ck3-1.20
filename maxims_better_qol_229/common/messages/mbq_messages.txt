@@ -1,0 +1,13 @@
+﻿# Better Quality of Life 0.3.14: feed message for the conversion summary (dev/bau_v0314_sammelmeldung.md 2a).
+# No display line = feed, like msg_expired_alliance (01_alliance_messages.txt:21-25); icon and style as event_religious_neutral_text (01_religious_messages.txt:344-350).
+mbq_conv_summary_message = {
+	icon = "religious"
+	# 0.3.17: the type only passes the texts on, as every vanilla event message (01_religious_messages.txt:344-350, messages_l_english.yml:145-146).
+	# A type text is read without ROOT (vanilla type texts use CHARACTER, messages_l_english.yml:140-143): that was the
+	# "Data error in loc string mbq_conv_summary_desc" of 0.3.14-0.3.16 (dev/diag_0316). Title and desc come from send_interface_message.
+	title = event_message_title
+	desc = event_message_text
+	style = good # Maxim 15-10: alle Sammelmeldungen einheitlich
+	message_filter_type = mbq_conversion_summary # 0.3.15: own feed filter (common/message_filter_types/mbq_message_filter_types.txt)
+	display = feed # _messages.info:9-12
+}

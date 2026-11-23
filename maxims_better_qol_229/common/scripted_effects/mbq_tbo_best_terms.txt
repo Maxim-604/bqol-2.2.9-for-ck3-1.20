@@ -1,0 +1,209 @@
+﻿# Better Quality of Life 2.0.0 (Vassals): Tributvertrag nach angenommener Tributforderung. Kopie von mbq_best_terms.txt (0.3.x), nur Namen getauscht.
+# Aufruf aus mbq_tb_run_body_effect (build_vasallen.py _NACH_TB) mit scope:actor = Tributzahler, scope:recipient = Spieler.
+# Better Quality of Life 0.3.7 (Best terms): after OUR automatic tribute acceptance, give the new tributary the highest contract levels
+# vanilla allows, with the costs of the vanilla interaction suzerain_modify_tributary_contract_interaction (00_modifiy_vassal_contract.txt:1928-2141):
+# same checks (:1941-1951, :2059-2061), same costs and lock (:2084-2125), same message (:2072-2075). No hook is ever spent.
+# 0.3.9: the wishes come from the set of the active mode (mbq_tbo_want_*_trigger, scripted_triggers/mbq_best_terms_triggers.txt).
+# Plans: dev/bau_v036_best_terms.md, order 0.3.7 (Modding/Auftraege/Modder.md). Scope: the suzerain (player). Called as
+# scope:recipient = { mbq_tbo_best_terms_effect = yes } inside become_tributary_interaction on_accept; root is NOT set there
+# (error.log 10-10-2026: "Event target link 'root' returned an unset scope"), so this file only uses scope:recipient and scope:actor.
+# 0.3.12: ONE step per obligation (if/else_if), as one adjacent step by hand (my_realm_window_l_english.yml:215 "not adjacent"),
+# and only if tributary_contract_obligation_level_can_be_increased (triggers.log:7781) says yes.
+# Level indices = order of the levels in the contract files (vanilla sets them the same way, 00_interaction_effects.txt:3003-3006):
+#   default_tributary_taxes 0..2, default_tributary_prestige 0..2 (default_tributary.txt:1-139)
+#   nomad_government_herd 0 exempt..4 extortionate, nomad_government_prestige 0..2 (nomad.txt:1-122, :255-288)
+#   suzerain_war_participation_guarantee 0 none/1 available, tributary_war_participation_obligation 0 none/1 forced (special_contracts.txt:804-910)
+# Taxes: herd in tributary_nomadic (subject_contract_groups.txt:88-100), default_tributary_taxes in subjugated, settled, steppe (:72-86, :103-133).
+# Prestige: nomad_government_prestige in tributary_nomadic and tributary_steppe, default_tributary_prestige in subjugated and settled.
+mbq_tbo_best_terms_effect = {
+	if = {
+		limit = {
+			is_ai = no
+			NOT = { government_has_flag = government_is_mandala }     # 0.3.12: mandala pays piety instead (00_modifiy_vassal_contract.txt:2091-2094), out of scope
+			scope:actor = {
+				is_tributary_of = scope:recipient                         # 00_modifiy_vassal_contract.txt:1943
+				subject_contract_has_modifiable_obligations = yes         # :1944
+				NOT = { government_has_flag = government_is_herder }      # :1945 herders cannot be modified in vanilla
+				NOT = { is_at_war_with = scope:recipient }                # :1950
+				subject_contract_is_blocked_from_modification = no        # triggers.log:7513
+				OR = {                                                    # mandala, wanua, celestial, hegemonic: other costs, out of scope
+					has_subject_contract_group = tributary_subjugated
+					has_subject_contract_group = tributary_settled
+					has_subject_contract_group = tributary_nomadic
+					has_subject_contract_group = tributary_steppe
+				}
+				mbq_tbo_any_change_trigger = yes                   # at least one ticked box can still change something
+			}
+		}
+		if = {
+			limit = { prestige < medium_prestige_value }                  # can_send :2059-2061 (150, 00_basic_values.txt:1002)
+			send_interface_message = { # A7 (Maxim 16-10): nur Verlauf rechts, keine Einblendung oben (Typ display = feed)
+				type = mbq_vassal_summary_message
+				title = mbq_best_terms_no_prestige
+				left_icon = scope:actor
+			}
+		}
+		else = {
+			set_variable = { name = mbq_bt_changes value = 0 }
+			scope:actor = {
+				if = {
+					limit = { mbq_tbo_want_tax_trigger = yes }
+					if = {
+						limit = { has_subject_contract_group = tributary_nomadic }
+					if = {
+						limit = {
+							vassal_contract_obligation_level:nomad_government_herd = 0
+							tributary_contract_obligation_level_can_be_increased = nomad_government_herd
+						}
+						tributary_contract_set_obligation_level = { type = nomad_government_herd level = 1 }
+						scope:recipient = { set_variable = { name = mbq_bt_changes value = 1 } }
+					}
+					else_if = {
+						limit = {
+							vassal_contract_obligation_level:nomad_government_herd = 1
+							tributary_contract_obligation_level_can_be_increased = nomad_government_herd
+						}
+						tributary_contract_set_obligation_level = { type = nomad_government_herd level = 2 }
+						scope:recipient = { set_variable = { name = mbq_bt_changes value = 1 } }
+					}
+					else_if = {
+						limit = {
+							vassal_contract_obligation_level:nomad_government_herd = 2
+							tributary_contract_obligation_level_can_be_increased = nomad_government_herd
+						}
+						tributary_contract_set_obligation_level = { type = nomad_government_herd level = 3 }
+						scope:recipient = { set_variable = { name = mbq_bt_changes value = 1 } }
+					}
+					else_if = {
+						limit = {
+							vassal_contract_obligation_level:nomad_government_herd = 3
+							tributary_contract_obligation_level_can_be_increased = nomad_government_herd
+						}
+						tributary_contract_set_obligation_level = { type = nomad_government_herd level = 4 }
+						scope:recipient = { set_variable = { name = mbq_bt_changes value = 1 } }
+					}
+					}
+					else = {
+					if = {
+						limit = {
+							vassal_contract_obligation_level:default_tributary_taxes = 0
+							tributary_contract_obligation_level_can_be_increased = default_tributary_taxes
+						}
+						tributary_contract_set_obligation_level = { type = default_tributary_taxes level = 1 }
+						scope:recipient = { set_variable = { name = mbq_bt_changes value = 1 } }
+					}
+					else_if = {
+						limit = {
+							vassal_contract_obligation_level:default_tributary_taxes = 1
+							tributary_contract_obligation_level_can_be_increased = default_tributary_taxes
+						}
+						tributary_contract_set_obligation_level = { type = default_tributary_taxes level = 2 }
+						scope:recipient = { set_variable = { name = mbq_bt_changes value = 1 } }
+					}
+					}
+				}
+				if = {
+					limit = { mbq_tbo_want_prestige_trigger = yes }
+					if = {
+						limit = { OR = { has_subject_contract_group = tributary_nomadic has_subject_contract_group = tributary_steppe } }
+					if = {
+						limit = {
+							vassal_contract_obligation_level:nomad_government_prestige = 0
+							tributary_contract_obligation_level_can_be_increased = nomad_government_prestige
+						}
+						tributary_contract_set_obligation_level = { type = nomad_government_prestige level = 1 }
+						scope:recipient = { set_variable = { name = mbq_bt_changes value = 1 } }
+					}
+					else_if = {
+						limit = {
+							vassal_contract_obligation_level:nomad_government_prestige = 1
+							tributary_contract_obligation_level_can_be_increased = nomad_government_prestige
+						}
+						tributary_contract_set_obligation_level = { type = nomad_government_prestige level = 2 }
+						scope:recipient = { set_variable = { name = mbq_bt_changes value = 1 } }
+					}
+					}
+					else = {
+					if = {
+						limit = {
+							vassal_contract_obligation_level:default_tributary_prestige = 0
+							tributary_contract_obligation_level_can_be_increased = default_tributary_prestige
+						}
+						tributary_contract_set_obligation_level = { type = default_tributary_prestige level = 1 }
+						scope:recipient = { set_variable = { name = mbq_bt_changes value = 1 } }
+					}
+					else_if = {
+						limit = {
+							vassal_contract_obligation_level:default_tributary_prestige = 1
+							tributary_contract_obligation_level_can_be_increased = default_tributary_prestige
+						}
+						tributary_contract_set_obligation_level = { type = default_tributary_prestige level = 2 }
+						scope:recipient = { set_variable = { name = mbq_bt_changes value = 1 } }
+					}
+					}
+				}
+				if = { # forced war support BEFORE removing the guarantee: its is_valid needs the guarantee (special_contracts.txt:895)
+					limit = { mbq_tbo_want_war_support_trigger = yes }
+				if = {
+					limit = {
+						vassal_contract_obligation_level:tributary_war_participation_obligation = 0
+						tributary_contract_obligation_level_can_be_increased = tributary_war_participation_obligation
+						NOT = { has_government = herder_government } # A1: Vanilla is_valid, Hirten nie
+						OR = { # A1: Vanilla is_valid der Stufe forced
+							scope:recipient = { government_has_flag = government_is_steppe_admin }
+							has_relation_blood_brother = scope:recipient
+							AND = {
+								OR = { is_ai = no is_obedient = yes }
+								vassal_contract_obligation_level:suzerain_war_participation_guarantee > 0
+							}
+						}
+					}
+					tributary_contract_set_obligation_level = { type = tributary_war_participation_obligation level = 1 }
+					scope:recipient = { set_variable = { name = mbq_bt_changes value = 1 } }
+				}
+				}
+				if = { # no suzerain guarantee = 0 (special_contracts.txt:804-829); lowering it is good for us
+					limit = {
+						mbq_tbo_want_no_guarantee_trigger = yes
+						vassal_contract_obligation_level:suzerain_war_participation_guarantee = 1
+						tributary_contract_obligation_level_can_be_decreased = suzerain_war_participation_guarantee   # triggers.log:7776
+						OR = { # Pruefer 16-10: forced braucht die Garantie (V special_contracts.txt:895), ausser Steppen-Verwaltung oder Blutsbruder
+							vassal_contract_obligation_level:tributary_war_participation_obligation = 0
+							scope:recipient = { government_has_flag = government_is_steppe_admin }
+							has_relation_blood_brother = scope:recipient
+						}
+					}
+					tributary_contract_set_obligation_level = { type = suzerain_war_participation_guarantee level = 0 }
+					scope:recipient = { set_variable = { name = mbq_bt_changes value = 1 } }
+				}
+			}
+			# Costs exactly as :2070-2125. Every change above lowers the tributary's score, so any change is an unequal contract (:2087).
+			if = {
+				limit = { var:mbq_bt_changes = 1 }
+				send_interface_message = {
+					type = msg_vassal_contract_change
+					title = modify_vassal_contract_interaction_notification
+					right_icon = scope:actor
+					add_prestige = medium_prestige_loss                                 # :2095
+					scope:actor = {
+						add_opinion = { modifier = outraged_opinion opinion = -30 target = scope:recipient }   # :2097-2103
+					}
+					every_tributary = {                                                 # :2105-2114
+						limit = { NOT = { this = scope:actor } }
+						add_opinion = { modifier = outraged_opinion opinion = -10 target = scope:recipient }
+					}
+					scope:actor = {
+						hidden_effect = { set_subject_contract_modification_blocked = yes }   # :2117-2119
+						set_variable = {                                                # :2120-2124
+							name = suzerain_recently_adjusted_mandala_subject_contract
+							value = scope:recipient
+							years = mandala_vassal_obligation_cooldown_years
+						}
+					}
+				}
+			}
+			remove_variable = mbq_bt_changes
+		}
+	}
+}
+

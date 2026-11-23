@@ -1,0 +1,483 @@
+﻿# Better Quality of Life 2.0.0 (Vassals): Massen-Vasallisierung und Massen-Tribut. Alle Effekte am Spieler (root = this = Spieler). Muster mbq_ransom.txt.
+# Ausloesung ueber die versteckten Kopien mbq_offer_vassalization_interaction und mbq_demand_tributary_interaction (ohne Antwortbriefe),
+# nur bei Annahme (execute_threshold = accept, Ablehnungen werden weder geschickt noch ausgefuehrt, E:2662-2664). Vertragsstufe ueber var:mbq_vs_stufe statt send_option (Experte 5b).
+
+# Vertragsstufe (Chef 14-10 nach Maxim; Experte 5b Frage 2). var:mbq_vs_stufe am Spieler liest die Kopie in ai_accept und on_accept.
+# Mindeststufe aus den Fenster-Schaltern: mbq_vs_min_high = nur hoch, mbq_vs_min_normal = hoch oder normal, keiner = jede Stufe (Standard).
+mbq_vs_set_min_level_effect = { # Scope = Spieler
+	if = {
+		limit = { has_global_variable = mbq_vs_min_high }
+		set_variable = { name = mbq_vs_stufe value = 3 }
+	}
+	else_if = {
+		limit = { has_global_variable = mbq_vs_min_normal }
+		set_variable = { name = mbq_vs_stufe value = 2 }
+	}
+	else = {
+		set_variable = { name = mbq_vs_stufe value = 1 }
+	}
+}
+
+# Scope = Kandidat, root = Spieler. Setzt die hoechste Stufe, zu der der Kandidat ja sagt (is_character_interaction_potentially_accepted im
+# mbq_vs_candidate_trigger, triggers.log:5167), nie unter der Mindeststufe. Sagt er auf keiner ja, bleibt die Mindeststufe stehen und der
+# folgende mbq_vs_candidate_trigger im Lauf scheitert (kein run_interaction). Hoechstens 3 Pruefungen hier plus 1 im Lauf (Experte 5b: hoechstens 4).
+mbq_vs_pick_level_effect = {
+	root = { set_variable = { name = mbq_vs_stufe value = 3 } }
+	if = {
+		limit = {
+			NOT = { has_global_variable = mbq_vs_min_high }
+			NOT = { mbq_vs_candidate_trigger = yes }
+		}
+		root = { set_variable = { name = mbq_vs_stufe value = 2 } }
+		if = {
+			limit = {
+				NOT = { has_global_variable = mbq_vs_min_normal }
+				NOT = { mbq_vs_candidate_trigger = yes }
+			}
+			root = { set_variable = { name = mbq_vs_stufe value = 1 } }
+		}
+	}
+}
+
+# Takt (Chef 14-10: monatlich Standard, alle drei Monate per Variable mbq_vs_quarterly) per Event-Schleife mit Generationszaehler wie mbq_rs_arm_effect
+# (Experte 5a Frage 7: monatlich geht nur so). Eine Schleife fuer Vasallisierung und Tribut.
+mbq_vs_arm_effect = {
+	if = {
+		limit = { has_variable = mbq_vs_gen }
+		change_variable = { name = mbq_vs_gen add = 1 }
+	}
+	else = {
+		set_variable = { name = mbq_vs_gen value = 1 }
+	}
+	save_scope_value_as = { name = mbq_vs_gen value = var:mbq_vs_gen }
+	# Hotfix Maxim 15-10: nur noch monatlich (Anfragen laufen sonst vorher ab), alte Variable mbq_vs_quarterly wird ignoriert
+	set_variable = { name = mbq_vs_armed value = yes days = 35 }
+	trigger_event = { id = mbq_vassal.0001 days = 30 }
+}
+
+# ---- vs: Kandidaten sammeln (Scope = Spieler). Liste mbq_vs_cand, ohne Doppel (is_target_in_variable_list triggers.log:830).
+mbq_vs_collect_effect = {
+	if = { limit = { has_variable_list = mbq_vs_cand } clear_variable_list = mbq_vs_cand }
+	mbq_vs_set_min_level_effect = yes # Sammeln mit der Mindeststufe: niedrigste erlaubte Stufe = leichteste Annahme (V:346-357)
+	if = {
+		limit = { NOT = { has_global_variable = mbq_vs_no_nb } }
+		every_neighboring_and_across_water_top_liege_realm_owner = { # effects.log:4801
+			limit = { mbq_vs_candidate_trigger = yes }
+			root = { add_to_variable_list = { name = mbq_vs_cand target = prev } }
+		}
+	}
+	if = {
+		limit = { NOT = { has_global_variable = mbq_vs_no_trib } }
+		every_tributary = { # effects.log:5304
+			limit = {
+				NOT = { root = { is_target_in_variable_list = { name = mbq_vs_cand target = prev } } }
+				mbq_vs_candidate_trigger = yes
+			}
+			root = { add_to_variable_list = { name = mbq_vs_cand target = prev } }
+		}
+	}
+}
+
+mbq_vs_run_body_effect = {
+	if = {
+		limit = { NOT = { has_variable = mbq_vs_pending } }
+		if = { limit = { has_variable_list = mbq_vs_list } clear_variable_list = mbq_vs_list }
+		set_variable = { name = mbq_vs_pending value = yes days = 3 } # Sicherheitsnetz wie mbq_ransom.txt
+		trigger_event = { id = mbq_vassal.0002 days = 1 }
+	}
+	mbq_vs_collect_effect = yes
+	if = { limit = { has_variable_list = mbq_vs_cand }
+		# Reihenfolge hoechster Rang, dann Grafschaften (mbq_vs_order_value); ordered_in_list effects.log:1707-1716. Je Kandidat NEU pruefen:
+		# nach jeder Annahme sinkt der freie Vasallenplatz (konzept.md Abschnitt 5 Frage 5), run_interaction fuehrt sofort aus (E:2662).
+		ordered_in_list = {
+			variable = mbq_vs_cand
+			order_by = mbq_vs_order_value
+			max = 1000
+			check_range_bounds = no
+				mbq_vs_pick_level_effect = yes # Stufe je Kandidat: hoch, normal, niedrig bis zur Mindeststufe (Experte 5b)
+			if = {
+				limit = { mbq_vs_candidate_trigger = yes }
+				if = {
+					limit = { NOT = { root = { is_target_in_variable_list = { name = mbq_vs_list target = prev } } } }
+					root = { add_to_variable_list = { name = mbq_vs_list target = prev } }
+				}
+				run_interaction = { # effects.log:2654-2665
+					interaction = mbq_offer_vassalization_interaction
+					actor = root
+					recipient = this
+					execute_threshold = accept
+				}
+			}
+		}
+		clear_variable_list = mbq_vs_cand
+	}
+	if = { limit = { has_variable = mbq_vs_stufe } remove_variable = mbq_vs_stufe }
+}
+
+mbq_vs_run_effect = {
+	if = {
+		limit = {
+			mbq_vs_player_ok_trigger = yes
+			mbq_vs_rank_valid_trigger = yes
+			mbq_vs_who_valid_trigger = yes
+		}
+		mbq_vs_run_body_effect = yes
+	}
+	else = {
+		if = { limit = { has_variable = mbq_vs_manual } remove_variable = mbq_vs_manual }
+	}
+}
+
+# Sammelmeldung (aus mbq_vassal.0002): Erfolg = is_vassal_of = root
+mbq_vs_summary_effect = {
+	set_variable = { name = mbq_vs_n value = 0 }
+	set_variable = { name = mbq_vs_slot value = 0 }
+	if = { limit = { has_variable_list = mbq_vs_list }
+		every_in_list = {
+			variable = mbq_vs_list
+			limit = { is_alive = yes is_vassal_of = root }
+			root = { change_variable = { name = mbq_vs_n add = 1 } }
+		}
+		ordered_in_list = {
+			variable = mbq_vs_list
+			limit = { is_alive = yes is_vassal_of = root }
+			order_by = mbq_vs_order_value
+			max = 5
+			check_range_bounds = no
+			save_scope_as = mbq_vs_pr
+			root = {
+				change_variable = { name = mbq_vs_slot add = 1 }
+				if = { limit = { var:mbq_vs_slot = 1 } set_variable = { name = mbq_vs_c1 value = scope:mbq_vs_pr } }
+				else_if = { limit = { var:mbq_vs_slot = 2 } set_variable = { name = mbq_vs_c2 value = scope:mbq_vs_pr } }
+				else_if = { limit = { var:mbq_vs_slot = 3 } set_variable = { name = mbq_vs_c3 value = scope:mbq_vs_pr } }
+				else_if = { limit = { var:mbq_vs_slot = 4 } set_variable = { name = mbq_vs_c4 value = scope:mbq_vs_pr } }
+				else_if = { limit = { var:mbq_vs_slot = 5 } set_variable = { name = mbq_vs_c5 value = scope:mbq_vs_pr } }
+			}
+		}
+		clear_variable_list = mbq_vs_list
+	}
+	if = {
+		limit = { var:mbq_vs_n > 5 }
+		set_variable = { name = mbq_vs_rest value = var:mbq_vs_n }
+		change_variable = { name = mbq_vs_rest subtract = 5 }
+	}
+	if = {
+		limit = {
+			OR = {
+				var:mbq_vs_n >= 1 # Sammelmeldung ist Verlauf (display = feed), bleibt auch bei Ohne Fenster (Maxim 15-10)
+				has_variable = mbq_vs_manual
+			}
+		}
+		send_interface_message = { # effects.log:9999
+			type = mbq_vassal_summary_message
+			title = mbq_vs_sum_title
+			desc = mbq_vs_sum_desc
+		}
+	}
+	if = { limit = { has_variable = mbq_vs_manual } remove_variable = mbq_vs_manual }
+	if = { limit = { has_variable = mbq_vs_pending } remove_variable = mbq_vs_pending }
+	remove_variable = mbq_vs_n
+	remove_variable = mbq_vs_slot
+	if = { limit = { has_variable = mbq_vs_rest } remove_variable = mbq_vs_rest }
+	if = { limit = { has_variable = mbq_vs_c1 } remove_variable = mbq_vs_c1 }
+	if = { limit = { has_variable = mbq_vs_c2 } remove_variable = mbq_vs_c2 }
+	if = { limit = { has_variable = mbq_vs_c3 } remove_variable = mbq_vs_c3 }
+	if = { limit = { has_variable = mbq_vs_c4 } remove_variable = mbq_vs_c4 }
+	if = { limit = { has_variable = mbq_vs_c5 } remove_variable = mbq_vs_c5 }
+}
+
+# ---- tb: Kandidaten sammeln (Scope = Spieler). Liste mbq_tb_cand, ohne Doppel (is_target_in_variable_list triggers.log:830).
+mbq_tb_collect_effect = {
+	if = { limit = { has_variable_list = mbq_tb_cand } clear_variable_list = mbq_tb_cand }
+	every_neighboring_and_across_water_top_liege_realm_owner = {
+		limit = { mbq_tb_candidate_trigger = yes }
+		root = { add_to_variable_list = { name = mbq_tb_cand target = prev } }
+	}
+}
+
+mbq_tb_run_body_effect = {
+	if = {
+		limit = { NOT = { has_variable = mbq_tb_pending } }
+		if = { limit = { has_variable_list = mbq_tb_list } clear_variable_list = mbq_tb_list }
+		set_variable = { name = mbq_tb_pending value = yes days = 3 } # Sicherheitsnetz wie mbq_ransom.txt
+		trigger_event = { id = mbq_vassal.0003 days = 1 }
+	}
+	mbq_tb_collect_effect = yes
+	if = { limit = { has_variable_list = mbq_tb_cand }
+		# Reihenfolge hoechster Rang, dann Grafschaften (mbq_vs_order_value); ordered_in_list effects.log:1707-1716. Je Kandidat NEU pruefen:
+		# nach jeder Annahme sinkt der freie Vasallenplatz (konzept.md Abschnitt 5 Frage 5), run_interaction fuehrt sofort aus (E:2662).
+		ordered_in_list = {
+			variable = mbq_tb_cand
+			order_by = mbq_vs_order_value
+			max = 1000
+			check_range_bounds = no
+			if = {
+				limit = { mbq_tb_candidate_trigger = yes }
+				if = {
+					limit = { NOT = { root = { is_target_in_variable_list = { name = mbq_tb_list target = prev } } } }
+					root = { add_to_variable_list = { name = mbq_tb_list target = prev } }
+				}
+				run_interaction = { # effects.log:2654-2665
+					interaction = mbq_demand_tributary_interaction
+					actor = root
+					recipient = this
+					execute_threshold = accept
+				}
+				if = {
+					limit = { is_tributary_of = root } # triggers.log:5976; Annahme wirklich erfolgt
+					root = { add_to_variable_list = { name = mbq_tb_bt target = prev } }
+					# Chef 14-10: run_interaction zog im Test die Kosten nicht ab (Prestige 1050 -> 600 = nur 3 x 150 Best terms). Vanilla-Kosten
+					# demand_tributary_interaction cost = minor_prestige_value (00_tributary_interactions.txt:953-961, 75 laut 00_basic_values.txt:1001) hier von Hand.
+					root = { add_prestige = { value = minor_prestige_value multiply = -1 } }
+				}
+			}
+		}
+		clear_variable_list = mbq_tb_cand
+	}
+	if = { limit = { has_variable_list = mbq_tb_bt }
+		every_in_list = {
+			variable = mbq_tb_bt
+			limit = { is_tributary_of = root }
+			save_scope_as = actor
+			root = {
+				save_scope_as = recipient
+				mbq_tbo_best_terms_effect = yes
+			}
+		}
+		clear_variable_list = mbq_tb_bt
+	}
+}
+
+mbq_tb_run_effect = {
+	if = {
+		limit = {
+			mbq_vs_player_ok_trigger = yes
+			mbq_vs_rank_valid_trigger = yes
+		}
+		mbq_tb_run_body_effect = yes
+	}
+	else = {
+		if = { limit = { has_variable = mbq_tb_manual } remove_variable = mbq_tb_manual }
+	}
+}
+
+# Sammelmeldung (aus mbq_vassal.0003): Erfolg = is_tributary_of = root
+mbq_tb_summary_effect = {
+	set_variable = { name = mbq_tb_n value = 0 }
+	set_variable = { name = mbq_tb_slot value = 0 }
+	if = { limit = { has_variable_list = mbq_tb_list }
+		every_in_list = {
+			variable = mbq_tb_list
+			limit = { is_alive = yes is_tributary_of = root }
+			root = { change_variable = { name = mbq_tb_n add = 1 } }
+		}
+		ordered_in_list = {
+			variable = mbq_tb_list
+			limit = { is_alive = yes is_tributary_of = root }
+			order_by = mbq_vs_order_value
+			max = 5
+			check_range_bounds = no
+			save_scope_as = mbq_tb_pr
+			root = {
+				change_variable = { name = mbq_tb_slot add = 1 }
+				if = { limit = { var:mbq_tb_slot = 1 } set_variable = { name = mbq_tb_c1 value = scope:mbq_tb_pr } }
+				else_if = { limit = { var:mbq_tb_slot = 2 } set_variable = { name = mbq_tb_c2 value = scope:mbq_tb_pr } }
+				else_if = { limit = { var:mbq_tb_slot = 3 } set_variable = { name = mbq_tb_c3 value = scope:mbq_tb_pr } }
+				else_if = { limit = { var:mbq_tb_slot = 4 } set_variable = { name = mbq_tb_c4 value = scope:mbq_tb_pr } }
+				else_if = { limit = { var:mbq_tb_slot = 5 } set_variable = { name = mbq_tb_c5 value = scope:mbq_tb_pr } }
+			}
+		}
+		clear_variable_list = mbq_tb_list
+	}
+	if = {
+		limit = { var:mbq_tb_n > 5 }
+		set_variable = { name = mbq_tb_rest value = var:mbq_tb_n }
+		change_variable = { name = mbq_tb_rest subtract = 5 }
+	}
+	if = {
+		limit = {
+			OR = {
+				var:mbq_tb_n >= 1 # Sammelmeldung ist Verlauf (display = feed), bleibt auch bei Ohne Fenster (Maxim 15-10)
+				has_variable = mbq_tb_manual
+			}
+		}
+		send_interface_message = { # effects.log:9999
+			type = mbq_vassal_summary_message
+			title = mbq_tb_sum_title
+			desc = mbq_tb_sum_desc
+		}
+	}
+	if = { limit = { has_variable = mbq_tb_manual } remove_variable = mbq_tb_manual }
+	if = { limit = { has_variable = mbq_tb_pending } remove_variable = mbq_tb_pending }
+	remove_variable = mbq_tb_n
+	remove_variable = mbq_tb_slot
+	if = { limit = { has_variable = mbq_tb_rest } remove_variable = mbq_tb_rest }
+	if = { limit = { has_variable = mbq_tb_c1 } remove_variable = mbq_tb_c1 }
+	if = { limit = { has_variable = mbq_tb_c2 } remove_variable = mbq_tb_c2 }
+	if = { limit = { has_variable = mbq_tb_c3 } remove_variable = mbq_tb_c3 }
+	if = { limit = { has_variable = mbq_tb_c4 } remove_variable = mbq_tb_c4 }
+	if = { limit = { has_variable = mbq_tb_c5 } remove_variable = mbq_tb_c5 }
+}
+
+# Gemeinsame Vertragswuensche (Maxim 15-10): alte Variablen der Allgemein-Kaestchen (basis mbq_settings.txt:50-105, je Gruppe nomad/all) einmal in
+# den einen Satz mbq_tbo_* uebernehmen. Gruppen werden zusammengelegt (ODER). no_guarantee war Haken = Variable gesetzt, neu mbq_tbo_no_guar_off = Haken weg:
+# hatte ein 1.0.7-Spielstand die Tribut-Automatik oder Wuensche, aber keinen no_guarantee-Haken, bleibt er aus (kein neuer Prestige-Abzug).
+mbq_tbo_migrate_effect = {
+	if = { limit = { has_global_variable = mbq_vs_keep_faith } remove_global_variable = mbq_vs_keep_faith } # Maxim 15-10: Other faith Standard aus, alte Abwahl = neuer Stand
+	if = { limit = { always = no } set_global_variable = { name = mbq_vs_keep_faith value = yes } set_global_variable = { name = mbq_terms_nomad_tax value = yes } set_global_variable = { name = mbq_terms_nomad_prestige value = yes } set_global_variable = { name = mbq_terms_nomad_war_support value = yes } set_global_variable = { name = mbq_terms_nomad_no_guarantee value = yes } set_global_variable = { name = mbq_terms_all_tax value = yes } set_global_variable = { name = mbq_terms_all_prestige value = yes } set_global_variable = { name = mbq_terms_all_war_support value = yes } set_global_variable = { name = mbq_terms_all_no_guarantee value = yes } } # Varwarn 15-10: nie ausgefuehrt, nur damit die Engine die 1.0.7-Altvariablen als gesetzt sieht (error.log "used but is never set")
+	if = {
+		limit = { NOT = { has_global_variable = mbq_tbo_mig } }
+		if = {
+			limit = { OR = { has_global_variable = mbq_terms_nomad_tax has_global_variable = mbq_terms_all_tax } }
+			set_global_variable = { name = mbq_tbo_tax value = yes }
+		}
+		if = {
+			limit = { OR = { has_global_variable = mbq_terms_nomad_prestige has_global_variable = mbq_terms_all_prestige } }
+			set_global_variable = { name = mbq_tbo_prestige value = yes }
+		}
+		if = {
+			limit = { OR = { has_global_variable = mbq_terms_nomad_war_support has_global_variable = mbq_terms_all_war_support } }
+			set_global_variable = { name = mbq_tbo_war_support value = yes }
+		}
+		if = {
+			limit = { OR = { has_global_variable = mbq_terms_nomad_no_guarantee has_global_variable = mbq_terms_all_no_guarantee } }
+			if = { limit = { has_global_variable = mbq_tbo_no_guar_off } remove_global_variable = mbq_tbo_no_guar_off }
+		}
+		else_if = {
+			limit = {
+				OR = {
+					has_global_variable = mbq_auto_tribute
+					has_global_variable = mbq_auto_tribute_all
+					has_global_variable = mbq_terms_nomad_tax
+					has_global_variable = mbq_terms_nomad_prestige
+					has_global_variable = mbq_terms_nomad_war_support
+					has_global_variable = mbq_terms_all_tax
+					has_global_variable = mbq_terms_all_prestige
+					has_global_variable = mbq_terms_all_war_support
+				}
+			}
+			set_global_variable = { name = mbq_tbo_no_guar_off value = yes }
+		}
+		if = { limit = { has_global_variable = mbq_terms_nomad_tax } remove_global_variable = mbq_terms_nomad_tax }
+		if = { limit = { has_global_variable = mbq_terms_nomad_prestige } remove_global_variable = mbq_terms_nomad_prestige }
+		if = { limit = { has_global_variable = mbq_terms_nomad_war_support } remove_global_variable = mbq_terms_nomad_war_support }
+		if = { limit = { has_global_variable = mbq_terms_nomad_no_guarantee } remove_global_variable = mbq_terms_nomad_no_guarantee }
+		if = { limit = { has_global_variable = mbq_terms_all_tax } remove_global_variable = mbq_terms_all_tax }
+		if = { limit = { has_global_variable = mbq_terms_all_prestige } remove_global_variable = mbq_terms_all_prestige }
+		if = { limit = { has_global_variable = mbq_terms_all_war_support } remove_global_variable = mbq_terms_all_war_support }
+		if = { limit = { has_global_variable = mbq_terms_all_no_guarantee } remove_global_variable = mbq_terms_all_no_guarantee }
+		set_global_variable = { name = mbq_tbo_mig value = yes }
+	}
+}
+
+# Vorschau im Fenster: nur beim Oeffnen und bei jedem Klick (kein Dauertakt). Selbstheilung des Takts wie mbq_rs_preview_effect.
+# Logikcheck 20 S3: Schalter, die die Zaehlung nicht aendern (Annehmen-Haken, Vertragswuensche, Automatik an/aus), rufen nur den leichten Teil;
+# die Zaehlung (bis zu 4x is_character_interaction_potentially_accepted je Nachbar) nur beim Oeffnen, Jetzt-Knopf und bei Rang/Wer/Ausnahmen/Stufe.
+mbq_vs_preview_light_effect = {
+	mbq_menu_migrate_effect = yes # 2.1.2
+	mbq_tbo_migrate_effect = yes
+	if = {
+		limit = {
+			OR = {
+				mbq_vs_auto_on_trigger = yes
+				mbq_tb_auto_on_trigger = yes
+			}
+			NOT = { has_variable = mbq_vs_armed }
+		}
+		mbq_vs_arm_effect = yes
+	}
+	if = { # Hinweiszeile Mandala (Chef 14-10 Nr. 9)
+		limit = { government_has_flag = government_is_mandala }
+		set_variable = { name = mbq_vs_mandala value = yes }
+	}
+	else_if = {
+		limit = { has_variable = mbq_vs_mandala }
+		remove_variable = mbq_vs_mandala
+	}
+}
+
+mbq_vs_preview_effect = {
+	mbq_vs_preview_light_effect = yes
+	set_variable = { name = mbq_vs_prev_n value = 0 }
+	set_variable = { name = mbq_tb_prev_n value = 0 }
+	if = {
+		limit = {
+			mbq_vs_player_ok_trigger = yes
+			mbq_vs_rank_valid_trigger = yes
+		}
+		if = {
+			limit = { mbq_vs_who_valid_trigger = yes }
+			mbq_vs_collect_effect = yes
+			if = { limit = { has_variable_list = mbq_vs_cand }
+				every_in_list = {
+					variable = mbq_vs_cand
+					root = { change_variable = { name = mbq_vs_prev_n add = 1 } }
+				}
+				clear_variable_list = mbq_vs_cand
+			}
+			if = { limit = { has_variable = mbq_vs_stufe } remove_variable = mbq_vs_stufe }
+		}
+		mbq_tb_collect_effect = yes
+		if = { limit = { has_variable_list = mbq_tb_cand }
+			every_in_list = {
+				variable = mbq_tb_cand
+				root = { change_variable = { name = mbq_tb_prev_n add = 1 } }
+			}
+			clear_variable_list = mbq_tb_cand
+		}
+	}
+}
+# BQoL 2.1.2 (Maxim 21-10): einmalige Uebernahme alter Einstellungen in das neue Menue, Merker mbq_menu_v2 (global). Aufruf beim Oeffnen des Fensters,
+# bei jedem Klick auf einen Vasallen-Schalter und im Vierteljahrestakt (mbq_auto_actions_pulse). Uebernommen wird nur, wo die alte Einstellung genau einem Eintrag der
+# neuen Auswahl entspricht; sonst gilt der Standard. Die Auswahlen (Mindestalter, Rang, Tribut) sind eine Oberflaeche ueber die alten Variablen, darum bleibt ein eindeutiger Wert unveraendert.
+mbq_menu_migrate_effect = {
+	if = {
+		limit = { NOT = { has_global_variable = mbq_menu_v2 } }
+		if = { # Hauptschalter Vasallen: an, wenn eine der alten Automatiken an war
+			limit = { OR = {
+				has_global_variable = mbq_vs_auto
+				has_global_variable = mbq_tb_auto
+				has_global_variable = mbq_vs_acc
+				has_global_variable = mbq_auto_tribute
+				has_global_variable = mbq_auto_tribute_all
+			} }
+			set_global_variable = { name = mbq_vs_master value = yes }
+		}
+		# 2.1.20: Platz 6 und 7 der Empfaenger-Vorlieben gibt es wieder (bis 2.1.19 wurden sie hier einmalig geleert), darum bleiben ihre Werte erhalten
+		if = { # Rang Loesegeld: Luecken zurueck auf Standard (ohne Titel und Baron); Kaiser entfaellt
+			limit = {
+			NOT = {
+				OR = {
+					AND = { has_global_variable = mbq_rs_no_t0 has_global_variable = mbq_rs_no_t1 NOT = { has_global_variable = mbq_rs_t2 } NOT = { has_global_variable = mbq_rs_t3 } NOT = { has_global_variable = mbq_rs_t4 } }
+					AND = { NOT = { has_global_variable = mbq_rs_no_t0 } has_global_variable = mbq_rs_no_t1 NOT = { has_global_variable = mbq_rs_t2 } NOT = { has_global_variable = mbq_rs_t3 } NOT = { has_global_variable = mbq_rs_t4 } }
+					AND = { NOT = { has_global_variable = mbq_rs_no_t0 } NOT = { has_global_variable = mbq_rs_no_t1 } NOT = { has_global_variable = mbq_rs_t2 } NOT = { has_global_variable = mbq_rs_t3 } NOT = { has_global_variable = mbq_rs_t4 } }
+					AND = { NOT = { has_global_variable = mbq_rs_no_t0 } NOT = { has_global_variable = mbq_rs_no_t1 } has_global_variable = mbq_rs_t2 NOT = { has_global_variable = mbq_rs_t3 } NOT = { has_global_variable = mbq_rs_t4 } }
+					AND = { NOT = { has_global_variable = mbq_rs_no_t0 } NOT = { has_global_variable = mbq_rs_no_t1 } has_global_variable = mbq_rs_t2 has_global_variable = mbq_rs_t3 NOT = { has_global_variable = mbq_rs_t4 } }
+					AND = { NOT = { has_global_variable = mbq_rs_no_t0 } NOT = { has_global_variable = mbq_rs_no_t1 } has_global_variable = mbq_rs_t2 has_global_variable = mbq_rs_t3 has_global_variable = mbq_rs_t4 }
+				}
+			}
+			}
+			if = { limit = { has_global_variable = mbq_rs_no_t0 } remove_global_variable = mbq_rs_no_t0 }
+			if = { limit = { has_global_variable = mbq_rs_no_t1 } remove_global_variable = mbq_rs_no_t1 }
+			if = { limit = { has_global_variable = mbq_rs_t2 } remove_global_variable = mbq_rs_t2 }
+			if = { limit = { has_global_variable = mbq_rs_t3 } remove_global_variable = mbq_rs_t3 }
+			if = { limit = { has_global_variable = mbq_rs_t4 } remove_global_variable = mbq_rs_t4 }
+		}
+		if = { limit = { has_global_variable = mbq_rs_t5 } remove_global_variable = mbq_rs_t5 }
+		if = { # Rang Vasallen: Luecken zurueck auf alle drei Raenge
+			limit = {
+			NOT = {
+				OR = {
+					AND = { NOT = { has_global_variable = mbq_vs_no_t2 } has_global_variable = mbq_vs_no_t3 has_global_variable = mbq_vs_no_t4 }
+					AND = { NOT = { has_global_variable = mbq_vs_no_t2 } NOT = { has_global_variable = mbq_vs_no_t3 } has_global_variable = mbq_vs_no_t4 }
+					AND = { NOT = { has_global_variable = mbq_vs_no_t2 } NOT = { has_global_variable = mbq_vs_no_t3 } NOT = { has_global_variable = mbq_vs_no_t4 } }
+				}
+			}
+			}
+			if = { limit = { has_global_variable = mbq_vs_no_t2 } remove_global_variable = mbq_vs_no_t2 }
+			if = { limit = { has_global_variable = mbq_vs_no_t3 } remove_global_variable = mbq_vs_no_t3 }
+			if = { limit = { has_global_variable = mbq_vs_no_t4 } remove_global_variable = mbq_vs_no_t4 }
+		}
+		set_global_variable = { name = mbq_menu_v2 value = yes }
+	}
+}

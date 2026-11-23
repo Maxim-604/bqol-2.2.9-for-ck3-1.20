@@ -1,0 +1,5 @@
+﻿# Better Quality of Life 2.0.0 (Vassals): eigener Filter, Feed in der Gruppe realm wie vassal_contract_changed (V common/message_filter_types/00_message_filter_types.txt:295-297).
+mbq_vassal_summary = {
+	display = feed
+	group = realm
+}

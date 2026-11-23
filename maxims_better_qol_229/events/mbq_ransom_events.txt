@@ -1,0 +1,46 @@
+﻿# Better Quality of Life 2.0.0 Loesegeld-Automatik: Schleife nur am Spieler (Muster MOAC events/mmoc_auto_events.txt), kein Puls fuer KI-Herrscher.
+namespace = mbq_ransom
+
+# Takt: laeuft, solange "Automatik an" (globale Variable mbq_rs_auto); aus = die Schleife endet beim naechsten Termin.
+# Veralteter Termin (Takt umgestellt oder Automatik neu an: neue Generation, mbq_rs_arm_effect) tut nichts.
+mbq_ransom.0001 = {
+	hidden = yes
+	immediate = {
+		if = {
+			limit = {
+				exists = scope:mbq_rs_gen
+				has_variable = mbq_rs_gen
+				scope:mbq_rs_gen = var:mbq_rs_gen
+			}
+			remove_variable = mbq_rs_armed
+			if = {
+				limit = { has_global_variable = mbq_rs_auto is_alive = yes is_ai = no } # wie MOAC mmoc_auto_events.txt:12
+				# Pause, solange der Spieler selbst gefangen ist (Maxim 14-10, Logik-Check Punkt 4: Vanilla sperrt den gefangenen Absender nicht belegt, darum hier).
+				# is_imprisoned (triggers.log:5518). Der Takt laeuft weiter und setzt nach der Freilassung von selbst wieder ein.
+				if = {
+					limit = { is_imprisoned = no }
+					mbq_rs_run_effect = yes
+				}
+				mbq_rs_arm_effect = yes
+			}
+		}
+		else_if = { # Logiktest 2 B13: Termin ohne gespeicherte Generation (Laden, alter 1.1.0-Termin): neu scharf schalten, kein Lauf.
+			# Kein Doppellauf: die neue Generation entwertet alle anderen Termine.
+			limit = {
+				NOT = { exists = scope:mbq_rs_gen }
+				has_global_variable = mbq_rs_auto
+				is_alive = yes
+				is_ai = no
+			}
+			mbq_rs_arm_effect = yes
+		}
+	}
+}
+
+# Sammelmeldung einen Tag nach dem Lauf.
+mbq_ransom.0002 = {
+	hidden = yes
+	immediate = {
+		mbq_rs_summary_effect = yes
+	}
+}

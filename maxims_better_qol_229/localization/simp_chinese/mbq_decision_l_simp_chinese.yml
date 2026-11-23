@@ -1,0 +1,6 @@
+﻿l_simp_chinese:
+ mbq_open_menu_decision: "Better Quality of Life"
+ mbq_open_menu_decision_confirm: "开启"
+ mbq_open_menu_decision_desc: "设置你的头衔如何转交。"
+ mbq_open_menu_decision_effect_tt: "#T Better Quality of Life#!\n#I 点击打开设置窗口#!"
+ mbq_open_menu_decision_tooltip: "#T Better Quality of Life#!\n#I 点击打开设置窗口#!"

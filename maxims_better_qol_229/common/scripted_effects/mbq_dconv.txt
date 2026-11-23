@@ -1,0 +1,446 @@
+﻿# Better Quality of Life 2.0.0 (Demand Conversion): Automatik am Spieler (root = this = Spieler). Muster Vassals (mbq_vassal.txt).
+# Takt: Standard alle 3 Monate (keine Variable), mbq_dc_t1 monatlich, mbq_dc_t6 alle 6 Monate, mbq_dc_t12 jaehrlich. Schleife mit Generationszaehler wie mbq_vs_arm_effect.
+mbq_dc_arm_effect = {
+	if = {
+		limit = { has_variable = mbq_dc_gen }
+		change_variable = { name = mbq_dc_gen add = 1 }
+	}
+	else = {
+		set_variable = { name = mbq_dc_gen value = 1 }
+	}
+	save_scope_value_as = { name = mbq_dc_gen value = var:mbq_dc_gen }
+	if = {
+		limit = { has_global_variable = mbq_dc_t1 }
+		set_variable = { name = mbq_dc_armed value = yes days = 35 }
+		trigger_event = { id = mbq_dconv.0001 days = 30 }
+	}
+	else_if = {
+		limit = { has_global_variable = mbq_dc_t6 }
+		set_variable = { name = mbq_dc_armed value = yes days = 187 }
+		trigger_event = { id = mbq_dconv.0001 days = 182 }
+	}
+	else_if = {
+		limit = { has_global_variable = mbq_dc_t12 }
+		set_variable = { name = mbq_dc_armed value = yes days = 370 }
+		trigger_event = { id = mbq_dconv.0001 days = 365 }
+	}
+	else = {
+		set_variable = { name = mbq_dc_armed value = yes days = 96 }
+		trigger_event = { id = mbq_dconv.0001 days = 91 }
+	}
+}
+
+# Lauf: je Kandidat neu pruefen (Schwelle) und die versteckte Kopie ausfuehren. Kein Kostenabzug noetig: Vanilla-Kosten sind ohne send_option 0
+# (Hoefling V:351-360 nur Einfluss-Option, Haus/Vasall demand_conversion_influence_cost_value pam_values.txt:9604-9611 nur Einfluss-Option).
+mbq_dc_run_body_effect = {
+	if = {
+		limit = { NOT = { has_variable = mbq_dc_pending } }
+		if = { limit = { has_variable_list = mbq_dc_list } clear_variable_list = mbq_dc_list }
+		set_variable = { name = mbq_dc_pending value = yes days = 12 }
+		trigger_event = { id = mbq_dconv.0002 days = 10 } # Antworten Vasall 4-9 Tage (V:786-787), Hoefling 1-5 (V:247-248); Bekehrung danach sofort (false_conversion_events.txt:731-763)
+	}
+	if = {
+		limit = { NOT = { has_global_variable = mbq_dc_no_dir } }
+		every_vassal = { # direkte Vasallen, MDC decisions:146-147
+			limit = { NOT = { vassal_contract_has_flag = religiously_protected } }
+			if = {
+				limit = { root = { mbq_dc_min_ok_trigger = { R = prev I = demand_conversion_vassal_ruler_interaction } } }
+				if = {
+					limit = { NOT = { root = { is_target_in_variable_list = { name = mbq_dc_list target = prev } } } }
+					root = { add_to_variable_list = { name = mbq_dc_list target = prev } }
+					run_interaction = { # Weg B (Spieltest Chef 15-10): senden wie MDC decisions:156-161, die KI antwortet wie im Grundspiel (Briefe, Wuerfel)
+						interaction = demand_conversion_vassal_ruler_interaction
+						actor = root
+						recipient = this
+						send_threshold = decline
+					}
+				}
+			}
+		}
+	}
+	if = {
+		limit = { NOT = { has_global_variable = mbq_dc_no_ind } }
+		every_vassal_or_below = { # indirekte Vasallen: liege nicht der Spieler, MDC decisions:174-181
+			limit = {
+				NOT = { vassal_contract_has_flag = religiously_protected }
+				exists = liege
+				NOT = { liege = root }
+			}
+			if = {
+				limit = { root = { mbq_dc_min_ok_trigger = { R = prev I = demand_conversion_vassal_ruler_interaction } } }
+				if = {
+					limit = { NOT = { root = { is_target_in_variable_list = { name = mbq_dc_list target = prev } } } }
+					root = { add_to_variable_list = { name = mbq_dc_list target = prev } }
+					run_interaction = { # Weg B (Spieltest Chef 15-10): senden wie MDC decisions:156-161, die KI antwortet wie im Grundspiel (Briefe, Wuerfel)
+						interaction = demand_conversion_vassal_ruler_interaction
+						actor = root
+						recipient = this
+						send_threshold = decline
+					}
+				}
+			}
+		}
+	}
+	if = {
+		limit = { NOT = { has_global_variable = mbq_dc_no_trib } }
+		every_tributary = { # MDC decisions:205
+			if = {
+				limit = { root = { mbq_dc_min_ok_trigger = { R = prev I = demand_conversion_vassal_ruler_interaction } } }
+				if = {
+					limit = { NOT = { root = { is_target_in_variable_list = { name = mbq_dc_list target = prev } } } }
+					root = { add_to_variable_list = { name = mbq_dc_list target = prev } }
+					run_interaction = { # Weg B (Spieltest Chef 15-10): senden wie MDC decisions:156-161, die KI antwortet wie im Grundspiel (Briefe, Wuerfel)
+						interaction = demand_conversion_vassal_ruler_interaction
+						actor = root
+						recipient = this
+						send_threshold = decline
+					}
+				}
+			}
+		}
+	}
+	if = {
+		limit = { NOT = { has_global_variable = mbq_dc_no_court } }
+		every_courtier = { # MDC decisions:225-236
+			if = {
+				limit = { root = { mbq_dc_min_ok_trigger = { R = prev I = ask_for_conversion_courtier_interaction } } }
+				if = {
+					limit = { NOT = { root = { is_target_in_variable_list = { name = mbq_dc_list target = prev } } } }
+					root = { add_to_variable_list = { name = mbq_dc_list target = prev } }
+					run_interaction = { # Weg B (Spieltest Chef 15-10): senden wie MDC decisions:156-161, die KI antwortet wie im Grundspiel (Briefe, Wuerfel)
+						interaction = ask_for_conversion_courtier_interaction
+						actor = root
+						recipient = this
+						send_threshold = decline
+					}
+				}
+			}
+		}
+		house ?= { # Hausmitglieder: nur gelandete ausserhalb des eigenen Reichs und nur als Hausoberhaupt (V:518-541 is_shown), MDC decisions:246-262
+			every_house_member = {
+				limit = { NOT = { this = root } }
+			if = {
+				limit = { root = { mbq_dc_min_ok_trigger = { R = prev I = demand_conversion_interaction } } }
+				if = {
+					limit = { NOT = { root = { is_target_in_variable_list = { name = mbq_dc_list target = prev } } } }
+					root = { add_to_variable_list = { name = mbq_dc_list target = prev } }
+					run_interaction = { # Weg B (Spieltest Chef 15-10): senden wie MDC decisions:156-161, die KI antwortet wie im Grundspiel (Briefe, Wuerfel)
+						interaction = demand_conversion_interaction
+						actor = root
+						recipient = this
+						send_threshold = decline
+					}
+				}
+			}
+			}
+		}
+	}
+}
+
+mbq_dc_run_effect = {
+	if = {
+		limit = {
+			is_imprisoned = no # Pause in Haft wie Vassals (triggers.log:5518)
+			mbq_dc_who_valid_trigger = yes
+		}
+		mbq_dc_run_body_effect = yes
+		if = { # 2.1.6: Ritus nur mit dem Haken; die Glaubensbekehrung davor laeuft immer. 2.1.34: der Haken wirkt nur bei Automatik an (gesperrt ohne 'Bekehrung verlangen', Standard im neuen Spiel an)
+			limit = { has_global_variable = mbq_dc_rite has_global_variable = mbq_dc_auto }
+			mbq_dc_rite_body_effect = yes
+		}
+	}
+	else = {
+		if = { limit = { has_variable = mbq_dc_manual } remove_variable = mbq_dc_manual }
+	}
+}
+
+# Sammelmeldung (aus mbq_dconv.0002): Erfolg = jetzt gleicher Glaube wie der Spieler
+mbq_dc_summary_effect = {
+	set_variable = { name = mbq_dc_n value = 0 }
+	set_variable = { name = mbq_dc_slot value = 0 }
+	set_variable = { name = mbq_dc_rn value = 0 } # 2.1.5: zu Eurem Ritus gewechselt (gleicher Glaube, jetzt gleicher Ritus)
+	if = { limit = { has_variable_list = mbq_dc_rlist }
+		every_in_list = {
+			variable = mbq_dc_rlist
+			limit = { is_alive = yes faith = root.faith rite = root.rite }
+			root = { change_variable = { name = mbq_dc_rn add = 1 } }
+		}
+		every_in_list = { # 2.1.12: no flag stays behind (answers are in after 5 days, the summary comes after 10)
+			variable = mbq_dc_rlist
+			limit = { has_variable = mbq_rite_auto }
+			remove_variable = mbq_rite_auto
+		}
+		clear_variable_list = mbq_dc_rlist
+	}
+	if = { limit = { has_variable_list = mbq_dc_list }
+		every_in_list = {
+			variable = mbq_dc_list
+			limit = { is_alive = yes faith = root.faith }
+			root = { change_variable = { name = mbq_dc_n add = 1 } }
+		}
+		ordered_in_list = {
+			variable = mbq_dc_list
+			limit = { is_alive = yes faith = root.faith }
+			order_by = mbq_vs_order_value # hoechster Rang zuerst (mbq_vassal_values.txt)
+			max = 5
+			check_range_bounds = no
+			save_scope_as = mbq_dc_pr
+			root = {
+				change_variable = { name = mbq_dc_slot add = 1 }
+				if = { limit = { var:mbq_dc_slot = 1 } set_variable = { name = mbq_dc_c1 value = scope:mbq_dc_pr } }
+				else_if = { limit = { var:mbq_dc_slot = 2 } set_variable = { name = mbq_dc_c2 value = scope:mbq_dc_pr } }
+				else_if = { limit = { var:mbq_dc_slot = 3 } set_variable = { name = mbq_dc_c3 value = scope:mbq_dc_pr } }
+				else_if = { limit = { var:mbq_dc_slot = 4 } set_variable = { name = mbq_dc_c4 value = scope:mbq_dc_pr } }
+				else_if = { limit = { var:mbq_dc_slot = 5 } set_variable = { name = mbq_dc_c5 value = scope:mbq_dc_pr } }
+			}
+		}
+		clear_variable_list = mbq_dc_list
+	}
+	if = {
+		limit = { var:mbq_dc_n > 5 }
+		set_variable = { name = mbq_dc_rest value = var:mbq_dc_n }
+		change_variable = { name = mbq_dc_rest subtract = 5 }
+	}
+	if = {
+		limit = {
+			OR = {
+				var:mbq_dc_n >= 1
+				var:mbq_dc_rn >= 1
+				AND = { exists = var:mbq_dc_rr var:mbq_dc_rr >= 1 } # 2.1.12
+				has_variable = mbq_dc_manual
+			}
+		}
+		send_interface_message = {
+			type = mbq_dconv_summary_message
+			title = mbq_dc_sum_title
+			desc = mbq_dc_sum_desc
+		}
+	}
+	if = { limit = { has_variable = mbq_dc_manual } remove_variable = mbq_dc_manual }
+	if = { limit = { has_variable = mbq_dc_pending } remove_variable = mbq_dc_pending }
+	remove_variable = mbq_dc_n
+	remove_variable = mbq_dc_rn
+	if = { limit = { has_variable = mbq_dc_rr } remove_variable = mbq_dc_rr }
+	remove_variable = mbq_dc_slot
+	if = { limit = { has_variable = mbq_dc_rest } remove_variable = mbq_dc_rest }
+	if = { limit = { has_variable = mbq_dc_c1 } remove_variable = mbq_dc_c1 }
+	if = { limit = { has_variable = mbq_dc_c2 } remove_variable = mbq_dc_c2 }
+	if = { limit = { has_variable = mbq_dc_c3 } remove_variable = mbq_dc_c3 }
+	if = { limit = { has_variable = mbq_dc_c4 } remove_variable = mbq_dc_c4 }
+	if = { limit = { has_variable = mbq_dc_c5 } remove_variable = mbq_dc_c5 }
+}
+
+# Vorschau "up to N": nur beim Oeffnen und bei Klicks (MENUE_RICHTLINIE 6). Selbstheilung des Takts wie mbq_vs_preview_light_effect.
+mbq_dc_preview_effect = {
+	if = {
+		limit = {
+			has_global_variable = mbq_dc_auto
+			NOT = { has_variable = mbq_dc_armed }
+		}
+		mbq_dc_arm_effect = yes
+	}
+	set_variable = { name = mbq_dc_prev_n value = 0 }
+	if = {
+		limit = { mbq_dc_who_valid_trigger = yes }
+		if = { limit = { has_variable_list = mbq_dc_cand } clear_variable_list = mbq_dc_cand }
+	if = {
+			limit = { NOT = { has_global_variable = mbq_dc_no_dir } }
+			every_vassal = { # direkte Vasallen, MDC decisions:146-147
+				limit = { NOT = { vassal_contract_has_flag = religiously_protected } }
+				if = {
+					limit = { root = { mbq_dc_min_ok_trigger = { R = prev I = demand_conversion_vassal_ruler_interaction } } }
+					if = {
+						limit = { NOT = { root = { is_target_in_variable_list = { name = mbq_dc_cand target = prev } } } }
+						root = { add_to_variable_list = { name = mbq_dc_cand target = prev } change_variable = { name = mbq_dc_prev_n add = 1 } } # demand_conversion_vassal_ruler_interaction
+					}
+				}
+			}
+		}
+		if = {
+			limit = { NOT = { has_global_variable = mbq_dc_no_ind } }
+			every_vassal_or_below = { # indirekte Vasallen: liege nicht der Spieler, MDC decisions:174-181
+				limit = {
+					NOT = { vassal_contract_has_flag = religiously_protected }
+					exists = liege
+					NOT = { liege = root }
+				}
+				if = {
+					limit = { root = { mbq_dc_min_ok_trigger = { R = prev I = demand_conversion_vassal_ruler_interaction } } }
+					if = {
+						limit = { NOT = { root = { is_target_in_variable_list = { name = mbq_dc_cand target = prev } } } }
+						root = { add_to_variable_list = { name = mbq_dc_cand target = prev } change_variable = { name = mbq_dc_prev_n add = 1 } } # demand_conversion_vassal_ruler_interaction
+					}
+				}
+			}
+		}
+		if = {
+			limit = { NOT = { has_global_variable = mbq_dc_no_trib } }
+			every_tributary = { # MDC decisions:205
+				if = {
+					limit = { root = { mbq_dc_min_ok_trigger = { R = prev I = demand_conversion_vassal_ruler_interaction } } }
+					if = {
+						limit = { NOT = { root = { is_target_in_variable_list = { name = mbq_dc_cand target = prev } } } }
+						root = { add_to_variable_list = { name = mbq_dc_cand target = prev } change_variable = { name = mbq_dc_prev_n add = 1 } } # demand_conversion_vassal_ruler_interaction
+					}
+				}
+			}
+		}
+		if = {
+			limit = { NOT = { has_global_variable = mbq_dc_no_court } }
+			every_courtier = { # MDC decisions:225-236
+				if = {
+					limit = { root = { mbq_dc_min_ok_trigger = { R = prev I = ask_for_conversion_courtier_interaction } } }
+					if = {
+						limit = { NOT = { root = { is_target_in_variable_list = { name = mbq_dc_cand target = prev } } } }
+						root = { add_to_variable_list = { name = mbq_dc_cand target = prev } change_variable = { name = mbq_dc_prev_n add = 1 } } # ask_for_conversion_courtier_interaction
+					}
+				}
+			}
+			house ?= { # Hausmitglieder: nur gelandete ausserhalb des eigenen Reichs und nur als Hausoberhaupt (V:518-541 is_shown), MDC decisions:246-262
+				every_house_member = {
+					limit = { NOT = { this = root } }
+				if = {
+					limit = { root = { mbq_dc_min_ok_trigger = { R = prev I = demand_conversion_interaction } } }
+					if = {
+						limit = { NOT = { root = { is_target_in_variable_list = { name = mbq_dc_cand target = prev } } } }
+						root = { add_to_variable_list = { name = mbq_dc_cand target = prev } change_variable = { name = mbq_dc_prev_n add = 1 } } # demand_conversion_interaction
+					}
+				}
+				}
+			}
+		}
+		if = { limit = { has_variable_list = mbq_dc_cand } clear_variable_list = mbq_dc_cand }
+	}
+}
+# 2.1.5 Ritus-Durchlauf (Maxim 21-10): Kandidaten mit gleichem Glauben und anderem Ritus, gleiche Ziele und gleicher Takt wie die Glaubensbekehrung. Aeusseres Tor: unter
+# major_piety_value Fruemmigkeit erfuellt keine Anfrage die Untergrenze (Kosten plus Reserve), dann wird gar nichts geprueft (Leistung). Je Kandidat zuerst die billigen Filter
+# (Glaube, Ritus, erwachsen), dann Fruemmigkeit und Annahme-Schwelle. Gesendet wird wie bei der Glaubensbekehrung per run_interaction, die Fruemmigkeit bucht das Spiel beim Senden.
+mbq_dc_rite_body_effect = {
+	if = {
+		limit = { piety >= major_piety_value }
+		if = { limit = { has_variable_list = mbq_dc_rlist } clear_variable_list = mbq_dc_rlist }
+		if = { limit = { has_variable = mbq_dc_rr } remove_variable = mbq_dc_rr } # 2.1.12: refusals of this run (counted in zzz_mbq_rite_toasts.txt)
+		if = {
+			limit = { NOT = { has_global_variable = mbq_dc_no_dir } }
+			every_vassal = {
+				limit = {
+					faith = root.faith
+					NOT = { rite = root.rite }
+					is_adult = yes
+				}
+				if = {
+					limit = { root = { mbq_dc_rite_ok_trigger = { R = prev I = sway_vassal_to_my_rite_interaction } } }
+					if = {
+						limit = { NOT = { root = { is_target_in_variable_list = { name = mbq_dc_rlist target = prev } } } }
+						root = { add_to_variable_list = { name = mbq_dc_rlist target = prev } }
+						set_variable = { name = mbq_rite_auto days = 12 } # 2.1.12: answers to this request come without the vanilla toast (zzz_mbq_rite_toasts.txt), flag ends with the answer
+						run_interaction = { # Vasallen: V pam_interactions.txt:3297-3315
+							interaction = sway_vassal_to_my_rite_interaction
+							actor = root
+							recipient = this
+							send_threshold = decline
+						}
+					}
+				}
+			}
+		}
+		if = {
+			limit = { NOT = { has_global_variable = mbq_dc_no_ind } }
+			every_vassal_or_below = {
+				limit = {
+					faith = root.faith
+					NOT = { rite = root.rite }
+					is_adult = yes
+					exists = liege
+					NOT = { liege = root }
+				}
+				if = {
+					limit = { root = { mbq_dc_rite_ok_trigger = { R = prev I = sway_vassal_to_my_rite_interaction } } }
+					if = {
+						limit = { NOT = { root = { is_target_in_variable_list = { name = mbq_dc_rlist target = prev } } } }
+						root = { add_to_variable_list = { name = mbq_dc_rlist target = prev } }
+						set_variable = { name = mbq_rite_auto days = 12 } # 2.1.12: answers to this request come without the vanilla toast (zzz_mbq_rite_toasts.txt), flag ends with the answer
+						run_interaction = { # indirekte Vasallen: gleiche Interaktion
+							interaction = sway_vassal_to_my_rite_interaction
+							actor = root
+							recipient = this
+							send_threshold = decline
+						}
+					}
+				}
+			}
+		}
+		if = {
+			limit = { NOT = { has_global_variable = mbq_dc_no_trib } }
+			every_tributary = {
+				limit = {
+					faith = root.faith
+					NOT = { rite = root.rite }
+					is_adult = yes
+				}
+				if = {
+					limit = { root = { mbq_dc_rite_ok_trigger = { R = prev I = sway_vassal_to_my_rite_interaction } } }
+					if = {
+						limit = { NOT = { root = { is_target_in_variable_list = { name = mbq_dc_rlist target = prev } } } }
+						root = { add_to_variable_list = { name = mbq_dc_rlist target = prev } }
+						set_variable = { name = mbq_rite_auto days = 12 } # 2.1.12: answers to this request come without the vanilla toast (zzz_mbq_rite_toasts.txt), flag ends with the answer
+						run_interaction = { # Tributpflichtige: V pam_interactions.txt:3302
+							interaction = sway_vassal_to_my_rite_interaction
+							actor = root
+							recipient = this
+							send_threshold = decline
+						}
+					}
+				}
+			}
+		}
+		if = {
+			limit = { NOT = { has_global_variable = mbq_dc_no_court } }
+			every_courtier = {
+				limit = {
+					faith = root.faith
+					NOT = { rite = root.rite }
+					is_adult = yes
+				}
+				if = {
+					limit = { root = { mbq_dc_rite_ok_trigger = { R = prev I = sway_courtier_to_my_rite_interaction } } }
+					if = {
+						limit = { NOT = { root = { is_target_in_variable_list = { name = mbq_dc_rlist target = prev } } } }
+						root = { add_to_variable_list = { name = mbq_dc_rlist target = prev } }
+						set_variable = { name = mbq_rite_auto days = 12 } # 2.1.12: answers to this request come without the vanilla toast (zzz_mbq_rite_toasts.txt), flag ends with the answer
+						run_interaction = { # Hoeflinge: V pam_interactions.txt:3076-3084
+							interaction = sway_courtier_to_my_rite_interaction
+							actor = root
+							recipient = this
+							send_threshold = decline
+						}
+					}
+				}
+			}
+			house ?= { # Hausmitglieder wie bei der Glaubensbekehrung (Vasallen-Variante, Hausspur V :3304-3318)
+				every_house_member = {
+					limit = {
+						faith = root.faith
+						NOT = { rite = root.rite }
+						is_adult = yes
+						NOT = { this = root }
+					}
+					if = {
+						limit = { root = { mbq_dc_rite_ok_trigger = { R = prev I = sway_vassal_to_my_rite_interaction } } }
+						if = {
+							limit = { NOT = { root = { is_target_in_variable_list = { name = mbq_dc_rlist target = prev } } } }
+							root = { add_to_variable_list = { name = mbq_dc_rlist target = prev } }
+							set_variable = { name = mbq_rite_auto days = 12 } # 2.1.12: answers to this request come without the vanilla toast (zzz_mbq_rite_toasts.txt), flag ends with the answer
+							run_interaction = { # Hausspur
+								interaction = sway_vassal_to_my_rite_interaction
+								actor = root
+								recipient = this
+								send_threshold = decline
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

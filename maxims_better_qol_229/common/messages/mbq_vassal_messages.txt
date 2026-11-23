@@ -1,0 +1,9 @@
+﻿# Better Quality of Life 2.0.0 (Vassals): Sammelmeldung "New vassals" / "New tributaries". Symbol wie V common/messages/01_vassal_messages.txt:48 (msg_liege_changed).
+mbq_vassal_summary_message = {
+	icon = "vassal"
+	title = event_message_title
+	desc = event_message_text
+	style = good # Maxim 15-10: alle Sammelmeldungen einheitlich
+	message_filter_type = mbq_vassal_summary
+	display = feed
+}

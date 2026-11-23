@@ -1,0 +1,22 @@
+﻿# Better Quality of Life 2.0.0 (Vassals): nach Erbfolge weiter am neuen Spielercharakter (Muster mbq_ransom_on_actions.txt, on_actions.log:4379-4381).
+on_player_character_change = {
+	on_actions = {
+		mbq_vs_on_player_change
+	}
+}
+
+mbq_vs_on_player_change = {
+	effect = {
+		every_player = {
+			limit = {
+				is_ai = no
+				OR = {
+					mbq_vs_auto_on_trigger = yes
+					mbq_tb_auto_on_trigger = yes
+				}
+				NOT = { has_variable = mbq_vs_armed }
+			}
+			mbq_vs_arm_effect = yes
+		}
+	}
+}

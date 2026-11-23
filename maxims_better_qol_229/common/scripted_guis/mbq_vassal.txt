@@ -1,0 +1,323 @@
+﻿# Better Quality of Life 2.0.0 (Vassals): Schalter der Kategorie Vassals. Muster mbq_ransom.txt (scripted guis). Variable gesetzt = Haken weg (Standard an),
+# ausser mbq_vs_auto, mbq_tb_auto, mbq_vs_quarterly (gesetzt = an).
+mbq_vs_toggle_acc_vs = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_vs_acc } remove_global_variable = mbq_vs_acc }
+		else = { set_global_variable = { name = mbq_vs_acc value = yes } }
+		mbq_vs_preview_light_effect = yes
+	}
+}
+mbq_vs_toggle_acc_nomad = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_auto_tribute } remove_global_variable = mbq_auto_tribute }
+		else = { set_global_variable = { name = mbq_auto_tribute value = yes } }
+		mbq_vs_preview_light_effect = yes
+	}
+}
+mbq_vs_toggle_acc_all = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_auto_tribute_all } remove_global_variable = mbq_auto_tribute_all }
+		else = { set_global_variable = { name = mbq_auto_tribute_all value = yes } }
+		mbq_vs_preview_light_effect = yes
+	}
+}
+mbq_vs_toggle_nb = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_vs_no_nb } remove_global_variable = mbq_vs_no_nb }
+		else = { set_global_variable = { name = mbq_vs_no_nb value = yes } }
+		mbq_vs_preview_effect = yes
+	}
+}
+mbq_vs_toggle_trib = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_vs_no_trib } remove_global_variable = mbq_vs_no_trib }
+		else = { set_global_variable = { name = mbq_vs_no_trib value = yes } }
+		mbq_vs_preview_effect = yes
+	}
+}
+mbq_vs_toggle_ex_rival = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_vs_keep_rival } remove_global_variable = mbq_vs_keep_rival }
+		else = { set_global_variable = { name = mbq_vs_keep_rival value = yes } }
+		mbq_vs_preview_effect = yes
+	}
+}
+mbq_vs_toggle_ex_claim = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_vs_keep_claim } remove_global_variable = mbq_vs_keep_claim }
+		else = { set_global_variable = { name = mbq_vs_keep_claim value = yes } }
+		mbq_vs_preview_effect = yes
+	}
+}
+mbq_vs_toggle_ex_faith = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_vs_ex_faith_on } remove_global_variable = mbq_vs_ex_faith_on }
+		else = { set_global_variable = { name = mbq_vs_ex_faith_on value = yes } }
+		mbq_vs_preview_effect = yes
+	}
+}
+mbq_vs_toggle_ex_faction = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_vs_keep_faction } remove_global_variable = mbq_vs_keep_faction }
+		else = { set_global_variable = { name = mbq_vs_keep_faction value = yes } }
+		mbq_vs_preview_effect = yes
+	}
+}
+mbq_vs_toggle_tbo_no_guar_off = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_tbo_no_guar_off } remove_global_variable = mbq_tbo_no_guar_off }
+		else = { set_global_variable = { name = mbq_tbo_no_guar_off value = yes } }
+		mbq_vs_preview_light_effect = yes
+	}
+}
+mbq_vs_toggle_tbo_tax = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_tbo_tax } remove_global_variable = mbq_tbo_tax }
+		else = { set_global_variable = { name = mbq_tbo_tax value = yes } }
+		mbq_vs_preview_light_effect = yes
+	}
+}
+mbq_vs_toggle_tbo_prestige = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_tbo_prestige } remove_global_variable = mbq_tbo_prestige }
+		else = { set_global_variable = { name = mbq_tbo_prestige value = yes } }
+		mbq_vs_preview_light_effect = yes
+	}
+}
+mbq_vs_toggle_tbo_war_support = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_tbo_war_support } remove_global_variable = mbq_tbo_war_support }
+		else = { set_global_variable = { name = mbq_tbo_war_support value = yes } }
+		mbq_vs_preview_light_effect = yes
+	}
+}
+mbq_vs_toggle_tb_windows = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_tb_silent } remove_global_variable = mbq_tb_silent }
+		else = { set_global_variable = { name = mbq_tb_silent value = yes } }
+		mbq_vs_preview_effect = yes
+	}
+}
+mbq_vs_toggle_auto = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_vs_auto } remove_global_variable = mbq_vs_auto }
+		else = {
+			set_global_variable = { name = mbq_vs_auto value = yes }
+			if = { limit = { NOT = { has_variable = mbq_vs_armed } } mbq_vs_arm_effect = yes } # laufende Schleife (andere Automatik an) nicht verschieben
+		}
+		mbq_vs_preview_light_effect = yes # Logikcheck 20 S3: Automatik an/aus aendert die Zaehlung nicht
+	}
+}
+mbq_vs_run_now = {
+	scope = character
+	effect = {
+		set_variable = { name = mbq_vs_manual value = yes }
+		mbq_vs_run_effect = yes
+		mbq_vs_preview_effect = yes
+	}
+}
+mbq_tb_toggle_auto = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_tb_auto } remove_global_variable = mbq_tb_auto }
+		else = {
+			set_global_variable = { name = mbq_tb_auto value = yes }
+			if = { limit = { NOT = { has_variable = mbq_vs_armed } } mbq_vs_arm_effect = yes } # laufende Schleife (andere Automatik an) nicht verschieben
+		}
+		mbq_vs_preview_light_effect = yes # Logikcheck 20 S3: Automatik an/aus aendert die Zaehlung nicht
+	}
+}
+mbq_tb_run_now = {
+	scope = character
+	effect = {
+		set_variable = { name = mbq_tb_manual value = yes }
+		mbq_tb_run_effect = yes
+		mbq_vs_preview_effect = yes
+	}
+}
+mbq_vs_set_quarterly = {
+	scope = character
+	effect = {
+		if = {
+			limit = { NOT = { has_global_variable = mbq_vs_quarterly } }
+			set_global_variable = { name = mbq_vs_quarterly value = yes }
+			if = { limit = { OR = { has_global_variable = mbq_vs_auto has_global_variable = mbq_tb_auto } } mbq_vs_arm_effect = yes }
+		}
+	}
+}
+mbq_vs_min_high = { # Mindeststufe wie Radio: genau eine Variable oder keine (Standard Low = jede Stufe)
+	scope = character
+	effect = {
+		set_global_variable = { name = mbq_vs_min_high value = yes }
+		if = { limit = { has_global_variable = mbq_vs_min_normal } remove_global_variable = mbq_vs_min_normal }
+		mbq_vs_preview_effect = yes
+	}
+}
+mbq_vs_min_normal = {
+	scope = character
+	effect = {
+		set_global_variable = { name = mbq_vs_min_normal value = yes }
+		if = { limit = { has_global_variable = mbq_vs_min_high } remove_global_variable = mbq_vs_min_high }
+		mbq_vs_preview_effect = yes
+	}
+}
+mbq_vs_min_low = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_vs_min_high } remove_global_variable = mbq_vs_min_high }
+		if = { limit = { has_global_variable = mbq_vs_min_normal } remove_global_variable = mbq_vs_min_normal }
+		mbq_vs_preview_effect = yes
+	}
+}
+mbq_tb_peaceful = { # GUI: Tribut friedlich verlangbar (V mpo_scripted_triggers.txt:918-928), sonst Tribut-Haken und Jetzt-Knopf grau
+	scope = character
+	is_shown = { can_get_tributaries_peacefully_trigger = yes NOT = { government_has_flag = government_is_mandala } } # Mandala: V 00_tributary_interactions.txt:872-878
+}
+mbq_vs_preview = {
+	scope = character
+	effect = { mbq_vs_preview_effect = yes }
+}
+mbq_vs_toggle_acc_tb = { # Spiegel (Maxim 15-10): Hauptschalter "Accept tributary offers" = mindestens eine der alten Variablen (basis mbq_settings.txt:18-30);
+	scope = character    # an setzt beide Gruppen, aus nimmt beide raus. Anders als basis :21/:28 bleiben die Vertragswuensche stehen (gemeinsamer Satz).
+	effect = {
+		if = {
+			limit = { OR = { has_global_variable = mbq_auto_tribute has_global_variable = mbq_auto_tribute_all } }
+			if = { limit = { has_global_variable = mbq_auto_tribute } remove_global_variable = mbq_auto_tribute }
+			if = { limit = { has_global_variable = mbq_auto_tribute_all } remove_global_variable = mbq_auto_tribute_all }
+		}
+		else = {
+			set_global_variable = { name = mbq_auto_tribute value = yes }
+			set_global_variable = { name = mbq_auto_tribute_all value = yes }
+		}
+		mbq_vs_preview_light_effect = yes # Logikcheck 20 S3
+	}
+}
+mbq_vs_tbo_all = { # All/Reset der gemeinsamen Tribut-Vertragswuensche (MENUE_RICHTLINIE 4, E:68)
+	scope = character
+	effect = {
+		set_global_variable = { name = mbq_tbo_tax value = yes }
+		set_global_variable = { name = mbq_tbo_prestige value = yes }
+		set_global_variable = { name = mbq_tbo_war_support value = yes }
+		if = { limit = { has_global_variable = mbq_tbo_no_guar_off } remove_global_variable = mbq_tbo_no_guar_off }
+		mbq_vs_preview_light_effect = yes # Logikcheck 20 S3
+	}
+}
+mbq_open_preview = { # beim Oeffnen des Zahnrad-Fensters (state _show): Loesegeld und Vasallen, sonst nichts
+	scope = character
+	effect = {
+		mbq_menu_migrate_effect = yes # 2.1.2 Uebernahme alter Einstellungen
+		mbq_rs_preview_effect = yes
+		mbq_dc_preview_effect = yes # Demand Conversion (build_bekehrung.py, 15-10); vor mbq_vs, weil build_grafschaften.py hinter mbq_vs_preview_effect ankert
+		mbq_vs_preview_effect = yes
+		mbq_gr_preview_effect = yes # Counties (build_grafschaften.py)
+	}
+}
+mbq_vs_exc_all = {
+	scope = character
+	effect = {
+		remove_global_variable = mbq_vs_keep_rival
+		remove_global_variable = mbq_vs_keep_claim
+		remove_global_variable = mbq_vs_keep_faction
+		set_global_variable = { name = mbq_vs_ex_faith_on value = yes }
+		mbq_vs_preview_effect = yes
+	}
+}
+# 2.1.2 Rang Graf (bis Rang, mbq_vs_no_<x> gesetzt = Rang aus; Kaiser mbq_vs_no_t5 wird nicht mehr gelesen)
+mbq_vs_rank_set_0 = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_vs_no_t2 } remove_global_variable = mbq_vs_no_t2 }
+		set_global_variable = { name = mbq_vs_no_t3 value = yes }
+		set_global_variable = { name = mbq_vs_no_t4 value = yes }
+		mbq_vs_preview_effect = yes
+	}
+}
+# 2.1.2 Rang Herzog (bis Rang, mbq_vs_no_<x> gesetzt = Rang aus; Kaiser mbq_vs_no_t5 wird nicht mehr gelesen)
+mbq_vs_rank_set_1 = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_vs_no_t2 } remove_global_variable = mbq_vs_no_t2 }
+		if = { limit = { has_global_variable = mbq_vs_no_t3 } remove_global_variable = mbq_vs_no_t3 }
+		set_global_variable = { name = mbq_vs_no_t4 value = yes }
+		mbq_vs_preview_effect = yes
+	}
+}
+# 2.1.2 Rang Koenig (bis Rang, mbq_vs_no_<x> gesetzt = Rang aus; Kaiser mbq_vs_no_t5 wird nicht mehr gelesen)
+mbq_vs_rank_set_2 = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_vs_no_t2 } remove_global_variable = mbq_vs_no_t2 }
+		if = { limit = { has_global_variable = mbq_vs_no_t3 } remove_global_variable = mbq_vs_no_t3 }
+		if = { limit = { has_global_variable = mbq_vs_no_t4 } remove_global_variable = mbq_vs_no_t4 }
+		mbq_vs_preview_effect = yes
+	}
+}
+mbq_vs_tbo_reset = { # 2.1.2 (Maxim 21-10): Knopf heisst Keine = alle vier Vertragswuensche aus
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_tbo_tax } remove_global_variable = mbq_tbo_tax }
+		if = { limit = { has_global_variable = mbq_tbo_prestige } remove_global_variable = mbq_tbo_prestige }
+		if = { limit = { has_global_variable = mbq_tbo_war_support } remove_global_variable = mbq_tbo_war_support }
+		set_global_variable = { name = mbq_tbo_no_guar_off value = yes }
+		mbq_vs_preview_light_effect = yes # Logikcheck 20 S3
+	}
+}
+mbq_vs_exc_reset = { # 2.1.2: Keine = alle Ausnahmen aus (keep_x gesetzt = Haken weg, mbq_vs_ex_faith_on gesetzt = Haken an)
+	scope = character
+	effect = {
+		set_global_variable = { name = mbq_vs_keep_rival value = yes }
+		set_global_variable = { name = mbq_vs_keep_claim value = yes }
+		set_global_variable = { name = mbq_vs_keep_faction value = yes }
+		if = { limit = { has_global_variable = mbq_vs_ex_faith_on } remove_global_variable = mbq_vs_ex_faith_on }
+		mbq_vs_preview_effect = yes
+	}
+}
+mbq_vs_who_all = { # 2.1.2: Alle / Keine auch bei Nachbarn und Tributpflichtigen
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_vs_no_nb } remove_global_variable = mbq_vs_no_nb }
+		if = { limit = { has_global_variable = mbq_vs_no_trib } remove_global_variable = mbq_vs_no_trib }
+		mbq_vs_preview_effect = yes
+	}
+}
+mbq_vs_who_reset = { # Keine (ungueltig = rot, Automatik pausiert)
+	scope = character
+	effect = {
+		set_global_variable = { name = mbq_vs_no_nb value = yes }
+		set_global_variable = { name = mbq_vs_no_trib value = yes }
+		mbq_vs_preview_effect = yes
+	}
+}
+mbq_vs_toggle_master = { # 2.1.2 Hauptschalter "Automatik an"
+	scope = character
+	effect = {
+		mbq_menu_migrate_effect = yes # Altspielstand zuerst uebernehmen, sonst wuerde das Umlegen den Zustand der alten Schalter ueberschreiben
+		if = { limit = { has_global_variable = mbq_vs_master } remove_global_variable = mbq_vs_master }
+		else = {
+			set_global_variable = { name = mbq_vs_master value = yes }
+			if = {
+				limit = {
+					OR = { has_global_variable = mbq_vs_auto has_global_variable = mbq_tb_auto }
+					NOT = { has_variable = mbq_vs_armed }
+				}
+				mbq_vs_arm_effect = yes # laufende Schleife nicht verschieben
+			}
+		}
+		mbq_vs_preview_light_effect = yes
+	}
+}

@@ -1,0 +1,82 @@
+﻿# Better Quality of Life 2.0.0 (Counties): Zeilen der Sammelmeldung, feste Plaetze wie mbq_vassal_summary.txt.
+mbq_gr_s1 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_gr_c1 }
+		localization_key = mbq_gr_line1
+	}
+	text = {
+		localization_key = mbq_rs_empty
+	}
+}
+mbq_gr_s2 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_gr_c2 }
+		localization_key = mbq_gr_line2
+	}
+	text = {
+		localization_key = mbq_rs_empty
+	}
+}
+mbq_gr_s3 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_gr_c3 }
+		localization_key = mbq_gr_line3
+	}
+	text = {
+		localization_key = mbq_rs_empty
+	}
+}
+mbq_gr_s4 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_gr_c4 }
+		localization_key = mbq_gr_line4
+	}
+	text = {
+		localization_key = mbq_rs_empty
+	}
+}
+mbq_gr_s5 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_gr_c5 }
+		localization_key = mbq_gr_line5
+	}
+	text = {
+		localization_key = mbq_rs_empty
+	}
+}
+mbq_gr_more = {
+	type = character
+	text = {
+		trigger = { var:mbq_gr_n > 5 }
+		localization_key = mbq_gr_more_line
+	}
+	text = {
+		trigger = {
+			var:mbq_gr_n < 1
+			NOT = { exists = var:mbq_gr_kept_n } # Trichter-Bau: dann sagt mbq_gr_why den Grund
+		}
+		localization_key = mbq_gr_none_line
+	}
+	text = {
+		localization_key = mbq_rs_empty
+	}
+}
+mbq_gr_why = { # Trichter-Bau 14-10 (Maxim): Titel blieb, weil niemand Filter und Prioritaet erfuellt
+	type = character
+	text = { # 2.2.8: mindestens ein Titel blieb auch, weil die Vasallenschwelle gilt und voll ist (Zaehler mbq_gr_kept_full, mbq_gr_nofit_effect)
+		trigger = { exists = var:mbq_gr_kept_full }
+		localization_key = mbq_gr_kept_full_line
+	}
+	text = {
+		trigger = { exists = var:mbq_gr_kept_n }
+		localization_key = mbq_gr_kept_line
+	}
+	text = {
+		localization_key = mbq_rs_empty
+	}
+}

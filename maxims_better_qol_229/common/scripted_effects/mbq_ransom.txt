@@ -1,0 +1,178 @@
+﻿# Better Quality of Life 2.0.0 Loesegeld-Automatik. Alle Effekte am Spieler (root = this = Spieler).
+# Ablauf: Kandidaten pruefen, je Kandidat die VANILLA-Interaktion ransom_interaction ausloesen (run_interaction, effects.log:2654-2664),
+# ausgefuehrt nur, wenn der Zahler laut Vanilla-Annahme zustimmt (execute_threshold = accept). Keine Option wird erzwungen: der
+# Vanilla-Effekt waehlt selbst volle Summe, sonst sein Gold, sonst Haken (V common/scripted_effects/00_prison_effects.txt:3-53).
+# Am naechsten Tag wertet mbq_ransom.0002 aus, wer frei ist, und schickt EINE Sammelmeldung.
+
+# Schleife scharf schalten (Muster MOAC events/mmoc_auto_events.txt:66-68 und common/on_action/mmoc_on_actions.txt:10-21).
+# Quartal = 91 Tage (365 / 4), Monat = 30 Tage wie MOAC. trigger_event days: effects.log:2914-2915.
+# Nachbesserung 13-10 (Test M5): JEDER Aufruf startet den Takt neu. Ein laufender Termin laesst sich nicht loeschen, darum
+# Generationszaehler mbq_rs_gen: der Termin traegt seine Generation als gespeicherten Wert mit (Weitergabe an verzoegerte Events
+# wie V events/dlc/pam/pam_secular_faith_events.txt:1652-1653, gelesen :1701; ausserhalb von Events V 00_prison_interactions.txt:9003-9009),
+# mbq_ransom.0001 tut nur etwas, wenn sie noch gilt.
+mbq_rs_arm_effect = {
+	if = {
+		limit = { has_variable = mbq_rs_gen }
+		change_variable = { name = mbq_rs_gen add = 1 }
+	}
+	else = {
+		set_variable = { name = mbq_rs_gen value = 1 }
+	}
+	save_scope_value_as = { name = mbq_rs_gen value = var:mbq_rs_gen }
+	# Marke mit Ablauf Takt + 5 Tage (set_variable days effects.log:2797-2803): Selbstheilung A2, siehe mbq_rs_preview_effect
+	if = {
+		limit = { has_global_variable = mbq_rs_quarterly } # Fassung 4 (Maxim 14-10): Standard MONATLICH (30 Tage), mit Variable alle drei Monate (91 Tage)
+		set_variable = { name = mbq_rs_armed value = yes days = 96 }
+		trigger_event = { id = mbq_ransom.0001 days = 91 }
+	}
+	else = {
+		set_variable = { name = mbq_rs_armed value = yes days = 35 }
+		trigger_event = { id = mbq_ransom.0001 days = 30 }
+	}
+}
+
+mbq_rs_run_body_effect = {
+	if = {
+		limit = { NOT = { has_variable = mbq_rs_pending } } # laufende Auswertung nicht stoeren, sonst neue Liste
+		if = { limit = { has_variable_list = mbq_rs_list } clear_variable_list = mbq_rs_list } # triggers.log:737, effects.log:254
+		set_variable = { name = mbq_rs_pending value = yes days = 3 } # Sicherheitsnetz wie BQoL mbq_conv_summary.txt (set_variable days effects.log:2797-2803)
+		trigger_event = { id = mbq_ransom.0002 days = 1 }
+	}
+	every_prisoner = { # effects.log:5016
+		# Pruefung im Block statt im limit: zahlt ein Lehnsherr fuer mehrere, gilt sein Gold nach der vorigen Zahlung
+		if = {
+			limit = { mbq_rs_candidate_trigger = yes }
+			set_variable = { name = mbq_rs_offer value = mbq_rs_expected }
+			if = { # Logiktest A5/B11: zwei Laeufe am selben Tag, kein Doppel-Eintrag (is_target_in_variable_list triggers.log:830)
+				limit = { NOT = { root = { is_target_in_variable_list = { name = mbq_rs_list target = prev } } } }
+				root = { add_to_variable_list = { name = mbq_rs_list target = prev } } # effects.log:91-95
+			}
+			run_interaction = {
+				interaction = ransom_interaction # V common/character_interactions/00_prison_interactions.txt:1886
+				actor = root
+				recipient = this # Weiterleitung an den Zahler macht die Interaktion selbst (:1893-1906, run_interaction redirect = yes Standard)
+				execute_threshold = accept
+			}
+		}
+	}
+}
+
+mbq_rs_run_effect = {
+	if = { # Ungueltige Auswahl (kein Wer oder kein Rang): kein Lauf, keine Meldung, Automatik pausiert (Maxim 14-10, 2.0.0)
+		limit = { NOT = { mbq_rs_settings_valid_trigger = yes } }
+		if = { limit = { has_variable = mbq_rs_manual } remove_variable = mbq_rs_manual }
+	}
+	else = {
+		mbq_rs_run_body_effect = yes
+	}
+}
+
+# Anzeige "Jetzt passend" im Fenster: nur beim Oeffnen und bei jedem Klick (kein Dauertakt).
+mbq_rs_preview_effect = {
+	# Logiktest A2: Selbstheilung beim Oeffnen und bei jedem Klick. mbq_rs_armed laeuft jetzt nach Takt + 5 Tagen ab (mbq_rs_arm_effect);
+	# ging der Termin verloren, fehlt die Marke und der Takt startet hier neu. Ein lebender Termin wird NICHT verschoben.
+	if = {
+		limit = {
+			has_global_variable = mbq_rs_auto
+			NOT = { has_variable = mbq_rs_armed }
+		}
+		mbq_rs_arm_effect = yes
+	}
+	set_variable = { name = mbq_rs_prev_n value = 0 }
+	set_variable = { name = mbq_rs_prev_gold value = 0 }
+	every_prisoner = {
+		limit = { mbq_rs_candidate_trigger = yes }
+		save_scope_value_as = { name = mbq_rs_amt value = mbq_rs_expected } # save_scope_value_as wie V 00_prison_interactions.txt:1989
+		root = {
+			change_variable = { name = mbq_rs_prev_n add = 1 }
+			change_variable = { name = mbq_rs_prev_gold add = scope:mbq_rs_amt }
+		}
+	}
+}
+
+# Auswertung (aus mbq_ransom.0002): wer nicht mehr beim Spieler einsitzt, ist freigekauft.
+mbq_rs_summary_effect = {
+	set_variable = { name = mbq_rs_n value = 0 }
+	set_variable = { name = mbq_rs_sum value = 0 }
+	set_variable = { name = mbq_rs_slot value = 0 }
+	if = { limit = { has_variable_list = mbq_rs_list }
+		# Durchgang 1 (Maxim 14-10): Gesamtzahl und Gesamtsumme ALLER Freigelassenen fuer die Kopfzeile
+		every_in_list = { # effects.log:940
+			variable = mbq_rs_list
+			limit = {
+				is_alive = yes
+				NOT = { is_imprisoned_by = root }
+			}
+			save_scope_value_as = { name = mbq_rs_amt value = var:mbq_rs_offer }
+			root = {
+				change_variable = { name = mbq_rs_n add = 1 }
+				change_variable = { name = mbq_rs_sum add = scope:mbq_rs_amt }
+			}
+		}
+		# Durchgang 2: die hoechsten Zahlungen zuerst, hoechstens NSLOT Zeilen. ordered_in_list effects.log:1707-1716 (order_by = script_value, max, check_range_bounds);
+		# Richtung absteigend (hoechster Wert zuerst): V common/scripted_effects/00_accolades_scripted_effects.txt:19-26 findet das am wenigsten entwickelte Grafschaft
+		# mit order_by = { value = development_level multiply = -1 }, Standard ist also hoch zuerst. order_by als Block mit value wie V activities/activity_types/coronation.txt:3139.
+		ordered_in_list = {
+			variable = mbq_rs_list
+			limit = {
+				is_alive = yes
+				NOT = { is_imprisoned_by = root }
+			}
+			order_by = {
+				value = var:mbq_rs_offer
+			}
+			max = 5
+			check_range_bounds = no
+			save_scope_as = mbq_rs_pr
+			save_scope_value_as = { name = mbq_rs_amt value = var:mbq_rs_offer }
+			root = {
+				change_variable = { name = mbq_rs_slot add = 1 }
+				if = { limit = { var:mbq_rs_slot = 1 } set_variable = { name = mbq_rs_c1 value = scope:mbq_rs_pr } set_variable = { name = mbq_rs_g1 value = scope:mbq_rs_amt } }
+				else_if = { limit = { var:mbq_rs_slot = 2 } set_variable = { name = mbq_rs_c2 value = scope:mbq_rs_pr } set_variable = { name = mbq_rs_g2 value = scope:mbq_rs_amt } }
+				else_if = { limit = { var:mbq_rs_slot = 3 } set_variable = { name = mbq_rs_c3 value = scope:mbq_rs_pr } set_variable = { name = mbq_rs_g3 value = scope:mbq_rs_amt } }
+				else_if = { limit = { var:mbq_rs_slot = 4 } set_variable = { name = mbq_rs_c4 value = scope:mbq_rs_pr } set_variable = { name = mbq_rs_g4 value = scope:mbq_rs_amt } }
+				else_if = { limit = { var:mbq_rs_slot = 5 } set_variable = { name = mbq_rs_c5 value = scope:mbq_rs_pr } set_variable = { name = mbq_rs_g5 value = scope:mbq_rs_amt } }
+			}
+		}
+		every_in_list = {
+			variable = mbq_rs_list
+			if = { limit = { has_variable = mbq_rs_offer } remove_variable = mbq_rs_offer }
+		}
+		clear_variable_list = mbq_rs_list
+	}
+	# Zeile "und N weitere": Gesamt minus die gezeigten Zeilen
+	if = {
+		limit = { var:mbq_rs_n > 5 }
+		set_variable = { name = mbq_rs_rest value = var:mbq_rs_n }
+		change_variable = { name = mbq_rs_rest subtract = 5 }
+	}
+	if = {
+		limit = {
+			OR = {
+				var:mbq_rs_n >= 1
+				has_variable = mbq_rs_manual # "Jetzt ausfuehren" meldet auch "niemand"
+			}
+		}
+		send_interface_message = { # wie BQoL events/mbq_conv_summary_events.txt
+			type = mbq_ransom_summary_message
+			title = mbq_rs_sum_title
+			desc = mbq_rs_sum_desc
+		}
+	}
+	if = { limit = { has_variable = mbq_rs_manual } remove_variable = mbq_rs_manual }
+	if = { limit = { has_variable = mbq_rs_pending } remove_variable = mbq_rs_pending }
+	remove_variable = mbq_rs_n
+	remove_variable = mbq_rs_sum
+	remove_variable = mbq_rs_slot
+	if = { limit = { has_variable = mbq_rs_rest } remove_variable = mbq_rs_rest }
+	if = { limit = { has_variable = mbq_rs_c1 } remove_variable = mbq_rs_c1 }
+	if = { limit = { has_variable = mbq_rs_g1 } remove_variable = mbq_rs_g1 }
+	if = { limit = { has_variable = mbq_rs_c2 } remove_variable = mbq_rs_c2 }
+	if = { limit = { has_variable = mbq_rs_g2 } remove_variable = mbq_rs_g2 }
+	if = { limit = { has_variable = mbq_rs_c3 } remove_variable = mbq_rs_c3 }
+	if = { limit = { has_variable = mbq_rs_g3 } remove_variable = mbq_rs_g3 }
+	if = { limit = { has_variable = mbq_rs_c4 } remove_variable = mbq_rs_c4 }
+	if = { limit = { has_variable = mbq_rs_g4 } remove_variable = mbq_rs_g4 }
+	if = { limit = { has_variable = mbq_rs_c5 } remove_variable = mbq_rs_c5 }
+	if = { limit = { has_variable = mbq_rs_g5 } remove_variable = mbq_rs_g5 }
+}

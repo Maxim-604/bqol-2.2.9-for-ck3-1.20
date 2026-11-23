@@ -1,0 +1,732 @@
+﻿# Better Quality of Life 2.0.0 (Counties). Alle Effekte im Spieler-Scope, scope:mbq_gr_liege = Spieler, scope:mbq_gr_grant_title = Titel.
+
+# Vergabe (S :112-154 und :241-267): Kette wie S und Rise and Fall, type = granted (E:442-456, Schleifenschutz im Hook),
+# Meinung wie Vanilla GT:540-700 (received_title_barony/county/duchy, V 00_opinion_modifiers.txt:704, :711, :718).
+# Vanilla-Verleihen kostet nichts (GT auto_accept, kein cost-Block); Nebenwirkungen wie Kulturakzeptanz (GT:394-433) entfallen (nur zu Lasten des Spielers).
+mbq_gr_do_grant_effect = {
+	# 2.0.15 (Messlauf 2.0.14, Svetislava 6 statt 4): harte Pruefung unmittelbar vor JEDER Vergabe, egal welcher Weg den Empfaenger gewaehlt hat.
+	# Grenzen je Vasall und Vasallenregeln (mbq_gr_tier_rules_trigger, mbq_county_triggers.txt); sonst keine Vergabe, Grund in der Sammelmeldung.
+	if = {
+		limit = { scope:mbq_gr_recipient ?= { is_alive = yes mbq_gr_tier_rules_trigger = yes } }
+		mbq_gr_do_grant_checked_effect = yes
+	}
+	else = { mbq_gr_nofit_effect = yes }
+}
+
+# Die eigentliche Vergabe (bis 2.0.14 mbq_gr_do_grant_effect). Nur ueber mbq_gr_do_grant_effect aufrufen.
+mbq_gr_do_grant_checked_effect = {
+	# Stress fuer gierig/ehrgeizig 1:1 GT:1020-1080 (Liste target_titles = der eine Titel). Vor der Uebergabe geprueft = Stand beim Entschluss;
+	# ob Vanilla vor oder nach dem Code-Transfer prueft, ist unbelegt (GT:1). Greift nur an/unter der Schwelle und nur bei Grafschaft/Baronie.
+	if = {
+		limit = {
+			OR = {
+				has_trait = greedy
+				has_trait = ambitious
+			}
+			domain_size <= domain_limit
+			scope:mbq_gr_grant_title.tier <= tier_county
+		}
+		if = {
+			limit = { domain_size = domain_limit }
+			stress_and_fulfillment_impact = { greedy = minor_stress_impact_gain ambitious = minor_stress_impact_gain } # GT:1061-1069
+		}
+		else_if = {
+			limit = { domain_size < domain_limit }
+			stress_and_fulfillment_impact = { greedy = medium_stress_impact_gain ambitious = medium_stress_impact_gain } # GT:1070-1078
+		}
+	}
+	scope:mbq_gr_grant_title = {
+		create_title_and_vassal_change = { type = granted save_scope_as = mbq_gr_change }
+		if = { # Logikcheck M4: government_base Pflicht bei unbelandetem Empfaenger (E:177-179), Regierung des Spielers wie Vanilla-Verleihen
+			limit = { scope:mbq_gr_recipient = { is_landed = no } }
+			change_title_holder_include_vassals = {
+				holder = scope:mbq_gr_recipient
+				change = scope:mbq_gr_change
+				take_baronies = no
+				government_base = scope:mbq_gr_liege
+			}
+		}
+		else = {
+			change_title_holder_include_vassals = {
+				holder = scope:mbq_gr_recipient
+				change = scope:mbq_gr_change
+				take_baronies = no
+			}
+		}
+		resolve_title_and_vassal_change = scope:mbq_gr_change
+	}
+	scope:mbq_gr_recipient = {
+		if = {
+			limit = { scope:mbq_gr_grant_title.tier = tier_barony }
+			add_opinion = { target = scope:mbq_gr_liege modifier = received_title_barony }
+		}
+		else_if = {
+			limit = { scope:mbq_gr_grant_title.tier = tier_county }
+			add_opinion = { target = scope:mbq_gr_liege modifier = received_title_county }
+		}
+		# Hoefische Vasallen gegen Niedriggeborene 1:1 GT:575-590 (Spieler-Zweig, Grafschaft -5), Baronie nichts (GT:551-560); Herzogtum/Koenigreich gibt die Mod ab 2.1 nicht mehr ab
+		if = {
+			limit = {
+				is_lowborn = yes
+				NOT = { scope:mbq_gr_grant_title.tier = tier_barony }
+			}
+			scope:mbq_gr_liege = {
+				if = {
+					limit = { scope:mbq_gr_grant_title.tier = tier_county }
+					every_vassal = {
+						vassal_stance = courtly
+						add_opinion = { target = scope:mbq_gr_liege modifier = courtly_lowborn_grant_opinion opinion = -5 }
+					}
+				}
+			}
+		}
+	}
+	if = { # Empfaenger-Bau: neuer Adliger wie Vanilla (Wirkung der on_actions, nur fuer den Titel, der ihn erzeugt hat)
+		limit = { exists = scope:mbq_gr_new_noble scope:mbq_gr_new_noble > 0 } # 2.0.16
+		mbq_gr_new_noble_after_effect = yes
+		scope:mbq_gr_recipient = { # Logikcheck 20 S2: Liste wird nur einmal je Lauf gefuellt; der neue Direktvasall bleibt fuer die naechsten Titel Kandidat wie bisher
+			if = { limit = { NOT = { is_in_list = mbq_gr_cands } } add_to_temporary_list = mbq_gr_cands }
+		}
+		save_scope_value_as = { name = mbq_gr_new_noble value = 0 } # 2.0.16: Ueberschreiben statt clear_saved_scope
+	}
+	# Sammelmeldung statt Toast je Titel (MENUE_RICHTLINIE 11); Stumm-Modus: nichts merken, keine Meldung
+	if = {
+		limit = { NOT = { has_global_variable = mbq_gr_silent } }
+		if = { # Titel nur einmal merken (Doppelmeldung 14-10; triggers.log:815 is_target_in_variable_list)
+			limit = { NOT = { is_target_in_variable_list = { name = mbq_gr_list target = scope:mbq_gr_grant_title } } }
+			add_to_variable_list = { name = mbq_gr_list target = scope:mbq_gr_grant_title } # E:58
+		}
+		mbq_gr_pending_effect = yes
+	}
+}
+
+# Entschlackung 15-10 (Maxim): jede Aenderung im erweiterten Bereich schaltet das Preset "Who gets titles" auf Custom (mbq_gr_preset_5, Profile final 15-10).
+mbq_gr_custom_effect = {
+	if = { limit = { has_global_variable = mbq_gr_preset_1 } remove_global_variable = mbq_gr_preset_1 }
+	if = { limit = { has_global_variable = mbq_gr_preset_2 } remove_global_variable = mbq_gr_preset_2 }
+	if = { limit = { has_global_variable = mbq_gr_preset_3 } remove_global_variable = mbq_gr_preset_3 }
+	if = { limit = { has_global_variable = mbq_gr_preset_4 } remove_global_variable = mbq_gr_preset_4 }
+	if = { limit = { NOT = { has_global_variable = mbq_gr_preset_5 } } set_global_variable = { name = mbq_gr_preset_5 value = yes } }
+}
+
+mbq_gr_pending_effect = {
+	if = {
+		limit = { NOT = { has_variable = mbq_gr_pending } }
+		set_variable = { name = mbq_gr_pending value = yes days = 3 } # Sicherheitsnetz wie mbq_ransom.txt
+		trigger_event = { id = mbq_gr.0011 days = 1 }
+	}
+}
+
+# Kandidaten (Trichter-Bau 14-10): je Titel sammeln (nur Neue kommen dazu), dann nach Filter und Rang waehlen (Leistung: nur Reich, nur beim Lauf).
+# Temporaere Liste lebt "later in the same effect" (effects.log:83); Doppelte
+# verhindert is_in_list (triggers.log:780, Form Better Marriages mmoc_scripted_effects.txt:112). Wer: Eure Hoeflinge (E:4499), Direktvasallen
+# (E:5360; Option A: keine Untervasallen), lebende Mitglieder Eures Hauses (E:13502), Nachkommen bis Ururenkel (E:4398), Dynastie (E:16178) nur, wenn ein Platz
+# Dynasty waehlt (alte Dynastien zaehlen Tote mit, empfaenger_konzept.md H2). Familienschleifen filtern im limit mbq_gr_realm_member_trigger
+# (nur Reich, unbelandet oder Direktvasall); so kommen Verwandte an Vasallenhoefen herein, fremde Hoeflinge dort nie. Ein eigenes
+# every_vassal { every_courtier } waere doppelt: Haus-, Kinder- und Dynastieschleife finden dieselben Leute.
+# Im Reich bleiben nur Gueltige: mbq_gr_recipient_valid_trigger (target_is_liege_or_above) im Kandidaten-Filter. Scope = Spieler.
+mbq_gr_cands_effect = {
+	if = { # Logikcheck 20 S2: einmal je Lauf fuellen. Merker = der Spieler selbst in derselben temporaeren Liste (lebt genau so lange wie die Liste,
+		# effects.log:83; ein Scope-Wert koennte eine Event-Option ueberleben, die Liste nicht). Der Spieler faellt im Kandidaten-Filter raus
+		# (mbq_gr_cand_ok_trigger NOT = { this = scope:mbq_gr_liege }). Titelabhaengig ist nur der Filter/Rang (ordered_in_list je Titel), nicht die Sammlung.
+		limit = { scope:mbq_gr_liege = { NOT = { is_in_list = mbq_gr_cands } } }
+		scope:mbq_gr_liege = { add_to_temporary_list = mbq_gr_cands }
+		scope:mbq_gr_liege = {
+			every_courtier = {
+				limit = { NOT = { is_in_list = mbq_gr_cands } }
+				add_to_temporary_list = mbq_gr_cands
+			}
+			every_vassal = { # nur DIREKTE Vasallen (E:5360), keine Untervasallen (Option A, konzept.md 10)
+				limit = { NOT = { is_in_list = mbq_gr_cands } }
+				add_to_temporary_list = mbq_gr_cands
+			}
+			house ?= {
+				every_house_member = {
+					limit = {
+						is_alive = yes
+						NOT = { is_in_list = mbq_gr_cands }
+						mbq_gr_realm_member_trigger = yes
+					}
+					add_to_temporary_list = mbq_gr_cands
+				}
+			}
+			every_child = {
+				if = { limit = { is_alive = yes NOT = { is_in_list = mbq_gr_cands } mbq_gr_realm_member_trigger = yes } add_to_temporary_list = mbq_gr_cands }
+				every_child = {
+					if = { limit = { is_alive = yes NOT = { is_in_list = mbq_gr_cands } mbq_gr_realm_member_trigger = yes } add_to_temporary_list = mbq_gr_cands }
+					every_child = {
+						if = { limit = { is_alive = yes NOT = { is_in_list = mbq_gr_cands } mbq_gr_realm_member_trigger = yes } add_to_temporary_list = mbq_gr_cands }
+						every_child = {
+							limit = {
+								is_alive = yes
+								NOT = { is_in_list = mbq_gr_cands }
+								mbq_gr_realm_member_trigger = yes
+							}
+							add_to_temporary_list = mbq_gr_cands
+						}
+					}
+				}
+			}
+			if = {
+				limit = { mbq_gr_uses_dynasty_trigger = yes }
+				dynasty ?= {
+					every_dynasty_member = {
+						limit = {
+							is_alive = yes
+							NOT = { is_in_list = mbq_gr_cands }
+							mbq_gr_realm_member_trigger = yes
+						}
+						add_to_temporary_list = mbq_gr_cands
+					}
+				}
+			}
+		}
+	}
+}
+
+# Niemand passt (Maxim 14-10): der Titel bleibt, die Sammelmeldung nennt den Grund. Je Titel hoechstens einmal in 360 Tagen gemeldet, sonst kaeme
+# bei jedem Takt dieselbe Zeile. Scope = Spieler, scope:mbq_gr_grant_title = Titel.
+mbq_gr_nofit_effect = {
+	if = {
+		limit = {
+			NOT = { has_global_variable = mbq_gr_silent }
+			scope:mbq_gr_grant_title = { NOT = { has_variable = mbq_gr_nofit } }
+		}
+		scope:mbq_gr_grant_title = { set_variable = { name = mbq_gr_nofit value = yes days = 360 } }
+		if = {
+			limit = { has_variable = mbq_gr_kept_n }
+			change_variable = { name = mbq_gr_kept_n add = 1 }
+		}
+		else = {
+			set_variable = { name = mbq_gr_kept_n value = 1 }
+		}
+		if = { # 2.2.8: die Vasallenschwelle wird in der Sammelmeldung nur genannt, wenn sie fuer DIESEN Titel gilt und voll ist (neue Direktvasallen und Rueckfall ausgeschlossen); Baronien nie
+			limit = { mbq_gr_vassal_slot_ok_trigger = no }
+			if = {
+				limit = { has_variable = mbq_gr_kept_full }
+				change_variable = { name = mbq_gr_kept_full add = 1 }
+			}
+			else = {
+				set_variable = { name = mbq_gr_kept_full value = 1 }
+			}
+		}
+		mbq_gr_pending_effect = yes
+	}
+}
+
+# New noble wie Vanilla "A Noble of the ... Culture" / "A Local ... Noble" (V gui/window_find_vassal.gui:34-160, Title.CreateHolderForTitle /
+# CreateLocalHolderForTitle, DT:113822, :113828). Das Erzeugen ist Engine-Code; belegt sind: nur Grafschaft/Baronie (:34), Kultur = Spieler bzw.
+# Provinz des Titels (V localization/english/gui/title_view_l_english.yml:197-201), Glaube = Ritus des Spielers bzw. Staatsritus des obersten
+# Lehnsherrn bei state_faith (ebd. :198, :201), lokaler Knopf nur bei anderer Kultur (window_find_vassal.gui:99). Danach feuert Vanilla
+# on_county_auto_granted_to_liege_culture / _local_culture (V common/on_action/culture_on_actions.txt:418-553 / :555-696), deren Wirkung
+# mbq_gr_new_noble_after_effect nachbaut. Alter und Geschlecht waehlt die Engine (unbelegt); hier wie bisher 25-45, Geschlecht nach Ritus (Probe P-N4).
+# Trichter-Bau 14-10: nur noch New noble (your culture) = KIND 1, Aufruf aus mbq_gr_pick_c_effect (G0).
+mbq_gr_new_noble_effect = {
+	if = {
+		limit = {
+			scope:mbq_gr_grant_title.tier <= tier_county # nur Grafschaft/Baronie wie Vanilla (window_find_vassal.gui:34)
+			NOT = { government_has_flag = government_is_herder } # 2.1.19 (Experte R2): ein Neuer Adliger ist kein Herrscher, Hirten-Geber vergeben nur an Herrscher (mbq_gr_recipient_valid_trigger), also den Zweig gar nicht erst durchlaufen
+			trigger_if = { # 2.1.19: Titel mit Nomaden-/Hirten-Holding gehen bei Gebern ohne nomad_government nur an Herrscher (V 00_grant_titles_interaction.txt:163-185)
+				limit = { NOT = { has_government = nomad_government } }
+				NOT = { scope:mbq_gr_grant_title.title_province ?= { OR = { has_holding_type = nomad_holding has_holding_type = herder_holding } } }
+			}
+			mbq_gr_vassal_slot_ok_trigger = yes # neuer Direktvasall (empfaenger_konzept.md 5.8, T:7865); 2.2.8: Baronien ausgenommen, Regel in mbq_gr_vassal_slot_ok_trigger (mbq_county_triggers.txt)
+		}
+		scope:mbq_gr_liege.faith = { save_scope_as = mbq_gr_nn_faith } # 2.0.16: immer erst setzen (Rueckfall unten las einen stehengebliebenen Wert)
+		if = { # Glaube: Staatsritus des obersten Lehnsherrn bei state_faith (Loc :198/:201; Skript-Form V 00_scripted_triggers.txt:316-322), sonst Spieler
+			limit = { top_liege = { government_allows = state_faith } }
+			top_liege.primary_title.state_faith = { save_scope_as = mbq_gr_nn_faith } # V event_targets.log:944
+		}
+		if = {
+			limit = { NOT = { exists = scope:mbq_gr_nn_faith } }
+			scope:mbq_gr_liege.faith = { save_scope_as = mbq_gr_nn_faith }
+		}
+		create_character = { # E:339; dynasty = generate ist Standard (E:339): ein Adliger, kein Niedriggeborener
+			culture = $CULTURE$
+			faith = scope:mbq_gr_nn_faith
+			age = { 25 45 }
+			gender_female_chance = { # Maxim 15-10, Spieltest Vanilla-Knopf 'A Noble of the ... Culture' (CreateHolderForTitle, window_find_vassal.gui:41): Ritus gleichberechtigt -> 8 von 8 Maenner; also nur frauendominiert = Frau
+				if = { limit = { scope:mbq_gr_liege.rite ?= { rite_has_doctrine = doctrine_gender_female_dominated } } add = 100 }
+				else = { add = 0 }
+			}
+			employer = scope:mbq_gr_liege
+			save_scope_as = mbq_gr_recipient
+		}
+		clear_saved_scope = mbq_gr_nn_faith
+		if = { # 2.2.4 (error.log 01-11 20:48, 1428 Zeilen, nur mbq_county_events.txt:113): beim Aufbau des Tooltips der Option 'Weitergeben an neuen Adligen' (hidden_effect, mbq_gr.0001) laeuft create_character nicht, scope:mbq_gr_recipient gibt es dann nicht; im echten Klick legt create_character ihn immer an, das Verhalten bleibt gleich
+			limit = { exists = scope:mbq_gr_recipient }
+			scope:mbq_gr_recipient = { save_scope_as = mbq_gr_nn_new } # 2.2.1: Ausnahme vom Verwaltungsblock in mbq_gr_recipient_valid_trigger; 2.2.4: in der Wache (Experte 01-11), nn_new wird nur in mbq_gr_recipient_valid_trigger :54 mit ?= gelesen
+			if = { # Vanilla-Pruefung (Geschlecht nach Glaube/Gesetz), sonst keine Vergabe; Kultur-/Glaubenshaken gelten fuer neue Adlige nicht (Maxim Nr. 5)
+				limit = { NOT = { scope:mbq_gr_recipient = { mbq_gr_recipient_valid_trigger = yes } } }
+				scope:mbq_gr_recipient = { silent_disappearance_effect = yes } # Logikcheck 20 S1: keine Waise am Hof (V common/scripted_effects/00_death_management_effects.txt:20-32)
+				clear_saved_scope = mbq_gr_recipient
+			}
+			else = {
+				save_scope_value_as = { name = mbq_gr_pick_ok value = 1 } # 2.0.16
+				save_scope_value_as = { name = mbq_gr_new_noble value = $KIND$ } # 1 = Kultur des Spielers, 2 = oertliche Kultur
+				save_scope_value_as = { name = mbq_gr_nn_made value = 1 } # 2.1.42: nie ein zweiter neuer Adliger fuer denselben Titel
+			}
+		}
+	}
+}
+
+# Wirkung der Vanilla-on_actions nach dem Verleihen an einen neuen Adligen (culture_on_actions.txt:418-553 KIND 1, :555-696 KIND 2), ohne den
+# Toast (ersetzt durch die Sammelmeldung). Meinung received_title_* gibt mbq_gr_do_grant_effect (gleiche Modifikatoren wie :449 / :594).
+mbq_gr_new_noble_after_effect = {
+	scope:mbq_gr_recipient = {
+		if = { # :467 / :612 Adelsfamilie
+			limit = {
+				scope:mbq_gr_grant_title.tier = tier_county
+				scope:mbq_gr_liege = {
+					government_allows = noble_families
+					government_has_flag = government_has_county_tier_noble_families
+				}
+				NOT = { any_held_title = { is_noble_family_title = yes } }
+			}
+			create_noble_family_effect = { GOVERNMENT_GIVER = scope:mbq_gr_liege }
+		}
+	}
+	if = { # :616-631 (Vermaechtnis :620) nur oertliche Kultur: Gefallen-Haken mit Dynastie-Vermaechtnis ep1_culture_legacy_3
+		limit = {
+			scope:mbq_gr_new_noble = 2
+			exists = scope:mbq_gr_liege.dynasty
+			scope:mbq_gr_liege.dynasty = { has_dynasty_perk = ep1_culture_legacy_3 }
+		}
+		scope:mbq_gr_liege = {
+			if = {
+				limit = { can_add_hook = { target = scope:mbq_gr_recipient type = favor_hook } }
+				add_hook = { type = favor_hook target = scope:mbq_gr_recipient }
+			}
+		}
+	}
+	scope:mbq_gr_liege = { # :503-515 / :641-653 (Parameter :507 / :645) Ringen: Prestige (dort im Toast, hier ohne)
+		if = {
+			limit = {
+				any_character_struggle = {
+					involvement = involved
+					has_struggle_phase_parameter = granting_title_to_local_noble_gives_prestige
+				}
+			}
+			add_prestige = medium_prestige_gain
+		}
+	}
+	if = { # :518-545 / :656-683 (Katalysator :532-541 / :670-679) Ringen
+		limit = {
+			scope:mbq_gr_grant_title = {
+				any_county_struggle = {
+					any_involved_ruler = { this = scope:mbq_gr_liege }
+				}
+			}
+			scope:mbq_gr_liege = {
+				any_character_struggle = {
+					involvement = involved
+					phase_has_catalyst = catalyst_grant_land_local_noble
+					is_culture_involved_in_struggle = scope:mbq_gr_recipient.culture
+				}
+			}
+		}
+		scope:mbq_gr_liege = {
+			every_character_struggle = {
+				involvement = involved
+				activate_struggle_catalyst = {
+					catalyst = catalyst_grant_land_local_noble
+					character = scope:mbq_gr_liege
+				}
+			}
+		}
+	}
+	if = { # :686-690 nur oertliche Kultur: Kulturakzeptanz, Root der on_action = Kultur des neuen Halters; Wert liest scope:landed_title (V 00_culture_values.txt:110-123)
+		limit = {
+			scope:mbq_gr_new_noble = 2
+			scope:mbq_gr_grant_title.tier = tier_county
+		}
+		scope:mbq_gr_grant_title = { save_scope_as = landed_title }
+		scope:mbq_gr_recipient.culture = {
+			change_cultural_acceptance = { # E:16837
+				target = scope:mbq_gr_liege.culture
+				value = auto_grant_county_cultural_acceptance_impact
+				desc = cultural_acceptance_gain_auto_granted_county
+			}
+		}
+	}
+}
+
+mbq_gr_pick_c_effect = { # Stufe c, generiert (G0)
+	save_scope_value_as = { name = mbq_gr_pick_best value = 0 } # 2.0.16: statt clear_saved_scope
+	mbq_gr_cands_effect = yes
+	ordered_in_list = { # E:1707, Muster Better Marriages mmoc_scripted_effects.txt:206-231
+		list = mbq_gr_cands
+		limit = {
+			NOT = { is_in_list = mbq_gr_badrec } # 2.1.39: Empfaenger, an die die Vergabe in diesem Lauf scheiterte
+			mbq_gr_cand_ok_trigger = yes
+			mbq_gr_qualify_trigger = yes # Logikcheck final M1+S2: trifft eine Mitgliedschafts-Prioritaet (Sortierung qualifiziert nicht)
+		}
+		order_by = mbq_gr_pick_order_value # Nachtrag Feedback 15-10: engste angehakte Religions-/Kulturstufe zuerst
+		save_scope_as = mbq_gr_best
+		save_scope_value_as = { name = mbq_gr_pick_best value = 1 }
+	}
+	if = { # Runde 3: Gleichstand deterministisch, zweiter Durchgang nur unter Gleichen (save_temporary_scope_value_as E:2699)
+		limit = { scope:mbq_gr_pick_best = 1 }
+		scope:mbq_gr_best = { save_temporary_scope_value_as = { name = mbq_gr_best_ord value = mbq_gr_pick_order_value } }
+		ordered_in_list = {
+			list = mbq_gr_cands
+			limit = {
+				NOT = { is_in_list = mbq_gr_badrec } # 2.1.39
+				mbq_gr_cand_ok_trigger = yes
+				mbq_gr_qualify_trigger = yes
+				mbq_gr_pick_order_value = scope:mbq_gr_best_ord
+			}
+			order_by = mbq_gr_tie_value
+			save_scope_as = mbq_gr_best
+			save_scope_value_as = { name = mbq_gr_pick_best value = 1 }
+		}
+	}
+	if = {
+		limit = {
+			OR = {
+				AND = { # Rueckfall nur mit Haken New noble if nobody fits (Maxim 15-10)
+					scope:mbq_gr_pick_best = 0
+					mbq_gr_c_has_nn_trigger = yes
+				}
+				# Maxim 15-10: New noble nur noch als Rueckfall per Haken, kein Prioritaetsplatz
+			}
+		}
+		if = { # Maxim 15-10: Vorschau (mbq_gr.0001) erschafft niemanden, merkt nur den Rueckfall
+			limit = { exists = scope:mbq_gr_preview scope:mbq_gr_preview = 1 } # 2.0.16
+			save_scope_value_as = { name = mbq_gr_nn_planned value = 1 }
+		}
+		else = { mbq_gr_new_noble_effect = { CULTURE = scope:mbq_gr_liege.culture KIND = 1 } } # Vanilla-Knopf 'Eure Kultur'
+	}
+	if = { # kein neuer Adliger (oder er scheiterte, z. B. Vasallenlimit): der beste Kandidat
+		limit = { # 2.0.16: Merker statt exists (die alte Empfaengerin blieb stehen, Logik-Test 2.0.15)
+			scope:mbq_gr_pick_ok = 0
+			scope:mbq_gr_pick_best = 1
+		}
+		scope:mbq_gr_best = { save_scope_as = mbq_gr_recipient }
+		save_scope_value_as = { name = mbq_gr_pick_ok value = 1 }
+	}
+}
+
+# Empfaenger Grafschaft/Baronie: Plaetze der Stufe c (ersetzt die feste Kaskade S :29-106).
+mbq_gr_county_pick_effect = {
+	save_scope_value_as = { name = mbq_gr_pick_ok value = 0 } # 2.0.16: statt clear_saved_scope (wirkte im Lauf nicht)
+	save_scope_value_as = { name = mbq_gr_nn_planned value = 0 }
+	save_scope_value_as = { name = mbq_gr_new_noble value = 0 } # 2.0.16: Ueberschreiben statt clear_saved_scope
+	mbq_gr_pick_c_effect = yes
+}
+
+mbq_gr_county_grant_effect = {
+	if = { limit = { NOT = { has_variable = mbq_kept_mig_2146 } } mbq_kept_migrate_2146_effect = yes } # 2.1.46: einmalige Umstellung, Schutz bleibt wie heute
+	save_scope_value_as = { name = mbq_gr_nn_made value = 0 } # 2.1.42: fuer diesen Titel wurde noch kein neuer Adliger erzeugt (Ueberschreiben statt clear_saved_scope, wie :399)
+	mbq_gr_county_pick_effect = yes
+	if = {
+		limit = { scope:mbq_gr_pick_ok = 1 } # 2.0.16 # S :109-113 exists-Guard
+		mbq_gr_do_grant_effect = yes
+		# 2.1.39 (Spieltest 25-10, Delft): ging der Titel trotz gewaehltem Empfaenger nicht ueber, den naechsten Kandidaten probieren (bis zu fuenfmal; Chef 25-10: mehrere Herzoege des Hauses scheitern nacheinander), nie still haengen
+		mbq_gr_grant_retry_effect = yes
+		mbq_gr_grant_retry_effect = yes
+		mbq_gr_grant_retry_effect = yes
+		mbq_gr_grant_retry_effect = yes
+		mbq_gr_grant_retry_effect = yes
+		mbq_gr_grant_final_nn_effect = yes # 2.1.42: Maxim 25-10, scheitern alle Empfaenger (auch mehr als fuenf), entsteht TROTZDEM ein neuer Adliger
+		if = { # alle Versuche vergeblich: Grund in der Sammelmeldung (Nofit), statt dass nur "Abgegeben: 0" steht
+			# 2.1.41: auch wenn die letzte Auswahl niemanden mehr fand (pick_ok = 0 ab der Wiederholung, :397), sonst blieb der Titel stumm beim Spieler
+			limit = { scope:mbq_gr_grant_title = { holder ?= scope:mbq_gr_liege } }
+			mbq_gr_nofit_effect = yes
+		}
+	}
+	else = { mbq_gr_nofit_effect = yes } # Trichter-Bau: Grund in der Sammelmeldung
+}
+
+# 2.1.39: ein weiterer Versuch. Nur wenn der gewaehlte Empfaenger KEIN neu erzeugter Adliger war (der Rueckfall wird nicht wiederholt, sonst entstuenden mehrere Adlige) und der Titel
+# nach der Vergabe noch beim Spieler liegt. Der gescheiterte Empfaenger kommt in die temporaere Liste mbq_gr_badrec (gilt fuer diesen Lauf), die Auswahl (mbq_gr_pick_c_effect) uebergeht sie.
+mbq_gr_grant_retry_effect = {
+	if = {
+		limit = {
+			scope:mbq_gr_pick_ok = 1
+			scope:mbq_gr_new_noble = 0
+			scope:mbq_gr_nn_made = 0 # 2.1.42: ein neu erzeugter Adliger wird nie wiederholt, auch wenn die Engine die Vergabe an ihn verwarf
+			scope:mbq_gr_grant_title = { holder ?= scope:mbq_gr_liege }
+		}
+		scope:mbq_gr_recipient = {
+			if = { limit = { NOT = { is_in_list = mbq_gr_badrec } } add_to_temporary_list = mbq_gr_badrec }
+		}
+		mbq_gr_county_pick_effect = yes
+		if = {
+			limit = { scope:mbq_gr_pick_ok = 1 }
+			mbq_gr_do_grant_effect = yes
+		}
+	}
+}
+
+# 2.1.42 (Maxim 25-10: "Wenn die Vergabe an einen Empfaenger nicht geht, soll TROTZDEM mit der Baronie ein neuer Adliger erstellt werden"): sind die Wiederholungen aufgebraucht und der Titel liegt noch
+# beim Spieler, entsteht der neue Adlige hier. Nur mit Haken "Neuer Adliger als Rueckfall" (mbq_gr_c_has_nn_trigger), nur einmal je Titel (mbq_gr_nn_made) und nur, wenn die Vorbedingungen von
+# mbq_gr_new_noble_effect stimmen (Grafschaft/Baronie, Vasallenplatz frei, kein Hirten-Geber); sonst bleibt pick_ok 0 und die Schlusspruefung meldet Nofit.
+mbq_gr_grant_final_nn_effect = {
+	if = {
+		limit = {
+			scope:mbq_gr_nn_made = 0
+			mbq_gr_c_has_nn_trigger = yes
+			scope:mbq_gr_grant_title = { holder ?= scope:mbq_gr_liege }
+		}
+		save_scope_value_as = { name = mbq_gr_pick_ok value = 0 }
+		save_scope_value_as = { name = mbq_gr_new_noble value = 0 }
+		mbq_gr_new_noble_effect = { CULTURE = scope:mbq_gr_liege.culture KIND = 1 } # wie der bestehende Rueckfall (mbq_gr_pick_c_effect), Vanilla-Knopf 'Eure Kultur'
+		if = {
+			limit = { scope:mbq_gr_pick_ok = 1 }
+			mbq_gr_do_grant_effect = yes
+		}
+	}
+}
+
+# Aufraeumen Grafschaften (S :415-493): erst Baronien, dann Grafschaften, Abbruch sobald unter der Schwelle (Live-Pruefung statt Zaehler).
+mbq_gr_county_cleanup_effect = {
+	ordered_held_title = { # 2.0.17: EINE Schleife, neueste zuerst; bei gleicher Nummer Baronie vor Grafschaft (vorher erst alle Baronien, dann Grafschaften; E:6655)
+		limit = {
+			OR = {
+				tier = tier_barony
+				tier = tier_county
+			}
+			mbq_gr_county_cand_trigger = yes
+		}
+		order_by = mbq_gr_cleanup_order_value
+		max = 1000
+		check_range_bounds = no
+		if = {
+			limit = { scope:mbq_gr_liege = { mbq_gr_over_value > 0 } } # wie Vorschau, Schwelle plus erlaubte Grafschaften (Maxim Nr. 4)
+			save_scope_as = mbq_gr_grant_title
+			scope:mbq_gr_liege = { mbq_gr_county_grant_effect = yes } # Kaskade im Spieler-Scope (S :450-452)
+		}
+	}
+}
+
+# 2.2.3 (Maxim 01-11): wertvolle, nicht markierte Besitzungen, die schon laenger beim Spieler liegen (Erbe, frueher ohne Rueckfrage), wurden bei 'Frag mich' weder gefragt noch abgegeben, die Rueckfrage kam nur beim Titelgewinn
+# (mbq_county_on_actions.txt, on_title_gain). Jetzt fragt der Lauf, solange der Spieler nach dem Aufraeumen noch ueber der Schwelle ist: dieselbe Rueckfrage mbq_gr.0001 fuer ALLE offenen Titel im selben Lauf (2.2.6, max = 50 nur als Sicherheitsnetz),
+# je Titel nur einmal (mbq_gr_asked wird vor dem Ereignis gesetzt; die Antwort in mbq_gr.0001 und der Titelverlust loeschen die Marke). Gesetzt wird nie mbq_gr_kept, das tut nur die Option 'Behalten'.
+# Scopes wie im Gewinn-Hook: scope:mbq_gr_liege (Lauf :save_scope_as, der Spieler) und scope:mbq_gr_grant_title (hier gesetzt); das Ereignis liest nur diese beiden (events/mbq_county_events.txt, immediate und Optionen).
+mbq_gr_ask_valuable_effect = {
+	if = { # 2.2.5: einmalige Umstellung. In 2.2.3 wurde mbq_gr_asked ohne Ablauf gesetzt, auch wenn Maxim das Fenster nie sah (Fehlermeldung Chef 01-11, 3 Titel dauerhaft 'wartend'). Alte Marken weg, neue laufen nach 30 Tagen ab.
+		limit = { NOT = { has_variable = mbq_ask_mig_225 } }
+		every_held_title = {
+			limit = { has_variable = mbq_gr_asked }
+			remove_variable = mbq_gr_asked
+		}
+		set_variable = { name = mbq_ask_mig_225 value = yes }
+	}
+	if = {
+		limit = {
+			NOT = { mbq_gr_no_ask_trigger = yes }
+			mbq_gr_over_value > 0
+		}
+		ordered_held_title = { # 2.2.6 (Maxim 01-11: "es ist, als waere monatlich nur eins moeglich"): Takt UND Jetzt ausfuehren fragen ALLE offenen wertvollen, nicht markierten Titel im selben Lauf; max = 50 ist nur Sicherheitsnetz gegen eine Fensterflut, keine Takt-Bremse (2.2.3 hatte max = 1, 2.2.5 max = 1 bzw. 5 bei Jetzt ausfuehren)
+			limit = { mbq_gr_ask_cand_trigger = yes }
+			order_by = mbq_gr_cleanup_order_value
+			max = 50
+			check_range_bounds = no
+			save_scope_as = mbq_gr_grant_title
+			set_variable = { name = mbq_gr_asked value = yes days = 30 }
+			scope:mbq_gr_liege = { trigger_event = mbq_gr.0001 }
+		}
+	}
+}
+
+# Lauf (Takt und Jetzt ausfuehren): Grafschaften und Baronien (ab 2.1 keine Herzogtuemer und Koenigreiche mehr).
+mbq_gr_run_effect = {
+	if = { limit = { NOT = { has_variable = mbq_kept_mig_2146 } } mbq_kept_migrate_2146_effect = yes } # 2.1.46: einmalige Umstellung, Schutz bleibt wie heute
+	save_scope_as = mbq_gr_liege
+	if = {
+		limit = {
+			mbq_gr_player_ok_trigger = yes
+			mbq_gr_what_valid_trigger = yes
+		}
+		if = {
+			limit = { NOT = { has_global_variable = mbq_gr_no_county } }
+			mbq_gr_county_cleanup_effect = yes
+			mbq_gr_ask_valuable_effect = yes # 2.2.3
+		}
+	}
+	if = { # Jetzt ausfuehren ohne Treffer: trotzdem Meldung "nichts zu tun" (wie Vassals), ausser stumm
+		limit = {
+			has_variable = mbq_gr_manual
+			NOT = { has_global_variable = mbq_gr_silent }
+		}
+		mbq_gr_pending_effect = yes
+	}
+	else_if = {
+		limit = { has_variable = mbq_gr_manual }
+		remove_variable = mbq_gr_manual
+	}
+}
+
+# Takt per Event-Schleife mit Generationszaehler (Muster mbq_vs_arm_effect, build_vasallen.py; Experte Vassals 5a Frage 7).
+mbq_gr_arm_effect = {
+	if = {
+		limit = { has_variable = mbq_gr_gen }
+		change_variable = { name = mbq_gr_gen add = 1 }
+	}
+	else = {
+		set_variable = { name = mbq_gr_gen value = 1 }
+	}
+	save_scope_value_as = { name = mbq_gr_gen value = var:mbq_gr_gen }
+	if = {
+		limit = { has_global_variable = mbq_gr_quarterly }
+		set_variable = { name = mbq_gr_armed value = yes days = 96 }
+		trigger_event = { id = mbq_gr.0010 days = 91 }
+	}
+	else = {
+		set_variable = { name = mbq_gr_armed value = yes days = 35 }
+		trigger_event = { id = mbq_gr.0010 days = 30 }
+	}
+}
+
+# Sammelmeldung (aus mbq_gr.0011). Erfolg = Titel nicht mehr beim Spieler.
+mbq_gr_summary_effect = {
+	set_variable = { name = mbq_gr_n value = 0 }
+	set_variable = { name = mbq_gr_slot value = 0 }
+	if = {
+		limit = { has_variable_list = mbq_gr_list }
+		every_in_list = { # E:940
+			variable = mbq_gr_list
+			limit = { NOT = { holder ?= root } }
+			root = { change_variable = { name = mbq_gr_n add = 1 } }
+		}
+		ordered_in_list = { # E:1707
+			variable = mbq_gr_list
+			limit = { NOT = { holder ?= root } }
+			order_by = mbq_gr_order_value
+			max = 5
+			check_range_bounds = no
+			save_scope_as = mbq_gr_pr
+			root = {
+				change_variable = { name = mbq_gr_slot add = 1 }
+				if = { limit = { var:mbq_gr_slot = 1 } set_variable = { name = mbq_gr_c1 value = scope:mbq_gr_pr } }
+				else_if = { limit = { var:mbq_gr_slot = 2 } set_variable = { name = mbq_gr_c2 value = scope:mbq_gr_pr } }
+				else_if = { limit = { var:mbq_gr_slot = 3 } set_variable = { name = mbq_gr_c3 value = scope:mbq_gr_pr } }
+				else_if = { limit = { var:mbq_gr_slot = 4 } set_variable = { name = mbq_gr_c4 value = scope:mbq_gr_pr } }
+				else_if = { limit = { var:mbq_gr_slot = 5 } set_variable = { name = mbq_gr_c5 value = scope:mbq_gr_pr } }
+			}
+		}
+		clear_variable_list = mbq_gr_list
+	}
+	if = {
+		limit = { var:mbq_gr_n > 5 }
+		set_variable = { name = mbq_gr_rest value = var:mbq_gr_n }
+		change_variable = { name = mbq_gr_rest subtract = 5 }
+	}
+	if = {
+		limit = {
+			NOT = { has_global_variable = mbq_gr_silent }
+			OR = {
+				var:mbq_gr_n >= 1
+				has_variable = mbq_gr_manual
+				has_variable = mbq_gr_kept_n # Trichter-Bau: Titel blieb, weil niemand passt (Maxim 14-10)
+			}
+		}
+		send_interface_message = { # E:9999
+			type = mbq_county_summary_message
+			title = mbq_gr_sum_title
+			desc = mbq_gr_sum_desc
+		}
+	}
+	if = { limit = { has_variable = mbq_gr_manual } remove_variable = mbq_gr_manual }
+	if = { limit = { has_variable = mbq_gr_pending } remove_variable = mbq_gr_pending }
+	remove_variable = mbq_gr_n
+	remove_variable = mbq_gr_slot
+	if = { limit = { has_variable = mbq_gr_rest } remove_variable = mbq_gr_rest }
+	if = { limit = { has_variable = mbq_gr_kept_n } remove_variable = mbq_gr_kept_n }
+	if = { limit = { has_variable = mbq_gr_kept_full } remove_variable = mbq_gr_kept_full } # 2.2.8
+	if = { limit = { has_variable = mbq_gr_c1 } remove_variable = mbq_gr_c1 }
+	if = { limit = { has_variable = mbq_gr_c2 } remove_variable = mbq_gr_c2 }
+	if = { limit = { has_variable = mbq_gr_c3 } remove_variable = mbq_gr_c3 }
+	if = { limit = { has_variable = mbq_gr_c4 } remove_variable = mbq_gr_c4 }
+	if = { limit = { has_variable = mbq_gr_c5 } remove_variable = mbq_gr_c5 }
+}
+
+# Vorschau: nur beim Oeffnen und bei jedem Klick. Zaehlt hoechstens so viele Titel wie Ueberhang (ohne Empfaengersuche, Zahl ist "bis zu").
+mbq_gr_preview_effect = {
+	if = { limit = { NOT = { has_variable = mbq_kept_mig_2146 } } mbq_kept_migrate_2146_effect = yes } # 2.1.46: einmalige Umstellung, Schutz bleibt wie heute
+	save_scope_as = mbq_gr_liege
+	if = { # Selbstheilung des Takts wie mbq_vs_preview_effect
+		limit = {
+			has_global_variable = mbq_gr_auto
+			NOT = { has_variable = mbq_gr_armed }
+		}
+		mbq_gr_arm_effect = yes
+	}
+	if = { limit = { has_variable = mbq_gr_paused } remove_variable = mbq_gr_paused } # 2.1.19: Pause-Hinweis im Fenster entfernt, alte Spielstaende aufraeumen
+	if = { # 2.1.19 Diagnose (Chef 24-10): die Domaenenrechnung in Verwaltungs-, Nomaden- und Hirtenreichen ist NICHT belegt; Zeile im debug.log beim Oeffnen und bei jedem Klick (Schluessel MBQ_GR_DIAG_LOG, Funktionen data_types_uncategorized.txt:36408-36450)
+		limit = { OR = { government_has_mechanic = administrative government_has_flag = government_is_nomadic government_has_flag = government_is_herder } }
+		debug_log = MBQ_GR_DIAG_LOG # Schluessel ohne Anfuehrungszeichen wie V 00_religious_war.txt:3318 und 00_diarch_interactions.txt:272
+	}
+	set_variable = { name = mbq_gr_prev_n value = 0 }
+	if = { limit = { has_variable = mbq_gr_prev_why } remove_variable = mbq_gr_prev_why } # 2.1.44
+	if = {
+		limit = {
+			mbq_gr_player_ok_trigger = yes
+			mbq_gr_what_valid_trigger = yes
+		}
+		if = {
+			limit = {
+				NOT = { has_global_variable = mbq_gr_no_county }
+				mbq_gr_over_value > 0 # Schwelle plus erlaubte Grafschaften (Maxim Nr. 4, Entscheidung Chef 7.7)
+			}
+			set_variable = { name = mbq_gr_pc value = 0 }
+			set_variable = { name = mbq_gr_rs_cap value = 0 } # 2.1.44: Gruende, warum ein Besitz nicht abgegeben wird (Zeile unter der Vorschau, nur bei Ueberhang und 0 Treffern)
+			set_variable = { name = mbq_gr_rs_val value = 0 }
+			set_variable = { name = mbq_gr_rs_ask value = 0 } # 2.2.3
+			set_variable = { name = mbq_gr_rs_hold value = 0 }
+			set_variable = { name = mbq_gr_rs_oth value = 0 }
+			set_variable = { name = mbq_gr_rs_lease value = 0 }
+			every_held_title = {
+				limit = { OR = { tier = tier_county tier = tier_barony } }
+				if = {
+					limit = { mbq_gr_county_cand_trigger = yes }
+					root = { change_variable = { name = mbq_gr_pc add = 1 } }
+				}
+				else_if = { # verpachtet (Theokratische Pacht, Tempel beim Kleriker): zaehlt nicht zur Domaene, also auch kein Grund in der Zeile (Modder 2: Domaene sank nicht, Save 1209_11_05)
+					limit = { is_leased_out = yes }
+					root = { change_variable = { name = mbq_gr_rs_lease add = 1 } }
+				}
+				else_if = { # Hauptstadt des Spielers oder Hauptbaronie (Sitz der Grafschaft, folgt ihrer Grafschaft)
+					limit = {
+						OR = {
+							mbq_gr_not_capital_trigger = no
+							AND = { tier = tier_barony is_capital_barony = yes }
+						}
+					}
+					root = { change_variable = { name = mbq_gr_rs_cap add = 1 } }
+				}
+				else_if = { # als Wertvoll markiert (eigene Marke am Titel, 2.1.46: keine Vererbung von der Grafschaft)
+					limit = { has_variable = mbq_gr_kept }
+					root = { change_variable = { name = mbq_gr_rs_val add = 1 } }
+				}
+				else_if = { # 2.2.3: wertvoll bei Frag mich, nicht markiert: wartet auf die Antwort des Spielers (Rueckfrage mbq_gr.0001 aus dem Lauf), wird NICHT als markiert gezaehlt; 2.2.5: beantwortete Titel sind Kandidaten und stehen hier nicht mehr
+					limit = {
+						NOT = { scope:mbq_gr_liege = { mbq_gr_no_ask_trigger = yes } }
+						mbq_gr_valuable_trigger = yes
+						NOT = { has_variable = mbq_gr_answered }
+					}
+					root = { change_variable = { name = mbq_gr_rs_ask add = 1 } }
+				}
+				else_if = { # 2.1.45 (Experte): nur Tempel, die Glaube oder Regierung des Herrschers nicht erlaubt (mbq_gr_church_allowed_trigger); verpachtete sind schon oben ausgenommen, Staedte fallen bei anderem Grund in 'andere'
+					limit = {
+						tier = tier_barony
+						title_province ?= { has_holding_type = church_holding }
+						mbq_gr_church_allowed_trigger = no
+					}
+					root = { change_variable = { name = mbq_gr_rs_hold add = 1 } }
+				}
+				else = { root = { change_variable = { name = mbq_gr_rs_oth add = 1 } } }
+			}
+			set_variable = { name = mbq_gr_po value = mbq_gr_over_value }
+			if = { limit = { var:mbq_gr_pc > var:mbq_gr_po } set_variable = { name = mbq_gr_pc value = var:mbq_gr_po } }
+			change_variable = { name = mbq_gr_prev_n add = var:mbq_gr_pc }
+			remove_variable = mbq_gr_pc
+			remove_variable = mbq_gr_po
+			if = { # 2.1.44: Grund-Zeile nur bei Ueberhang und 0 Treffern
+				limit = { var:mbq_gr_prev_n = 0 }
+				set_variable = { name = mbq_gr_prev_why value = 1 }
+			}
+		}
+	}
+}

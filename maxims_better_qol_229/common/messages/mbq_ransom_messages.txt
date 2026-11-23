@@ -1,0 +1,10 @@
+﻿# Better Quality of Life 2.0.0: Sammelmeldung der Loesegeld-Automatik. Typ reicht nur die Texte durch wie mbq_conv_summary_message
+# (mbq_messages.txt); Symbol wie die Vanilla-Loesegeldmeldung interaction_prison_ransom (V common/messages/01_interaction_messages.txt:9-15).
+mbq_ransom_summary_message = {
+	icon = "prison"
+	title = event_message_title
+	desc = event_message_text
+	style = good # Maxim 15-10: alle Sammelmeldungen einheitlich
+	message_filter_type = mbq_ransom_summary
+	display = feed
+}

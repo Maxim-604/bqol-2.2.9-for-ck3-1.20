@@ -1,0 +1,9 @@
+﻿# 24-10-2026 (Chef/Maxim): gemeinsame Entscheidungsgruppe "Mods von Maxim" (EN "Mods by Maxim") fuer Better UI, Better Quality of Life und Better Marriages.
+# Quelle: Modding\CK3\_gemeinsam\maxims_mods_gruppe. Gleicher Pfad und BYTE-GLEICHER Inhalt in jeder Mod: dann ersetzt die spaeter geladene Datei die fruehere ohne Doppel-Definition
+# und ohne doppelte Loc-Schluessel (Muster: _gemeinsam\maxims_qol_entscheidungen). Pruefskript pruefe_gruppe.py im Quellordner. Nicht einzeln aendern.
+# Format: V common/decision_group_types/_decision_group_types.info (sort_order, gui_tags). sort_order 149: knapp unter maxims_qol (150), ueber Reich (100).
+maxims_mods = {
+	sort_order = 149
+	# 25-10-2026 (Maxim): Tag mbq_keep_fold. Ohne Wirkung, solange keine Mod ihn liest; Private QoL merkt damit Ein- und Ausklappen dieser Gruppe (gui/00_mbq_decision_group_fold.gui, DecisionGroupType.HasTag).
+	gui_tags = { big_button mbq_keep_fold }
+}

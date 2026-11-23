@@ -1,0 +1,323 @@
+﻿# Better Quality of Life 2.0.0 (QOL-38): Grund der Sperre im Tooltip der Interaktion 'Vertrag aendern' (Vasallenvertrag). Database override, the later definition wins
+# (Muster mbq_auto_divorce_accept.txt:2). VOLLKOPIE des Schluessels liege_modify_vassal_contract_interaction = Vanilla 1.20.1
+#   common/character_interactions/00_modifiy_vassal_contract.txt:1-312 (md5 der Datei c24012a67dabb1cdbc878ae05439aeee).
+# Einzige Aenderung: im trigger_else_if-Zweig 'If they're blocked' (Vanilla :90-97) steht die Pruefung
+#   scope:recipient = { subject_contract_is_blocked_from_modification = no }
+# jetzt in custom_tooltip { text = IS_VASSAL_CONTRACT_BLOCKED_FROM_MODIFICATION ... } (Text liegt in Vanilla, localization/english/triggers/character_triggers_l_english.yml:593).
+# WARTUNG: gefrorene Vanilla-Kopie, nach jedem CK3-Patch an 00_modifiy_vassal_contract.txt mit dem Generator neu erzeugen (md5-Pruefung bricht sonst ab).
+liege_modify_vassal_contract_interaction = {
+	special_interaction = liege_modify_vassal_contract
+	interface = modify_vassal_contract
+	category = interaction_category_vassal
+	common_interaction = yes
+	icon = icon_contract_modification_single
+	interface_priority = 5
+
+	send_name = "modify_vassal_contract_interaction_SEND"
+	desc = liege_modify_vassal_contract_interaction_desc
+
+	force_notification = yes
+	notification_text = MODIFY_VASSAL_CONTRACT_NOTIFICATION_TO_VASSAL
+
+	is_shown = {
+		scope:recipient = {
+			this != scope:puppet_or_actor
+			liege ?= scope:puppet_or_actor
+			is_tributary = no # this excludes tributary contracts by default
+			is_ruler = yes
+			vassal_contract_has_modifiable_obligations = yes
+			NOT = { government_has_mechanic = administrative }
+			NOT = { government_has_flag = government_is_nomadic }
+		}
+	}
+
+	is_valid_showing_failures_only = {
+		NOT = { scope:puppet_or_actor = { is_at_war_with = scope:recipient } }
+	}
+
+	can_send = {
+		#Mandala gets special treatment
+		trigger_if = {
+			limit = {
+				scope:puppet_or_actor = { government_has_flag = government_is_mandala }
+			}
+			custom_tooltip = {
+				text = liege_modify_vassal_contract_mandala_cooldown
+				NOT = {
+					scope:recipient = { var:liege_recently_adjusted_mandala_vassal_contract ?= scope:puppet_or_actor }
+				}
+			}
+			scope:puppet_or_actor = {
+				has_changed_contract_obligation_trigger = yes
+
+				custom_description = {
+					text = "liege_modify_vassal_contract_cannot_exceed_tyranny_cap"
+					object = scope:puppet_or_actor
+					NOT = {
+						vassal_obligation_increase_tyranny_gain_multiplier > 1
+					}
+				}
+
+				# Cannot change more than three things at once
+				custom_description = {
+					text = "vassal_modify_vassal_contract_obligation_change_limit"
+					value = list_size:changed_obligations
+					list_size:changed_obligations <= max_contract_changes
+				}
+
+				# If the trade without the hook usage is already in the vassal's favour or fair then don't waste your hook
+				save_temporary_scope_value_as = {
+					name = obligations_favoring_vassal
+					value = scope:recipient.count_obligation_improvements_for_vassal
+				}
+				trigger_if = {
+					limit = { scope:obligations_favoring_vassal > 0 }
+					custom_description = {
+						text = "vassal_modify_vassal_contract_unnecessary_hook_usage_vassal_favor"
+						object = scope:recipient
+						value = scope:obligations_favoring_vassal
+						NOT = { always = scope:hook }
+					}
+				}
+				trigger_else_if = {
+					limit = { scope:obligations_favoring_vassal = 0 }
+					custom_description = {
+						text = "vassal_modify_vassal_contract_unnecessary_hook_usage_equal"
+						object = scope:recipient
+						NOT = { always = scope:hook }
+					}
+				}
+				trigger_else = {} # Otherwise we're fine!
+			}
+		}
+		#The rest
+		trigger_else_if = { #If they're blocked we don't want to show anything else
+			limit = {
+				scope:recipient = {
+					subject_contract_is_blocked_from_modification = yes
+				}
+			}
+			# mbq QOL-38: Grund sichtbar machen, sonst zeigt CK3 hier nur die generische Meldung (Sammler-Form, Hunk 1).
+			custom_tooltip = {
+				text = IS_VASSAL_CONTRACT_BLOCKED_FROM_MODIFICATION
+				scope:recipient = {
+					subject_contract_is_blocked_from_modification = no
+				}
+			}
+		}
+		trigger_else = {
+			scope:puppet_or_actor = {
+				has_changed_contract_obligation_trigger = yes
+
+				custom_description = {
+					text = "liege_modify_vassal_contract_cannot_exceed_tyranny_cap"
+					object = scope:puppet_or_actor
+					NOT = {
+						vassal_obligation_increase_tyranny_gain_multiplier > 1
+					}
+				}
+
+				# Cannot change more than three things at once
+				custom_description = {
+					text = "vassal_modify_vassal_contract_obligation_change_limit"
+					value = list_size:changed_obligations
+					list_size:changed_obligations <= max_contract_changes
+				}
+
+				# If the trade without the hook usage is already in the vassal's favour or fair then don't waste your hook
+				save_temporary_scope_value_as = {
+					name = obligations_favoring_vassal
+					value = scope:recipient.count_obligation_improvements_for_vassal
+				}
+				trigger_if = {
+					limit = { scope:obligations_favoring_vassal > 0 }
+					custom_description = {
+						text = "vassal_modify_vassal_contract_unnecessary_hook_usage_vassal_favor"
+						object = scope:recipient
+						value = scope:obligations_favoring_vassal
+						NOT = { always = scope:hook }
+					}
+				}
+				trigger_else_if = {
+					limit = { scope:obligations_favoring_vassal = 0 }
+					custom_description = {
+						text = "vassal_modify_vassal_contract_unnecessary_hook_usage_equal"
+						object = scope:recipient
+						NOT = { always = scope:hook }
+					}
+				}
+				trigger_else = {} # Otherwise we're fine!
+			}
+		}
+	}
+
+	auto_accept = yes
+	on_accept = {
+		hidden_effect = {
+			# Struggle Catalysts
+			## We work these out first so they're not invalidated by the actual effect block.
+			if = {
+				limit = {
+					catalyst_granted_powerful_diff_faith_vassal_religious_protection_preliminary_trigger = { CHAR = scope:recipient }
+					scope:puppet_or_actor = {
+						any_character_struggle = {
+							involvement = involved
+							activate_struggle_catalyst_secondary_character_involvement_involved_trigger = {
+								CATALYST = catalyst_granted_powerful_diff_faith_vassal_religious_protection
+								CHAR = scope:recipient
+							}
+						}
+					}
+				}
+				scope:puppet_or_actor = {
+					every_character_struggle = {
+						involvement = involved
+						limit = {
+							activate_struggle_catalyst_secondary_character_involvement_involved_trigger = {
+								CATALYST = catalyst_granted_powerful_diff_faith_vassal_religious_protection
+								CHAR = scope:recipient
+							}
+						}
+						activate_struggle_catalyst = {
+							catalyst = catalyst_granted_powerful_diff_faith_vassal_religious_protection
+							character = scope:puppet_or_actor
+						}
+					}
+				}
+			}
+			if = {
+				limit = {
+					catalyst_revoked_powerful_diff_faith_vassal_religious_protection_preliminary_trigger = { CHAR = scope:recipient }
+					scope:puppet_or_actor = {
+						any_character_struggle = {
+							involvement = involved
+							activate_struggle_catalyst_secondary_character_involvement_involved_trigger = {
+								CATALYST = catalyst_revoked_powerful_diff_faith_vassal_religious_protection
+								CHAR = scope:recipient
+							}
+						}
+					}
+				}
+				scope:puppet_or_actor = {
+					every_character_struggle = {
+						involvement = involved
+						limit = {
+							activate_struggle_catalyst_secondary_character_involvement_involved_trigger = {
+								CATALYST = catalyst_revoked_powerful_diff_faith_vassal_religious_protection
+								CHAR = scope:recipient
+							}
+						}
+						activate_struggle_catalyst = {
+							catalyst = catalyst_revoked_powerful_diff_faith_vassal_religious_protection
+							character = scope:puppet_or_actor
+						}
+					}
+				}
+			}
+
+			# Improving contract catalyst
+			if = {
+				limit = {
+					scope:recipient.count_obligation_improvements_for_vassal > 0
+					scope:puppet_or_actor = {
+						is_diff_faith_or_culture_trigger = {
+							CHAR = scope:recipient
+							STATUS = involved
+						}
+						any_character_struggle = {
+							involvement = involved
+							activate_struggle_catalyst_secondary_character_involvement_involved_trigger = {
+								CATALYST = catalyst_grant_privilege_to_diff_faith_culture_vassal
+								CHAR = scope:recipient
+							}
+						}
+					}
+				}
+				scope:puppet_or_actor = {
+					every_character_struggle = {
+						involvement = involved
+						limit = {
+							activate_struggle_catalyst_secondary_character_involvement_involved_trigger = {
+								CATALYST = catalyst_grant_privilege_to_diff_faith_culture_vassal
+								CHAR = scope:recipient
+							}
+						}
+						activate_struggle_catalyst = {
+							catalyst = catalyst_grant_privilege_to_diff_faith_culture_vassal
+							character = scope:puppet_or_actor
+						}
+					}
+				}
+			}
+		}
+
+		# Enact changes.
+		scope:puppet_or_actor = {
+			send_interface_message = {
+				type = msg_vassal_contract_change
+				title = modify_vassal_contract_interaction_notification
+				right_icon = scope:recipient
+				# Add tyranny for each level increased. Can spend one hook to avoid one level of tyranny hit.
+				add_tyranny = vassal_obligation_increase_tyranny_gain
+				if = {
+					limit = { vassal_obligation_increase_tyranny_gain != 0 }
+					stress_and_fulfillment_impact = {
+						just = medium_stress_impact_gain
+						generous = medium_stress_impact_gain
+					}
+				}
+				if = {
+					limit = {
+						always = scope:hook
+					}
+					use_hook = scope:recipient
+					add_achievement_flag_effect = { FLAG = achievement_fine_print_flag }
+				}
+
+				scope:recipient = {
+					hidden_effect = {
+						set_subject_contract_modification_blocked = yes
+					}
+					set_variable = {
+						name = liege_recently_adjusted_mandala_vassal_contract
+						value = scope:puppet_or_actor
+						years = mandala_vassal_obligation_cooldown_years
+					}
+				}
+
+				every_in_list = {
+					list = changed_obligations
+
+					save_scope_as = obligation
+
+					scope:recipient = {
+						vassal_contract_set_obligation_level = {
+							type = scope:obligation.vassal_contract_type
+							level = scope:obligation
+						}
+					}
+
+				}
+			}
+		}
+
+		# Additional Flavor Titles
+		scope:recipient = { additional_flavor_check_effect = yes }
+	}
+
+	send_option = {
+		is_valid = {
+			scope:puppet_or_actor = {
+				has_usable_hook = scope:recipient
+			}
+		}
+		flag = hook
+		localization = SCHEME_HOOK
+	}
+	should_use_extra_icon = {
+		scope:puppet_or_actor = { has_usable_hook = scope:recipient }
+	}
+	extra_icon = "gfx/interface/icons/character_interactions/hook_icon.dds"
+
+	send_options_exclusive = no
+}

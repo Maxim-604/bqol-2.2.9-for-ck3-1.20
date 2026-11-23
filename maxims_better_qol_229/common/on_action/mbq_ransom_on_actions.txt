@@ -1,0 +1,21 @@
+﻿# Better Quality of Life 2.0.0: nach Erbfolge laeuft die Loesegeld-Automatik am neuen Spielercharakter weiter.
+# on_player_character_change vom Code (on_actions.log:4379-4381, Scope none); nur ein on_actions-Eintrag, Listen verschmelzen
+# (Muster MOAC common/on_action/mmoc_on_actions.txt:4-21). Rechnet nur bei Erbfolge des Spielers.
+on_player_character_change = {
+	on_actions = {
+		mbq_rs_on_player_change
+	}
+}
+
+mbq_rs_on_player_change = {
+	effect = {
+		every_player = { # effects.log:1022
+			limit = {
+				is_ai = no
+				has_global_variable = mbq_rs_auto
+				NOT = { has_variable = mbq_rs_armed }
+			}
+			mbq_rs_arm_effect = yes
+		}
+	}
+}

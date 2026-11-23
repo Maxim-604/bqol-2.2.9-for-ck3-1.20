@@ -1,0 +1,7 @@
+﻿l_simp_chinese:
+ MBQ_VS_G_VASSALS: "封臣"
+ MBQ_VS_G_TRIBUTE: "朝贡者"
+ MBQ_VS_G_BOTH: "适用于封臣和朝贡者"
+ MBQ_VS_G_NOW: "立即执行"
+ MBQ_VS_MIN_LABEL: "契约：不低于"
+ MBQ_VS_NOW_NOTE: "无需自动化也可使用"

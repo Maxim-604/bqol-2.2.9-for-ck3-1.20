@@ -1,0 +1,54 @@
+﻿# Better Quality of Life 2.0.0 (Vassals): Schleife nur am Spieler, Muster events/mbq_ransom_events.txt (mbq_ransom.0001/0002).
+namespace = mbq_vassal
+
+mbq_vassal.0001 = {
+	hidden = yes
+	immediate = {
+		if = {
+			limit = {
+				exists = scope:mbq_vs_gen
+				has_variable = mbq_vs_gen
+				scope:mbq_vs_gen = var:mbq_vs_gen
+			}
+			remove_variable = mbq_vs_armed
+			if = {
+				limit = {
+					OR = {
+						mbq_vs_auto_on_trigger = yes
+						mbq_tb_auto_on_trigger = yes
+					}
+					is_alive = yes
+					is_ai = no
+				}
+				if = {
+					limit = { is_imprisoned = no } # Pause in Haft wie Loesegeld (konzept V11, triggers.log:5518)
+					if = { limit = { mbq_vs_auto_on_trigger = yes } mbq_vs_run_effect = yes }
+					if = { limit = { mbq_tb_auto_on_trigger = yes } mbq_tb_run_effect = yes } # nach der Vasallisierung: neue Vasallen sind keine Tributziele mehr
+				}
+				mbq_vs_arm_effect = yes
+			}
+		}
+		else_if = { # Termin ohne gespeicherte Generation (Laden): neu scharf schalten, kein Lauf (wie mbq_ransom.0001)
+			limit = {
+				NOT = { exists = scope:mbq_vs_gen }
+				OR = {
+					mbq_vs_auto_on_trigger = yes
+					mbq_tb_auto_on_trigger = yes
+				}
+				is_alive = yes
+				is_ai = no
+			}
+			mbq_vs_arm_effect = yes
+		}
+	}
+}
+
+mbq_vassal.0002 = {
+	hidden = yes
+	immediate = { mbq_vs_summary_effect = yes }
+}
+
+mbq_vassal.0003 = {
+	hidden = yes
+	immediate = { mbq_tb_summary_effect = yes }
+}

@@ -1,0 +1,7 @@
+﻿l_japanese:
+ MBQ_VS_G_VASSALS: "封臣"
+ MBQ_VS_G_TRIBUTE: "諸侯"
+ MBQ_VS_G_BOTH: "封臣と諸侯向け"
+ MBQ_VS_G_NOW: "今すぐ実行"
+ MBQ_VS_MIN_LABEL: "契約：これ未満にしない"
+ MBQ_VS_NOW_NOTE: "自動化なしでも使える"

@@ -1,0 +1,11 @@
+﻿l_spanish:
+ MBQ_WIN_PRIO_1: "Prioridad 1"
+ MBQ_WIN_PRIO_2: "Prioridad 2"
+ MBQ_WIN_PRIO_3: "Prioridad 3"
+ MBQ_WIN_PRIO_4: "Prioridad 4"
+ MBQ_PRIO_OPT_0: "@cross_icon! Nada"
+ MBQ_PRIO_OPT_1: "@gold_icon! Pagar el oro que piden"
+ MBQ_PRIO_OPT_2: "@weak_hook_icon! Usar un anzuelo débil"
+ MBQ_PRIO_OPT_3: "@unspent_strong_hook_icon! Usar un anzuelo fuerte"
+ MBQ_PRIO_OPT_4: "@hook_on_me_icon! Conceder el favor que piden"
+ MBQ_TT_PRIO: "#T Prioridades: se prueban en orden#!\n$EFFECT_LIST_BULLET$ Se usa la primera opción que funcione, luego la siguiente\n$EFFECT_LIST_BULLET$ Si ninguna funciona, se rechaza la petición"

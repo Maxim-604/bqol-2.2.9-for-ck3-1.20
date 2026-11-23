@@ -1,0 +1,154 @@
+﻿# Better Quality of Life 2.0.0 (Demand Conversion): Schalter. Gesetzt = an bei mbq_dc_auto, mbq_dc_t*, mbq_dc_min_*; gesetzt = Haken weg bei mbq_dc_no_*.
+mbq_dc_toggle_auto = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_dc_auto } remove_global_variable = mbq_dc_auto }
+		else = {
+			set_global_variable = { name = mbq_dc_auto value = yes }
+			if = { limit = { NOT = { has_variable = mbq_dc_armed } } mbq_dc_arm_effect = yes }
+		}
+	}
+}
+mbq_dc_toggle_rite = { # 2.1.6 Haken "Auch zu meinem Ritus beeinflussen" (Standard aus, kostet Fruemmigkeit je Ziel)
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_dc_rite } remove_global_variable = mbq_dc_rite }
+		else = { set_global_variable = { name = mbq_dc_rite value = yes } }
+	}
+}
+mbq_dc_run_now = {
+	scope = character
+	effect = {
+		set_variable = { name = mbq_dc_manual value = yes }
+		mbq_dc_run_effect = yes
+		mbq_dc_preview_effect = yes
+	}
+}
+mbq_dc_preview = {
+	scope = character
+	effect = { mbq_dc_preview_effect = yes }
+}
+mbq_dc_set_t1 = { # Takt wie Radio: genau eine Variable oder keine (Standard alle 3 Monate)
+	scope = character
+	effect = {
+		set_global_variable = { name = mbq_dc_t1 value = yes }
+		if = { limit = { has_global_variable = mbq_dc_t6 } remove_global_variable = mbq_dc_t6 }
+		if = { limit = { has_global_variable = mbq_dc_t12 } remove_global_variable = mbq_dc_t12 }
+		if = { limit = { has_global_variable = mbq_dc_auto } mbq_dc_arm_effect = yes } # neuer Takt ab heute (wie mbq_vs_set_quarterly)
+	}
+}
+mbq_dc_set_t3 = { # Takt wie Radio: genau eine Variable oder keine (Standard alle 3 Monate)
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_dc_t1 } remove_global_variable = mbq_dc_t1 }
+		if = { limit = { has_global_variable = mbq_dc_t6 } remove_global_variable = mbq_dc_t6 }
+		if = { limit = { has_global_variable = mbq_dc_t12 } remove_global_variable = mbq_dc_t12 }
+		if = { limit = { has_global_variable = mbq_dc_auto } mbq_dc_arm_effect = yes } # neuer Takt ab heute (wie mbq_vs_set_quarterly)
+	}
+}
+mbq_dc_set_t6 = { # Takt wie Radio: genau eine Variable oder keine (Standard alle 3 Monate)
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_dc_t1 } remove_global_variable = mbq_dc_t1 }
+		set_global_variable = { name = mbq_dc_t6 value = yes }
+		if = { limit = { has_global_variable = mbq_dc_t12 } remove_global_variable = mbq_dc_t12 }
+		if = { limit = { has_global_variable = mbq_dc_auto } mbq_dc_arm_effect = yes } # neuer Takt ab heute (wie mbq_vs_set_quarterly)
+	}
+}
+mbq_dc_set_t12 = { # Takt wie Radio: genau eine Variable oder keine (Standard alle 3 Monate)
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_dc_t1 } remove_global_variable = mbq_dc_t1 }
+		if = { limit = { has_global_variable = mbq_dc_t6 } remove_global_variable = mbq_dc_t6 }
+		set_global_variable = { name = mbq_dc_t12 value = yes }
+		if = { limit = { has_global_variable = mbq_dc_auto } mbq_dc_arm_effect = yes } # neuer Takt ab heute (wie mbq_vs_set_quarterly)
+	}
+}
+mbq_dc_min_set_any = {
+	scope = character
+	effect = {
+		set_global_variable = { name = mbq_dc_min_any value = yes }
+		if = { limit = { has_global_variable = mbq_dc_min_60 } remove_global_variable = mbq_dc_min_60 }
+		if = { limit = { has_global_variable = mbq_dc_min_100 } remove_global_variable = mbq_dc_min_100 }
+		mbq_dc_preview_effect = yes
+	}
+}
+mbq_dc_min_set_60 = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_dc_min_any } remove_global_variable = mbq_dc_min_any }
+		set_global_variable = { name = mbq_dc_min_60 value = yes }
+		if = { limit = { has_global_variable = mbq_dc_min_100 } remove_global_variable = mbq_dc_min_100 }
+		mbq_dc_preview_effect = yes
+	}
+}
+mbq_dc_min_set_80 = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_dc_min_any } remove_global_variable = mbq_dc_min_any }
+		if = { limit = { has_global_variable = mbq_dc_min_60 } remove_global_variable = mbq_dc_min_60 }
+		if = { limit = { has_global_variable = mbq_dc_min_100 } remove_global_variable = mbq_dc_min_100 }
+		mbq_dc_preview_effect = yes
+	}
+}
+mbq_dc_min_set_100 = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_dc_min_any } remove_global_variable = mbq_dc_min_any }
+		if = { limit = { has_global_variable = mbq_dc_min_60 } remove_global_variable = mbq_dc_min_60 }
+		set_global_variable = { name = mbq_dc_min_100 value = yes }
+		mbq_dc_preview_effect = yes
+	}
+}
+mbq_dc_toggle_dir = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_dc_no_dir } remove_global_variable = mbq_dc_no_dir }
+		else = { set_global_variable = { name = mbq_dc_no_dir value = yes } }
+		mbq_dc_preview_effect = yes
+	}
+}
+mbq_dc_toggle_ind = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_dc_no_ind } remove_global_variable = mbq_dc_no_ind }
+		else = { set_global_variable = { name = mbq_dc_no_ind value = yes } }
+		mbq_dc_preview_effect = yes
+	}
+}
+mbq_dc_toggle_trib = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_dc_no_trib } remove_global_variable = mbq_dc_no_trib }
+		else = { set_global_variable = { name = mbq_dc_no_trib value = yes } }
+		mbq_dc_preview_effect = yes
+	}
+}
+mbq_dc_toggle_court = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_dc_no_court } remove_global_variable = mbq_dc_no_court }
+		else = { set_global_variable = { name = mbq_dc_no_court value = yes } }
+		mbq_dc_preview_effect = yes
+	}
+}
+mbq_dc_who_all = {
+	scope = character
+	effect = {
+		remove_global_variable = mbq_dc_no_dir
+		remove_global_variable = mbq_dc_no_ind
+		remove_global_variable = mbq_dc_no_trib
+		remove_global_variable = mbq_dc_no_court
+		mbq_dc_preview_effect = yes
+	}
+}
+mbq_dc_who_reset = { # 2.1.2 (Maxim 21-10): Keine = alle vier Ziele aus (ungueltig = rot, Automatik pausiert)
+	scope = character
+	effect = {
+		set_global_variable = { name = mbq_dc_no_dir value = yes }
+		set_global_variable = { name = mbq_dc_no_ind value = yes }
+		set_global_variable = { name = mbq_dc_no_trib value = yes }
+		set_global_variable = { name = mbq_dc_no_court value = yes }
+		mbq_dc_preview_effect = yes
+	}
+}

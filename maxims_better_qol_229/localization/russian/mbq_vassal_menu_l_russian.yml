@@ -1,0 +1,7 @@
+﻿l_russian:
+ MBQ_VS_G_VASSALS: "Вассалы"
+ MBQ_VS_G_TRIBUTE: "Данники"
+ MBQ_VS_G_BOTH: "Для вассалов и данников"
+ MBQ_VS_G_NOW: "Выполнить сейчас"
+ MBQ_VS_MIN_LABEL: "Договор: не ниже"
+ MBQ_VS_NOW_NOTE: "Работает и без автоматизации"

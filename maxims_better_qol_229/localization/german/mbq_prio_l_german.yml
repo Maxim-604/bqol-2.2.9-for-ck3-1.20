@@ -1,0 +1,11 @@
+﻿l_german:
+ MBQ_WIN_PRIO_1: "Priorität 1"
+ MBQ_WIN_PRIO_2: "Priorität 2"
+ MBQ_WIN_PRIO_3: "Priorität 3"
+ MBQ_WIN_PRIO_4: "Priorität 4"
+ MBQ_PRIO_OPT_0: "@cross_icon! Nichts"
+ MBQ_PRIO_OPT_1: "@gold_icon! Das geforderte Gold zahlen"
+ MBQ_PRIO_OPT_2: "@weak_hook_icon! Schwaches Druckmittel nutzen"
+ MBQ_PRIO_OPT_3: "@unspent_strong_hook_icon! Starkes Druckmittel nutzen"
+ MBQ_PRIO_OPT_4: "@hook_on_me_icon! Geforderten Gefallen gewähren"
+ MBQ_TT_PRIO: "#T Prioritäten: der Reihe nach versucht#!\n$EFFECT_LIST_BULLET$ Die erste Möglichkeit, die geht, wird genutzt, sonst die nächste\n$EFFECT_LIST_BULLET$ Geht nichts, wird die Forderung abgelehnt"

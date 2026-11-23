@@ -1,0 +1,5 @@
+﻿gui/mbq_settings.gui = mbq_settings
+gui/mbq_settings_button.gui = mbq_settings_button
+gui/mbq_wertvoll.gui = mbq_wertvoll_county
+gui/mbq_cp_driver.gui = mbq_cp_driver
+gui/mbq_cp_driver_b.gui = mbq_cp_driver_b

@@ -1,0 +1,218 @@
+﻿# Better Quality of Life 2.0.0: Kommt dieser Gefangene fuer die Loesegeld-Automatik in Frage? Scope = Gefangener, root = Spieler.
+# Einstellungen als globale Variablen wie das BQoL-Fenster (common/scripted_guis/mbq_settings.txt). Haken = einbezogen;
+# Standard ohne Variable (Fassung 4, Maxim 14-10-2026): Kerker an, Hausarrest an, ohne Titel und Baron an, Graf und hoeher aus, Loesegeld 100 Prozent, alle sechs Ausnahmen an.
+# Reihenfolge billigstes zuerst (Logik-Check Experte 14-10, Punkt 1): Schalter und Haft, Wer, Rang, Zahler KI, Gold, Ausnahmen, zuletzt die Vanilla-Annahme.
+
+# Pflichtgruppen (Maxim 14-10): Wer = Kerker oder Hausarrest, mindestens eins. Variable mbq_rs_no_<x> = Haken weg.
+mbq_rs_who_valid_trigger = {
+	OR = {
+		NOT = { has_global_variable = mbq_rs_no_dungeon }
+		NOT = { has_global_variable = mbq_rs_no_house }
+	}
+}
+
+# Rang: mindestens eins von fuenf (ohne Titel, Baron, Graf, Herzog, Koenig; Kaiser/Hegemon gestrichen, Maxim 21-10-2026). t0 und t1 Standard an (Variable mbq_rs_no_t0/_t1 = weg), t2 (Graf) bis t4 Standard aus (Variable mbq_rs_t2 bis _t4 = gesetzt).
+mbq_rs_rank_valid_trigger = {
+	OR = {
+		NOT = { has_global_variable = mbq_rs_no_t0 }
+		NOT = { has_global_variable = mbq_rs_no_t1 }
+		has_global_variable = mbq_rs_t2
+		has_global_variable = mbq_rs_t3
+		has_global_variable = mbq_rs_t4
+	}
+}
+
+# Gesamtprobe: ungueltige Auswahl = Automatik pausiert und "Jetzt ausfuehren" gesperrt (Maxim 14-10, Nachtrag abends/spaet). Laeuft in jedem Scope (nur globale Variablen).
+mbq_rs_settings_valid_trigger = {
+	mbq_rs_who_valid_trigger = yes
+	mbq_rs_rank_valid_trigger = yes
+}
+
+# Kriegsgegner (Fassung 4, Maxim 14-10: ALLE auf der Gegenseite eines laufenden Kriegs gegen den Spieler: Kriegsfuehrer, Verbuendete, spaeter Beigetretene).
+# Scope = Charakter X, root = Spieler. X nimmt an einem Krieg des Spielers auf der GEGENSEITE teil (Spieler Angreifer und X Verteidiger oder umgekehrt).
+# Muster Vanilla common/scripted_triggers (any_character_war mit "scope:x = { is_attacker_in_war = prev }" und "root.liege = { is_defender_in_war = prev }");
+# any_character_war triggers.log:1457, is_attacker_in_war :5076, is_defender_in_war :5329 (Scope: Krieg). Spaeter Beigetretene sind Angreifer/Verteidiger des Kriegs.
+mbq_rs_war_enemy_side_trigger = {
+	save_temporary_scope_as = mbq_rs_wx # wie V scripted_triggers save_temporary_scope_as = vassal
+	root = {
+		any_character_war = {
+			OR = {
+				AND = {
+					root = { is_attacker_in_war = prev }
+					scope:mbq_rs_wx = { is_defender_in_war = prev }
+				}
+				AND = {
+					root = { is_defender_in_war = prev }
+					scope:mbq_rs_wx = { is_attacker_in_war = prev }
+				}
+			}
+		}
+	}
+}
+
+# ... und deren VASALLEN (Maxim 14-10): X selbst oder einer seiner Lehnsherren oberhalb steht auf der Gegenseite. any_liege_or_above triggers.log:1816
+# ("all lieges above a character, skipping the character themselves"); das Gefangenen-Lehnsherr/Zahler-Paar steckt damit in der Kette.
+mbq_rs_war_enemy_trigger = {
+	OR = {
+		mbq_rs_war_enemy_side_trigger = yes
+		any_liege_or_above = { mbq_rs_war_enemy_side_trigger = yes }
+	}
+}
+
+mbq_rs_candidate_trigger = {
+	is_alive = yes
+	is_imprisoned_by = root # triggers.log:5524
+	mbq_rs_settings_valid_trigger = yes
+	save_temporary_scope_as = mbq_rs_x # Gefangener, fuer die Ausnahmen Fraktion und Haken (scope:mbq_rs_x)
+	# Wer: Haftart (triggers.log:5587-5588; Vanilla V 00_prison_interactions.txt:1820, 00_prison_custom_loc.txt:8)
+	OR = {
+		AND = {
+			is_in_prison_type = dungeon
+			NOT = { has_global_variable = mbq_rs_no_dungeon }
+		}
+		AND = {
+			is_in_prison_type = house_arrest
+			NOT = { has_global_variable = mbq_rs_no_house }
+		}
+	}
+	# Rang: hoechster gehaltener LANDTITEL (triggers.log:4850 "highest held landed title tier", Vergleiche <, <=, =, !=, >, >= :4851;
+	# tier_unlanded 0 bis tier_hegemony 6: V common/script_values/00_title_tiers_values.txt:1-7).
+	# Maxim 14-10 (Logik-Check Fix 1 und 2): "ohne Titel" = ohne Landtitel (auch Titel ohne Land wie Abenteurer, Soeldner, Orden zaehlen dazu),
+	# Kaiser und Hegemon werden nie ausgeloest (Rang gestrichen, Maxim 21-10-2026).
+	OR = {
+		AND = {
+			highest_held_title_tier < tier_barony
+			NOT = { has_global_variable = mbq_rs_no_t0 }
+		}
+		AND = {
+			highest_held_title_tier = tier_barony # wie V common/activities/activity_types/tournament.txt:1362
+			NOT = { has_global_variable = mbq_rs_no_t1 }
+		}
+		AND = {
+			highest_held_title_tier = tier_county
+			has_global_variable = mbq_rs_t2 # Fassung 4: Graf Standard AUS
+		}
+		AND = {
+			highest_held_title_tier = tier_duchy
+			has_global_variable = mbq_rs_t3
+		}
+		AND = {
+			highest_held_title_tier = tier_kingdom
+			has_global_variable = mbq_rs_t4
+		}
+	}
+	# Zahler ist KI (sonst bekaeme ein Mitspieler je Gefangenem eine Anfrage)
+	OR = {
+		AND = {
+			is_ruler = no
+			exists = liege
+			liege = { is_ai = yes }
+		}
+		AND = {
+			NOT = { AND = { is_ruler = no exists = liege } }
+			is_ai = yes
+		}
+	}
+	# Echtes Gold (Maxim 14-10): der Zahler muss mindestens 1 Gold haben, sonst bleibt der Gefangene sitzen (ohne Gold waehlte Vanilla den Haken,
+	# 00_prison_effects.txt:50-52). Dazu die Schwelle: 100 Prozent der vollen Summe oder je nach Haftdauer 75, 50 Prozent, ab 6 Jahren jedes Gold >= 1
+	# (mbq_rs_threshold). Vergleich zweier Werte wie V 02_ep1_interactions.txt:488.
+	mbq_rs_payer_gold >= 1
+	mbq_rs_payer_gold >= mbq_rs_threshold
+	# Ausnehmen (Maxim 13-10, 14-10 Fassung 4: Haken = geschuetzt = bleibt in Haft, alle SECHS Standard an; Variable mbq_rs_keep_<x> = Haken weg).
+	# 3 und 4 sind billige Einzelvergleiche und stehen vor den Schleifen (Logik-Check Punkt 1, Reihenfolge).
+	# 3 Rivalen und Erzfeinde des Spielers (triggers.log:4294, :4246; = root wie V 00_es_custom_loc.txt:1716, 00_relations.txt:491).
+	#   Richtung (Planer-Fund 1, 14-10): beide Relationen sind WECHSELSEITIG: V common/scripted_relations/00_scripted_relations.txt:54-68 rival = { corresponding = rival },
+	#   :70-86 nemesis = { corresponding = nemesis, relation_aliases = { rival } } und _scripted_relations.info ("corresponding = Relation automatisch auf dem Ziel gesetzt/entfernt").
+	#   Eine Richtung genuegt also; has_relation_rival schliesst ueber das Alias auch den Erzfeind ein, die zweite Zeile ist nur zur Klarheit.
+	trigger_if = {
+		limit = { NOT = { has_global_variable = mbq_rs_keep_rival } }
+		NOT = { has_relation_rival = root }
+		NOT = { has_relation_nemesis = root }
+	}
+	# 4 Eigene Dynastie (dynasty = root.dynasty wie V 00_marriage_interactions.txt:2707; exists-Pruefung, Niedriggeborene haben keine)
+	trigger_if = {
+		limit = { NOT = { has_global_variable = mbq_rs_keep_dyn } }
+		NOT = {
+			AND = {
+				exists = dynasty
+				exists = root.dynasty
+				dynasty = root.dynasty
+			}
+		}
+	}
+	# 5 Haken des Spielers auf den Gefangenen, auch schwacher Haken (Fassung 4): has_hook triggers.log:3859 ("does the character have a hook on the target",
+	#   schliesst starke und schwache ein, has_weak_hook :4830 waere nur die schwache).
+	trigger_if = {
+		limit = { NOT = { has_global_variable = mbq_rs_keep_hook } }
+		NOT = { root = { has_hook = scope:mbq_rs_x } }
+	}
+	# 6 Fraktionsfuehrer (Fassung 4): Fuehrer einer Fraktion, die gegen den Spieler zielt, jede Fraktionsart (auch Aufstaende, Unabhaengigkeit).
+	#   any_targeting_faction triggers.log:2312 (Fraktionen gegen den Charakter, ohne Typfilter = alle), faction_leader als Link event_targets.log:1933,
+	#   Vergleich wie V scripted_triggers "faction_leader = scope:attacker".
+	trigger_if = {
+		limit = { NOT = { has_global_variable = mbq_rs_keep_faction } }
+		NOT = {
+			root = {
+				any_targeting_faction = {
+					faction_leader = scope:mbq_rs_x
+				}
+			}
+		}
+	}
+	# 1 Kriegsgegner (Fassung 4): jeder auf der Gegenseite eines laufenden Kriegs gegen den Spieler (Kriegsfuehrer, Verbuendete, spaeter Beigetretene) und deren Vasallen,
+	#   geprueft am Gefangenen und an seiner Lehnsherrenkette inklusive Zahler (mbq_rs_war_enemy_trigger). is_at_war_with (triggers.log:5064) als billiger Vorab-Test;
+	#   dazu Erbe eines Titels, dessen Inhaber im Krieg mit dem Spieler ist (aus 1.1.0, any_heir_title triggers.log:1724 wie V 00_dynast_interactions.txt:232).
+	trigger_if = {
+		limit = { NOT = { has_global_variable = mbq_rs_keep_war } }
+		NOT = { is_at_war_with = root }
+		NOT = { mbq_rs_war_enemy_trigger = yes }
+		NOT = {
+			any_heir_title = {
+				exists = holder # wie V 00_dynast_interactions.txt:233
+				holder = { is_at_war_with = root }
+			}
+		}
+	}
+	# 2 Anspruch: any_claim (triggers.log:1471, Parameter pressed = all: auch nicht durchgesetzte Ansprueche, Logiktest 2 B7) auf einen Titel des Spielers
+	#   ab Grafschaft (Chef-Entscheidung 14-10: jeder Titel des Spielers ab tier_county, Baronien egal; holder = X wie V 00_prison_interactions.txt:4725)
+	trigger_if = {
+		limit = { NOT = { has_global_variable = mbq_rs_keep_claim } }
+		NOT = {
+			any_claim = {
+				pressed = all # Parameter triggers.log:1471, Form wie V events/dlc/bp1/bp1_yearly_events_chad.txt:2335-2337 (explicit bleibt Standard)
+				# Chef-Entscheidung 14-10 (Planer-Fund 2): Anspruch auf JEDEN Titel des Spielers ab Grafschaft (Baronien egal), nicht nur ab Herzogtum oder auf den Haupttitel.
+				# Frueher Abbruch: billigster Vergleich zuerst (Stufe), dann Inhaber; die Schleife laeuft nur ueber die (wenigen) Ansprueche des Gefangenen.
+				tier >= tier_county
+				exists = holder
+				holder = root
+			}
+		}
+	}
+	# 7/8 Vasallen (2.0.2, Maxim 15-10, Steam-Kommentar; 2.0.4 Maxim 15-10: Standard AN): Variable mbq_rs_keep_<x> gesetzt = Haken weg, wie die anderen sechs
+	#   Ausnahmen. Die Variablen mbq_rs_ex_vassal/_subvassal aus 2.0.2/2.0.3 werden ignoriert (Haken steht nach dem Update wieder an). Vanilla bietet das Loesegeld auch fuer eigene Vasallen an: ransom_interaction is_shown
+	#   verlangt nur Haft beim Spieler und Zahler != Spieler (V 00_prison_interactions.txt:1922-1928); ein Herrscher zahlt selbst (redirect :1893-1906).
+	#   is_vassal_of triggers.log:6058 ("direct vassal", wie V 00_character_descriptions.txt:38), is_vassal_or_below_of triggers.log:6064
+	#   ("Non-rulers are not considered vassals", wie V 00_dynasty_decisions.txt:301).
+	trigger_if = {
+		limit = { NOT = { has_global_variable = mbq_rs_keep_vassal } }
+		NOT = { is_vassal_of = root }
+	}
+	trigger_if = {
+		limit = { NOT = { has_global_variable = mbq_rs_keep_subvassal } }
+		NOT = {
+			AND = {
+				is_vassal_or_below_of = root
+				NOT = { is_vassal_of = root }
+			}
+		}
+	}
+	# Vanilla-Interaktion verfuegbar und der Zahler nimmt an: genau so prueft Vanilla den Loesegeld-Hinweis
+	# (V common/important_actions/00_personal_actions.txt:146-150; triggers.log:5167-5177). Teuerste Pruefung, darum zuletzt.
+	root = {
+		is_character_interaction_potentially_accepted = {
+			recipient = prev
+			interaction = ransom_interaction
+			required_response = yes
+		}
+	}
+}

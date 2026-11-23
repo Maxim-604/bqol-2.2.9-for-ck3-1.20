@@ -1,0 +1,29 @@
+﻿# 24-10-2026 (Chef/Maxim): Entscheidung in der gemeinsamen Gruppe "Mods von Maxim" (maxims_mods). Sie oeffnet das GUI-Fenster; der Effekt setzt NUR die globale Variable mbq_open_req,
+# ein GUI-Zustand (Huellwidget im Wurzel-Widget) liest sie, oeffnet das Fenster, schliesst das Entscheidungsfenster und loescht die Variable ueber ein Scripted GUI.
+# Muster: Better UI mbui_button_layout_decision (mbui_decisions.txt). is_shown nur Spieler (is_ai = no), keine Kosten, keine Abklingzeit, kein Alarm, die KI nimmt sie nie.
+mbq_open_menu_decision = {
+	picture = {
+		reference = "gfx/interface/illustrations/decisions/decision_misc.dds"
+	}
+	decision_group_type = maxims_mods
+	ai_goal = no
+
+	desc = mbq_open_menu_decision_desc
+	selection_tooltip = mbq_open_menu_decision_tooltip
+
+	is_shown = {
+		is_ai = no
+	}
+
+	effect = {
+		custom_tooltip = mbq_open_menu_decision_effect_tt
+		hidden_effect = {
+			set_global_variable = { name = mbq_open_req value = 1 }
+		}
+	}
+
+	ai_will_do = {
+		base = 0
+	}
+	ai_check_interval = 0
+}

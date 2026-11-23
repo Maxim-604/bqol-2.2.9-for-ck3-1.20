@@ -1,0 +1,85 @@
+﻿# Better Quality of Life 2.0.0 (Demand Conversion): Zeilen der Sammelmeldung, feste Plaetze wie mbq_vassal_summary.txt.
+mbq_dc_s1 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_dc_c1 }
+		localization_key = mbq_dc_line1
+	}
+	text = {
+		localization_key = mbq_rs_empty
+	}
+}
+mbq_dc_s2 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_dc_c2 }
+		localization_key = mbq_dc_line2
+	}
+	text = {
+		localization_key = mbq_rs_empty
+	}
+}
+mbq_dc_s3 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_dc_c3 }
+		localization_key = mbq_dc_line3
+	}
+	text = {
+		localization_key = mbq_rs_empty
+	}
+}
+mbq_dc_s4 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_dc_c4 }
+		localization_key = mbq_dc_line4
+	}
+	text = {
+		localization_key = mbq_rs_empty
+	}
+}
+mbq_dc_s5 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_dc_c5 }
+		localization_key = mbq_dc_line5
+	}
+	text = {
+		localization_key = mbq_rs_empty
+	}
+}
+mbq_dc_more = {
+	type = character
+	text = {
+		trigger = { var:mbq_dc_n > 5 }
+		localization_key = mbq_dc_more_line
+	}
+	text = {
+		trigger = { var:mbq_dc_n < 1 }
+		localization_key = mbq_dc_none_line
+	}
+	text = {
+		localization_key = mbq_rs_empty
+	}
+}
+mbq_dc_rite = { # 2.1.5
+	type = character
+	text = {
+		trigger = { exists = var:mbq_dc_rn var:mbq_dc_rn >= 1 }
+		localization_key = mbq_dc_rite_line
+	}
+	text = {
+		localization_key = mbq_rs_empty
+	}
+}
+mbq_dc_rite_ref = { # 2.1.12: refusals of the rite requests this run
+	type = character
+	text = {
+		trigger = { exists = var:mbq_dc_rr var:mbq_dc_rr >= 1 }
+		localization_key = mbq_dc_rite_ref_line
+	}
+	text = {
+		localization_key = mbq_rs_empty
+	}
+}

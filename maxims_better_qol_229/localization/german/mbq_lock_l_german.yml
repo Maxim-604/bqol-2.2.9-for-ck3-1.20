@@ -1,0 +1,7 @@
+﻿l_german:
+ MBQ_LOCK_DC: "#N Gesperrt: Zuerst '$MBQ_DC_AUTO$' anhaken.#!"
+ MBQ_LOCK_PRIO: "#N Gesperrt: Zuerst '$MBQ_GEN_CONV_ANSWER$' anhaken.#!"
+ MBQ_LOCK_AUTO: "#N Gesperrt: Zuerst '$MBQ_GR_AUTO$' anhaken.#!"
+ MBQ_LOCK_SILENT: "#N Gesperrt: Zuerst '$MBQ_VS_MASTER$' anhaken.#!"
+ MBQ_LOCK_TRIB: "#N Gesperrt: Zuerst '$MBQ_VS_AUTO_TB$' oder '$MBQ_VS_ACC_TB$' anhaken.#!"
+ MBQ_LOCK_TAKEN: "#N Gesperrt: Schon an anderer Stelle gewählt.#!"

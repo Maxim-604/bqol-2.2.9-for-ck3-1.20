@@ -1,0 +1,7 @@
+﻿# Better Quality of Life 2.1.5 (Ritus-Automatik): noetige Fruemmigkeit vor dem Senden einer Ritus-Anfrage = vanilla Kosten + Reserve.
+# Die Kosten (V script_values\pam_values.txt:9694-9733) lesen scope:recipient und scope:puppet_or_actor, beide setzt mbq_dc_rite_ok_trigger vor der Pruefung.
+# Reserve major_piety_value = 250 (V 00_basic_values.txt:1134): Vorschlag aus dev\recherche_ritus.md Abschnitt 5, kein Vanilla-Wert.
+mbq_rite_piety_need_value = {
+	value = pam_sway_ruler_to_my_rite_cost_value
+	add = major_piety_value
+}

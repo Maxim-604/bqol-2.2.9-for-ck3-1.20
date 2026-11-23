@@ -1,0 +1,184 @@
+﻿# Better Quality of Life (Q07): Nebenwirkungen der Verleihung, wie Vanilla grant_vassal_interaction on_accept fuer den Spieler (is_ai = no).
+# Aufruf aus mbq_auto_grant_vassals.txt nach add_opinion. Scopes: root = Spieler, scope:mbq_gv_vassal = verliehener Vasall, scope:mbq_gv_liege = neuer Lehnsherr.
+# Vanilla-Belege, common\character_interactions\00_vassal_interactions.txt:
+#   on_accept 268-275 Clan-Einheit (add_clan_unity_interaction_effect, miniscule_unity_gain)
+#   on_accept 277-310 Struggle-Katalysator (fp3)
+#   on_accept 311-334 Nomaden-Empfaenger: De-jure-Verschiebung (vassal_grant_de_jure_shift_trigger)
+#   on_accept 336-395 Kontroverse und Anspruchsrivalen (title_granting_controversy_effect, claimant_jealousy_immunity_effect, claimant_rivalry_mercy_effect), nur is_ai = no
+#   on_accept 396-416 Meinungsverlust -30 bei Übergabe an Nicht-De-jure-Lehnsherrn (subordinated_to_non_de_jure_liege_opinion)
+# Nicht uebernommen: Holy-Order-Hinweis (nur Tooltip), Truce bei Uebergabe an den eigenen Lehnsherrn (root ist dort nicht Vasall des Empfaengers).
+
+mbq_grant_nebenwirkungen_effect = {
+	# 2.0.8 (Experte, Nachprüfung nach dem Einspielen): Vanilla-Effekte lesen Interaktions-Scopes, die setzen wir hier
+	root = { save_scope_as = actor save_scope_as = puppet_or_actor }
+	scope:mbq_gv_liege = { save_scope_as = recipient }
+	scope:mbq_gv_vassal = { save_scope_as = secondary_actor }
+	add_clan_unity_interaction_effect = {
+		CHARACTER = root
+		TARGET = scope:mbq_gv_liege
+		VALUE = miniscule_unity_gain
+		DESC = clan_unity_grant_vassal.desc
+		REVERSE_NON_HOUSE_TARGET = yes
+	}
+
+	hidden_effect = {
+		# Struggle-Katalysator, Vanilla 279-310
+		if = {
+			limit = {
+				fp3_struggle_involves_one_supporter_and_one_detractor = {
+					FIRST = root
+					SECOND = scope:mbq_gv_liege
+				}
+				root = {
+					any_character_struggle = {
+						involvement = involved
+						phase_has_catalyst = catalyst_grants_vassal_to_de_jure_liege_supporter_detractor
+						is_secondary_character_involvement_involved_trigger = {
+							CHAR = scope:mbq_gv_liege
+						}
+					}
+				}
+				scope:mbq_gv_liege.primary_title = {
+					any_this_title_or_de_jure_above = {
+						holder = scope:mbq_gv_vassal
+					}
+				}
+			}
+			root = {
+				every_character_struggle = {
+					involvement = involved
+					activate_struggle_catalyst = {
+						catalyst = catalyst_grants_vassal_to_de_jure_liege_supporter_detractor
+						character = root
+					}
+					log_debug_variable_for_persian_struggle_effect = { VAR = concession_catalyst_grants_vassal_to_de_jure_liege_supporter_detractor }
+				}
+			}
+		}
+
+		# Nomaden-Empfaenger: De-jure-Verschiebung, Vanilla 311-334
+		if = {
+			limit = {
+				scope:mbq_gv_liege = {
+					government_has_flag = government_is_nomadic
+				}
+			}
+			while = {
+				limit = {
+					scope:mbq_gv_vassal ?= {
+						any_held_title = {
+							vassal_grant_de_jure_shift_trigger = yes
+						}
+					}
+				}
+				scope:mbq_gv_vassal ?= {
+					random_held_title = {
+						limit = {
+							vassal_grant_de_jure_shift_trigger = yes
+						}
+						set_de_jure_liege_title = scope:mbq_gv_liege.primary_title
+					}
+				}
+			}
+		}
+	}
+
+	# Kontroverse und Anspruchsrivalen, Vanilla 336-395 (nur Spieler)
+	if = {
+		limit = {
+			root = {
+				is_ai = no
+			}
+		}
+		scope:mbq_gv_vassal = {
+			if = {
+				limit = {
+					any_held_title = {
+						any_claimant = {
+							this = scope:mbq_gv_liege
+						}
+					}
+				}
+				ordered_held_title = {
+					order_by = tier
+					limit = {
+						any_claimant = {
+							this = scope:mbq_gv_liege
+						}
+					}
+					save_scope_as = highest_claim
+				}
+				scope:mbq_gv_liege = {
+					claimant_jealousy_immunity_effect = yes
+				}
+			}
+			every_held_title = {
+				limit = {
+					tier >= tier_county
+					tier = scope:mbq_gv_vassal.primary_title.tier
+				}
+				save_scope_as = title_transfered
+				root = {
+					title_granting_controversy_effect = {
+						TITLE = scope:title_transfered
+						INTERACTION = grant_vassal_interaction
+					}
+				}
+			}
+			# 2.1.13 (Audit Nr. 1, Experte 22-10): die Liste strong_claimants lebt im ganzen Lauf der Vasallen-Automatik (mehrere Uebertragungen in einer Kette, in Vanilla ist es EINE Interaktion),
+			# darum liefen Anwaerter frueherer Vasallen bei jeder weiteren Uebertragung erneut durch claimant_rivalry_mercy_effect (V pam_effects.txt:2691): mehrfach Eintrag denied_<rang> und Ereignis
+			# pam_interactions_events.0040 mit Rivalitaetsfortschritt. Jetzt zaehlen nur Anwaerter mit starkem Anspruch (has_strong_claim_on, derselbe Test wie beim Fuellen der Liste V pam_effects.txt:2973) auf einen Titel (ab Grafschaft) des GERADE uebertragenen Vasallen.
+			every_in_list = {
+				list = strong_claimants
+				limit = {
+					NOT = {
+						this = scope:mbq_gv_liege
+					}
+					save_temporary_scope_as = mbq_cl
+					scope:mbq_gv_vassal = {
+						any_held_title = {
+							tier >= tier_county
+							scope:mbq_cl = {
+								has_strong_claim_on = prev
+							}
+						}
+					}
+				}
+				save_scope_as = claimer
+				scope:mbq_gv_vassal = {
+					ordered_held_title = {
+						limit = {
+							any_claimant = {
+								this = scope:claimer
+							}
+						}
+						save_scope_as = highest_denied_claim
+					}
+				}
+				claimant_rivalry_mercy_effect = yes
+			}
+		}
+
+		# Meinungsverlust bei Uebergabe an einen Nicht-De-jure-Lehnsherrn, Vanilla 396-416
+		if = {
+			limit = {
+				NOT = {
+					scope:mbq_gv_vassal = {
+						any_held_title = {
+							any_this_title_or_de_jure_above = {
+								holder ?= scope:mbq_gv_liege
+							}
+						}
+					}
+				}
+			}
+			scope:mbq_gv_vassal = {
+				add_opinion = {
+					modifier = subordinated_to_non_de_jure_liege_opinion
+					target = root
+					opinion = -30
+				}
+			}
+		}
+	}
+}

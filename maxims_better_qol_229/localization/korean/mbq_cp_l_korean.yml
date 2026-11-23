@@ -1,0 +1,8 @@
+﻿l_korean:
+ MBQ_CP_AGE_TT: "Age"
+ MBQ_CP_BTN_TT: "#T Default automation#!\n공석이 된 경우, 모든 직위에 대해(공석은 궁정 직위 창이 열려 있을 때):\n[Select_CString( GetGlobalVariable( 'mbq_cp_lvl_0' ).IsSet, '@check_icon!', '@small_dot!' )] $MBQ_CP_LVL_0$\n[Select_CString( GetGlobalVariable( 'mbq_cp_lvl_1' ).IsSet, '@check_icon!', '@small_dot!' )] $MBQ_CP_LVL_1$\n[Select_CString( GetGlobalVariable( 'mbq_cp_lvl_2' ).IsSet, '@check_icon!', '@small_dot!' )] $MBQ_CP_LVL_2$\n[Select_CString( GetGlobalVariable( 'mbq_cp_lvl_3' ).IsSet, '@check_icon!', '@small_dot!' )] $MBQ_CP_LVL_3$\n[Select_CString( And( Not( GetGlobalVariable( 'mbq_cp_lvl_0' ).IsSet ), And( Not( GetGlobalVariable( 'mbq_cp_lvl_1' ).IsSet ), And( Not( GetGlobalVariable( 'mbq_cp_lvl_2' ).IsSet ), Not( GetGlobalVariable( 'mbq_cp_lvl_3' ).IsSet ) ) ) ), '@check_icon!', '@small_dot!' )] $MBQ_CP_LVL_OFF$\n#I Click to switch to the next level. All filled positions take it once, later changes by hand stay.#!"
+ MBQ_CP_LVL_0: "No automation"
+ MBQ_CP_LVL_1: "Suggest best candidates in event"
+ MBQ_CP_LVL_2: "Auto-assign highest [aptitude|e] candidate, if available"
+ MBQ_CP_LVL_3: "Auto-assign highest [aptitude|e] candidate, or notify with event"
+ MBQ_CP_LVL_OFF: "끔 (직책별로): 각 직책은 자신의 설정을 유지합니다"

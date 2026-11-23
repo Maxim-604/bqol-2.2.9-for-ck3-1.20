@@ -1,0 +1,55 @@
+﻿# Better Quality of Life 2.1.7 (Wertvoll, seit 2.1.38 je Besitz): Haken im Grafschaftsfenster, eigenes Widget ohne Aenderung einer Vanilla-Datei (Anmeldung ueber gui\scripted_widgets wie mbq_settings_button.gui).
+# Fenster holding_view: V gui\window_county_view.gui:5-12 (605 x 750, parentanchor bottom|left). Position C = Zeile "De Jure Hierarchy" (:213-224), y-Mitte 230,5 laut Messung.
+widget = {
+	name = "mbq_wertvoll_county"
+	size = { 100% 100% }
+	layer = middle # 2.1.21 (Maxim 24-10, Haken verschwunden): 2.1.18 hatte windows_layer, dann lag der Haken HINTER dem Grafschaftsfenster (holding_view, V window_county_view.gui:11 windows_layer). Beleg: derselbe Aufbau (eigenes Widget auf windows_layer neben einem Vanilla-Fenster auf windows_layer) lag UNTER dem Vanilla-Fenster, top darueber (maxims_qol/dev/sonde_hof/ergebnis_13-10.md:5). Jetzt middle: Ebene der Titel-, Charakter- und Interaktionsfenster (V window_title.gui:10, interaction_grant_titles.gui:11), also ueber dem Grafschaftsfenster (windows_layer) und unter den BQoL-Einstellungen (mbq_settings.gui:12 und :23 layer = top, B3). Reihenfolge middle gegen windows_layer und top ist aus Dateien nicht gemessen, nur aus der Vanilla-Nutzung geschlossen
+	alwaystransparent = yes
+
+	widget = {
+		parentanchor = bottom|left
+		size = { 605 750 }
+		alwaystransparent = yes
+		allow_outside = yes
+		visible = "[IsGameViewOpen( 'holding_view' )]"
+
+		dynamicgridbox = { # nur der Besitz, den das Fenster gerade zeigt und den der Spieler haelt
+			position = { 85 498 } # 2.1.44 (B): unterer Besitz-Bereich, nach Messung (sonde_wertvoll)
+			datamodel = "[GetPlayer.GetTitles]"
+			ignoreinvisible = yes
+			item = {
+				widget = {
+					visible = "[And( Title.IsBarony, IsGameViewDataShown( 'holding_view', Title.GetProvince.Self ) )]"
+					size = { 151 30 }
+
+					button_checkbox = { # box 30 (shared/buttons.gui:1342-1346), wie die Haken im BQoL-Menue (gelber Schein beim Ueberfahren ist Teil des Vanilla-Stils)
+						position = { 0 0 }
+						onclick = "[GetScriptedGui( 'mbq_gr_toggle_kept' ).Execute( GuiScope.SetRoot( GetPlayer.MakeScope ).AddScope( 'mbq_wv_title', Title.MakeScope ).End )]"
+						# 2.1.46: am Sitz der Grafschaft zeigt der Haken die Grafschaft (mbq_gr_kept an der Grafschaft); sonst ist angehakt, wenn dieser Titel die Marke traegt; bis zur einmaligen Umstellung zeigt der Haken den alten Schutz durch eine markierte Grafschaft (ohne mbq_gr_free) an
+						checked = "[Or( And( Title.IsCountyCapital, Title.GetDeJureLiege.MakeScope.Var( 'mbq_gr_kept' ).IsSet ), And( Not( Title.IsCountyCapital ), Or( Title.MakeScope.Var( 'mbq_gr_kept' ).IsSet, And( Not( GetPlayer.MakeScope.Var( 'mbq_kept_mig_2146' ).IsSet ), And( Title.GetDeJureLiege.MakeScope.Var( 'mbq_gr_kept' ).IsSet, Not( Title.MakeScope.Var( 'mbq_gr_free' ).IsSet ) ) ) ) ) )]"
+						clicksound = "event:/SFX/UI/Generic/sfx_ui_generic_checkbox" # shared/buttons.gui:1316
+						using = tooltip_es
+						tooltip = "[SelectLocalization( Title.IsCountyCapital, 'MBQ_WV_TT_SEAT', 'MBQ_WV_TT' )]"
+					}
+					icon = { # Stern im Baum (Maxim 21-10, Nr. 9 "Liebling"), Vanilla portraits.gui:2871 und window_succession_event.gui:1589 (105 px unkomprimiert, 7 Mipmaps); Groesse 24 wie die Menue-Symbole (22 in mbq_settings.gui)
+						position = { 35 3 }
+						size = { 24 24 }
+						texture = "gfx/interface/icons/character_interactions/designate_favorite.dds"
+						using = tooltip_es
+						tooltip = "[SelectLocalization( Title.IsCountyCapital, 'MBQ_WV_TT_SEAT', 'MBQ_WV_TT' )]"
+					}
+					text_single = {
+						position = { 64 0 }
+						size = { 87 30 }
+						autoresize = no
+						default_format = "#clickable"
+						text = "MBQ_WV_KNOPF"
+						align = left|nobaseline
+						using = tooltip_es
+						tooltip = "[SelectLocalization( Title.IsCountyCapital, 'MBQ_WV_TT_SEAT', 'MBQ_WV_TT' )]"
+					}
+				}
+			}
+		}
+	}
+}

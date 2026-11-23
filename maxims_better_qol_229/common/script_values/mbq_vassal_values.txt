@@ -1,0 +1,8 @@
+﻿# Better Quality of Life 2.0.0 (Vassals): Reihenfolge bei knappen Vasallenplaetzen (Chef 14-10, konzept.md Abschnitt 10 Nr. 4): hoechster Rang zuerst, dann die meisten Grafschaften.
+# highest_held_title_tier als Wert wie V common/activities/activity_types/coronation.txt:3142, sub_realm_size als Wert wie V 00_diarch_interactions.txt:9492
+# (triggers.log:7490 "# of counties"). Rang * 10000, damit die Grafschaftszahl nie einen Rang ueberholt. Hoch zuerst: ordered_in_list Standard (build_loesegeld.py Abschnitt 2).
+mbq_vs_order_value = {
+	value = highest_held_title_tier
+	multiply = 10000
+	add = sub_realm_size
+}

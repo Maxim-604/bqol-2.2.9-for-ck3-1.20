@@ -1,0 +1,236 @@
+﻿# Better Quality of Life 2.0.0: Schalter des Loesegeld-Fensters (gui/mbq_ransom.gui). Muster mbq_settings.txt (Vanilla 00_religion.txt:128-144).
+# Fassung 4 (14-10): mbq_rs_no_<x> = Haken weg (Standard an: Kerker, Hausarrest, ohne Titel, Baron), mbq_rs_t2 bis _t5 und mbq_rs_auto = Haken gesetzt (Standard aus),
+# mbq_rs_keep_<x> = Ausnahme-Haken weg (Standard an, acht Ausnahmen seit 2.0.4).
+mbq_rs_toggle_dungeon = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_rs_no_dungeon } remove_global_variable = mbq_rs_no_dungeon }
+		else = { set_global_variable = { name = mbq_rs_no_dungeon value = yes } }
+		mbq_rs_preview_effect = yes
+	}
+}
+mbq_rs_toggle_house = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_rs_no_house } remove_global_variable = mbq_rs_no_house }
+		else = { set_global_variable = { name = mbq_rs_no_house value = yes } }
+		mbq_rs_preview_effect = yes
+	}
+}
+mbq_rs_toggle_war = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_rs_keep_war } remove_global_variable = mbq_rs_keep_war }
+		else = { set_global_variable = { name = mbq_rs_keep_war value = yes } }
+		mbq_rs_preview_effect = yes
+	}
+}
+mbq_rs_toggle_claim = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_rs_keep_claim } remove_global_variable = mbq_rs_keep_claim }
+		else = { set_global_variable = { name = mbq_rs_keep_claim value = yes } }
+		mbq_rs_preview_effect = yes
+	}
+}
+mbq_rs_toggle_rival = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_rs_keep_rival } remove_global_variable = mbq_rs_keep_rival }
+		else = { set_global_variable = { name = mbq_rs_keep_rival value = yes } }
+		mbq_rs_preview_effect = yes
+	}
+}
+mbq_rs_toggle_dyn = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_rs_keep_dyn } remove_global_variable = mbq_rs_keep_dyn }
+		else = { set_global_variable = { name = mbq_rs_keep_dyn value = yes } }
+		mbq_rs_preview_effect = yes
+	}
+}
+mbq_rs_toggle_faction = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_rs_keep_faction } remove_global_variable = mbq_rs_keep_faction }
+		else = { set_global_variable = { name = mbq_rs_keep_faction value = yes } }
+		mbq_rs_preview_effect = yes
+	}
+}
+mbq_rs_toggle_hook = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_rs_keep_hook } remove_global_variable = mbq_rs_keep_hook }
+		else = { set_global_variable = { name = mbq_rs_keep_hook value = yes } }
+		mbq_rs_preview_effect = yes
+	}
+}
+mbq_rs_toggle_vassal = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_rs_keep_vassal } remove_global_variable = mbq_rs_keep_vassal }
+		else = { set_global_variable = { name = mbq_rs_keep_vassal value = yes } }
+		mbq_rs_preview_effect = yes
+	}
+}
+mbq_rs_toggle_subvassal = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_rs_keep_subvassal } remove_global_variable = mbq_rs_keep_subvassal }
+		else = { set_global_variable = { name = mbq_rs_keep_subvassal value = yes } }
+		mbq_rs_preview_effect = yes
+	}
+}
+mbq_rs_min_100 = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_rs_min_staffel } remove_global_variable = mbq_rs_min_staffel }
+		if = { limit = { has_global_variable = mbq_rs_min_now } remove_global_variable = mbq_rs_min_now }
+		mbq_rs_preview_effect = yes
+	}
+}
+mbq_rs_min_staffel = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_rs_min_now } remove_global_variable = mbq_rs_min_now }
+		if = {
+			limit = { NOT = { has_global_variable = mbq_rs_min_staffel } }
+			set_global_variable = { name = mbq_rs_min_staffel value = yes }
+		}
+		mbq_rs_preview_effect = yes
+	}
+}
+mbq_rs_min_now = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_rs_min_staffel } remove_global_variable = mbq_rs_min_staffel }
+		if = {
+			limit = { NOT = { has_global_variable = mbq_rs_min_now } }
+			set_global_variable = { name = mbq_rs_min_now value = yes }
+		}
+		mbq_rs_preview_effect = yes
+	}
+}
+
+mbq_rs_toggle_auto = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_rs_auto } remove_global_variable = mbq_rs_auto }
+		else = {
+			set_global_variable = { name = mbq_rs_auto value = yes }
+			mbq_rs_arm_effect = yes
+		}
+	}
+}
+mbq_rs_set_monthly = { # Fassung 4: Standard monatlich = keine Variable. Nachbesserung 13-10 (Test M5): Umstellung startet den Takt sofort neu (mbq_rs_arm_effect), alter Termin verfaellt
+	scope = character
+	effect = {
+		if = {
+			limit = { has_global_variable = mbq_rs_quarterly }
+			remove_global_variable = mbq_rs_quarterly
+			if = { limit = { has_global_variable = mbq_rs_auto } mbq_rs_arm_effect = yes }
+		}
+	}
+}
+mbq_rs_set_quarterly = { # alle drei Monate = Variable mbq_rs_quarterly (ersetzt mbq_rs_monthly)
+	scope = character
+	effect = {
+		if = {
+			limit = { NOT = { has_global_variable = mbq_rs_quarterly } }
+			set_global_variable = { name = mbq_rs_quarterly value = yes }
+			if = { limit = { has_global_variable = mbq_rs_auto } mbq_rs_arm_effect = yes }
+		}
+	}
+}
+mbq_rs_preview = {
+	scope = character
+	effect = {
+		mbq_rs_preview_effect = yes
+	}
+}
+mbq_rs_run_now = {
+	scope = character
+	effect = {
+		set_variable = { name = mbq_rs_manual value = yes }
+		mbq_rs_run_effect = yes
+		mbq_rs_preview_effect = yes
+	}
+}
+# 2.1.2 Rang Nobody (bis Rang; mbq_rs_no_<x> gesetzt = Rang aus, mbq_rs_t2 bis _t4 gesetzt = Rang an, Kaiser mbq_rs_t5 wird nicht mehr gelesen und hier geleert)
+mbq_rs_rank_set_0 = {
+	scope = character
+	effect = {
+		set_global_variable = { name = mbq_rs_no_t0 value = yes }
+		set_global_variable = { name = mbq_rs_no_t1 value = yes }
+		if = { limit = { has_global_variable = mbq_rs_t2 } remove_global_variable = mbq_rs_t2 }
+		if = { limit = { has_global_variable = mbq_rs_t3 } remove_global_variable = mbq_rs_t3 }
+		if = { limit = { has_global_variable = mbq_rs_t4 } remove_global_variable = mbq_rs_t4 }
+		if = { limit = { has_global_variable = mbq_rs_t5 } remove_global_variable = mbq_rs_t5 }
+		mbq_rs_preview_effect = yes
+	}
+}
+# 2.1.2 Rang Ohne Titel (bis Rang; mbq_rs_no_<x> gesetzt = Rang aus, mbq_rs_t2 bis _t4 gesetzt = Rang an, Kaiser mbq_rs_t5 wird nicht mehr gelesen und hier geleert)
+mbq_rs_rank_set_1 = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_rs_no_t0 } remove_global_variable = mbq_rs_no_t0 }
+		set_global_variable = { name = mbq_rs_no_t1 value = yes }
+		if = { limit = { has_global_variable = mbq_rs_t2 } remove_global_variable = mbq_rs_t2 }
+		if = { limit = { has_global_variable = mbq_rs_t3 } remove_global_variable = mbq_rs_t3 }
+		if = { limit = { has_global_variable = mbq_rs_t4 } remove_global_variable = mbq_rs_t4 }
+		if = { limit = { has_global_variable = mbq_rs_t5 } remove_global_variable = mbq_rs_t5 }
+		mbq_rs_preview_effect = yes
+	}
+}
+# 2.1.2 Rang Baron (bis Rang; mbq_rs_no_<x> gesetzt = Rang aus, mbq_rs_t2 bis _t4 gesetzt = Rang an, Kaiser mbq_rs_t5 wird nicht mehr gelesen und hier geleert)
+mbq_rs_rank_set_2 = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_rs_no_t0 } remove_global_variable = mbq_rs_no_t0 }
+		if = { limit = { has_global_variable = mbq_rs_no_t1 } remove_global_variable = mbq_rs_no_t1 }
+		if = { limit = { has_global_variable = mbq_rs_t2 } remove_global_variable = mbq_rs_t2 }
+		if = { limit = { has_global_variable = mbq_rs_t3 } remove_global_variable = mbq_rs_t3 }
+		if = { limit = { has_global_variable = mbq_rs_t4 } remove_global_variable = mbq_rs_t4 }
+		if = { limit = { has_global_variable = mbq_rs_t5 } remove_global_variable = mbq_rs_t5 }
+		mbq_rs_preview_effect = yes
+	}
+}
+# 2.1.2 Rang Graf (bis Rang; mbq_rs_no_<x> gesetzt = Rang aus, mbq_rs_t2 bis _t4 gesetzt = Rang an, Kaiser mbq_rs_t5 wird nicht mehr gelesen und hier geleert)
+mbq_rs_rank_set_3 = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_rs_no_t0 } remove_global_variable = mbq_rs_no_t0 }
+		if = { limit = { has_global_variable = mbq_rs_no_t1 } remove_global_variable = mbq_rs_no_t1 }
+		set_global_variable = { name = mbq_rs_t2 value = yes }
+		if = { limit = { has_global_variable = mbq_rs_t3 } remove_global_variable = mbq_rs_t3 }
+		if = { limit = { has_global_variable = mbq_rs_t4 } remove_global_variable = mbq_rs_t4 }
+		if = { limit = { has_global_variable = mbq_rs_t5 } remove_global_variable = mbq_rs_t5 }
+		mbq_rs_preview_effect = yes
+	}
+}
+# 2.1.2 Rang Herzog (bis Rang; mbq_rs_no_<x> gesetzt = Rang aus, mbq_rs_t2 bis _t4 gesetzt = Rang an, Kaiser mbq_rs_t5 wird nicht mehr gelesen und hier geleert)
+mbq_rs_rank_set_4 = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_rs_no_t0 } remove_global_variable = mbq_rs_no_t0 }
+		if = { limit = { has_global_variable = mbq_rs_no_t1 } remove_global_variable = mbq_rs_no_t1 }
+		set_global_variable = { name = mbq_rs_t2 value = yes }
+		set_global_variable = { name = mbq_rs_t3 value = yes }
+		if = { limit = { has_global_variable = mbq_rs_t4 } remove_global_variable = mbq_rs_t4 }
+		if = { limit = { has_global_variable = mbq_rs_t5 } remove_global_variable = mbq_rs_t5 }
+		mbq_rs_preview_effect = yes
+	}
+}
+# 2.1.2 Rang Koenig (bis Rang; mbq_rs_no_<x> gesetzt = Rang aus, mbq_rs_t2 bis _t4 gesetzt = Rang an, Kaiser mbq_rs_t5 wird nicht mehr gelesen und hier geleert)
+mbq_rs_rank_set_5 = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_rs_no_t0 } remove_global_variable = mbq_rs_no_t0 }
+		if = { limit = { has_global_variable = mbq_rs_no_t1 } remove_global_variable = mbq_rs_no_t1 }
+		set_global_variable = { name = mbq_rs_t2 value = yes }
+		set_global_variable = { name = mbq_rs_t3 value = yes }
+		set_global_variable = { name = mbq_rs_t4 value = yes }
+		if = { limit = { has_global_variable = mbq_rs_t5 } remove_global_variable = mbq_rs_t5 }
+		mbq_rs_preview_effect = yes
+	}
+}

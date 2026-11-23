@@ -1,0 +1,82 @@
+﻿# Better Quality of Life 2.1 (Maxim 21-10): Hausmitglieder-Bekehrung ohne Brief, wenn "Mute letters" an ist (seit 2.1.2 unabhaengig von "Automatisch antworten").
+# Vanilla: demand_conversion_interaction (00_religious_interactions.txt:508-779) schickt char_interaction.0181 (angenommen, :613) und .0182 (abgelehnt, :676);
+# Bodies 1:1 aus character_interaction_events.txt:1444-1464 und :1467-1489. Muster wie mbq_silent_conversion_events.txt.
+namespace = char_interaction
+
+#House Head Conversion: Accepted
+char_interaction.0181 = {
+	# mbq 2.1: id_override_priority (_events.info:74-81) replaces the vanilla definition of this ID only.
+	id_override_priority = 1
+	trigger = { # 2.1.2 (Maxim 21-10): Bestaetigungsbrief nur, wenn "Mute letters" aus ist; "Automatisch antworten" allein aendert ihn nicht (Stand bis 2.0.25); KI-Absender bleiben vanilla
+		OR = {
+			is_ai = yes
+			NOT = { has_global_variable = mbq_silent_conversion_info_only }
+		}
+	}
+	on_trigger_fail = {
+		notify_puppeteer_of_outcome_effect = {
+			TYPE = event_toast_effect_good
+			TITLE = char_interaction.0181.toast_puppeteer
+		}
+		mbq_conv_log_effect = { KIND = 5 } # 2.1.1 summary: accepted
+	}
+	type = letter_event
+	opening = {
+		desc = char_interaction.0001.opening
+	}
+	desc = char_interaction.0181.desc
+
+	sender = scope:recipient
+
+	immediate = {
+		notify_puppeteer_of_outcome_effect = {
+			TYPE = event_toast_effect_good
+			TITLE = char_interaction.0181.toast_puppeteer
+		}
+	}
+
+	option = {
+		name = EXCELLENT
+		show_as_tooltip = { demand_conversion_interaction_effect = yes }
+	}
+}
+
+#House Head Conversion: Refused
+char_interaction.0182 = {
+	# mbq 2.1: id_override_priority (_events.info:74-81) replaces the vanilla definition of this ID only.
+	id_override_priority = 1
+	trigger = { # 2.1.2 (Maxim 21-10): Bestaetigungsbrief nur, wenn "Mute letters" aus ist; "Automatisch antworten" allein aendert ihn nicht (Stand bis 2.0.25); KI-Absender bleiben vanilla
+		OR = {
+			is_ai = yes
+			NOT = { has_global_variable = mbq_silent_conversion_info_only }
+		}
+	}
+	on_trigger_fail = {
+		notify_puppeteer_of_outcome_effect = {
+			TYPE = event_toast_effect_bad
+			TITLE = char_interaction.0182.toast_puppeteer
+		}
+		mbq_conv_log_effect = { KIND = 11 } # 2.1.1 summary: refused
+	}
+	type = letter_event
+	opening = {
+		desc = char_interaction.0131.opening
+	}
+	desc = char_interaction.0182.desc
+
+	sender = {
+		character = scope:recipient
+		animation = anger
+	}
+
+	immediate = {
+		notify_puppeteer_of_outcome_effect = {
+			TYPE = event_toast_effect_bad
+			TITLE = char_interaction.0182.toast_puppeteer
+		}
+	}
+
+	option = {
+		name = char_interaction.0182.a
+	}
+}

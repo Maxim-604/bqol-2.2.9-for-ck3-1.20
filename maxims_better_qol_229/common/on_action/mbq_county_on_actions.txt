@@ -1,0 +1,287 @@
+﻿# Better Quality of Life 2.0.0 (Counties). Einhaengen in on_title_gain (V common/on_action/title_on_actions.txt:229-233, scope:title, scope:transfer_type
+# laut Kopf :3-27), Listen werden gemergt wie S zz_mqol_title_gain.txt:21-26.
+on_title_gain = {
+	on_actions = {
+		mbq_gr_on_title_mark # 2.0.17: zuerst, damit der Lauf die neuesten Titel zuerst abgibt
+		mbq_gr_on_title_revoked
+		mbq_gr_on_title_gain
+		mbq_gr_on_title_gain_kept # 2.1.7 Wertvoll
+	}
+}
+
+# 2.0.17 (Maxim 17-10, Hotfix): jeder Titelgewinn des Spielers bekommt eine laufende Nummer am Titel (mbq_gr_gain_seq), egal auf welchem Weg
+# (Eroberung, Erbe, Widerruf ...; V common/on_action/title_on_actions.txt:3-27). Das Aufraeumen gibt danach die hoechste Nummer zuerst ab.
+mbq_gr_on_title_mark = {
+	trigger = {
+		is_ai = no
+		exists = scope:title
+		scope:title = {
+			OR = {
+				tier = tier_county
+				tier = tier_barony
+			}
+		}
+	}
+	effect = {
+		if = { # Logik-Test 2.0.17: scope:title kann im effect fehlen (LAFD zerstoert ihn im selben on_title_gain, Muster V title_on_actions.txt:238-239)
+			limit = { exists = scope:title }
+			if = {
+				limit = { has_global_variable = mbq_gr_gain_n }
+				change_global_variable = { name = mbq_gr_gain_n add = 1 }
+			}
+			else = {
+				set_global_variable = { name = mbq_gr_gain_n value = 1 }
+			}
+			scope:title = { set_variable = { name = mbq_gr_gain_seq value = global_var:mbq_gr_gain_n } }
+			# 2.0.21 (Maxim 20-10): "Behalten" aus frueherem Besitz gilt nicht fuer den neuen Besitz (gemessen: Mekka, Medina, Tabuk gesperrt, mbq_county_triggers.txt:113)
+			# 2.0.22 (Logik-Test Modder 2): nur bei Eroberung, Erbe/Teilung/Geschenk/Wahl/Abdankung behalten "Behalten" (Eroberungsarten V title_on_actions.txt:4-27)
+			if = {
+				limit = {
+					scope:title = { has_variable = mbq_gr_kept }
+					OR = {
+						scope:transfer_type = flag:conquest
+						scope:transfer_type = flag:conquest_holy_war
+						scope:transfer_type = flag:conquest_claim
+						scope:transfer_type = flag:conquest_populist
+						scope:transfer_type = flag:usurped
+						scope:transfer_type = flag:revoked
+					}
+				}
+				scope:title = { remove_variable = mbq_gr_kept }
+			}
+			# 2.0.21 (Maxim 20-10): Baronien einer gewonnenen Grafschaft bekommen dieselbe Nummer (gemessen: b_as-safra blieb 73 und galt als alt)
+			# every_county_province effects.log:11313, barony event_targets.log:1536
+			if = {
+				limit = { scope:title.tier = tier_county }
+				scope:title = {
+					every_county_province = {
+						limit = { exists = barony }
+						barony = { set_variable = { name = mbq_gr_gain_seq value = global_var:mbq_gr_gain_n } }
+					}
+				}
+			}
+		}
+	}
+}
+
+# Logikcheck 20 M2: Widerruf nie sofort zurueckgeben (Ping-Pong). Transferarten flag:revoked / flag:lease_revoked (V common/on_action/title_on_actions.txt:17, :22),
+# scope:previous_holder (ebd. :232, "Might be dead"). Der Enteignete ist 1 Jahr als Empfaenger dieses Titels gesperrt (mbq_gr_recipient_valid_trigger),
+# auch fuer Takt und "Jetzt ausfuehren".
+mbq_gr_on_title_revoked = {
+	trigger = {
+		is_ai = no
+		exists = scope:title
+		exists = scope:previous_holder
+		OR = {
+			scope:transfer_type = flag:revoked
+			scope:transfer_type = flag:lease_revoked
+		}
+	}
+	effect = {
+		if = { # 2.0.21 Fallen-Pruefung: scope:title/previous_holder koennen im Effekt fehlen (LAFD 15-10, Muster V title_on_actions.txt:238-239)
+			limit = {
+				exists = scope:title
+				exists = scope:previous_holder
+			}
+			scope:title = { set_variable = { name = mbq_gr_rev_from value = scope:previous_holder days = 365 } }
+		}
+	}
+}
+
+# Schleifenschutz flag:granted 1:1 aus S :11-15. Abweichung (konzept.md L1): Erbfolge-Arten (inheritance, abdication, appointment_succession,
+# election) loesen NICHT sofort aus; bei der Erbfolge kann die Hauptstadt des Erben noch die alte sein, die Hauptstadt-Schutzregel griffe ins Leere.
+# Diesen Ueberhang raeumt der Takt bzw. "Jetzt ausfuehren" mit allen Schutzregeln ab.
+mbq_gr_on_title_gain = {
+	trigger = {
+		is_ai = no
+		has_global_variable = mbq_gr_auto
+		exists = scope:title
+		exists = scope:transfer_type
+		NOR = {
+			scope:transfer_type = flag:granted
+			scope:transfer_type = flag:inheritance
+			scope:transfer_type = flag:abdication
+			scope:transfer_type = flag:appointment_succession
+			scope:transfer_type = flag:election
+			scope:transfer_type = flag:revoked # Logikcheck 20 M2 (V title_on_actions.txt:17): Widerruf bleibt, der Takt raeumt spaeter mit allen Regeln ab
+			scope:transfer_type = flag:lease_revoked # :22
+		}
+		exists = scope:title # error.log 15-10-2026 (Test BQoL+LAFD+Compatch): 98x "Undefined event target 'title'" in mbq_gr_on_title_gain
+		scope:title = { holder ?= root } # Logikcheck 20 M1: Titel noch beim Spieler (z. B. Baronie schon mit ihrer Grafschaft verschenkt)
+		mbq_gr_player_ok_trigger = yes
+		mbq_gr_what_valid_trigger = yes # Empfaenger-Bau: rote Auswahl pausiert auch den Hook (MENUE_RICHTLINIE 5)
+	}
+	effect = {
+		save_scope_as = mbq_gr_liege
+		# error.log 15-10-2026 (BQoL+LAFD): Trigger sah scope:title, Effekt nicht mehr (Fehler :53/:59). LAFD ktv_on_action.txt:206-211 zerstoert den Titel (destroy_title) im selben on_title_gain vor uns; Muster exists im Effekt-limit: V title_on_actions.txt:238-239
+		if = {
+			limit = { exists = scope:title }
+			scope:title = { save_scope_as = mbq_gr_grant_title }
+			# Grafschaft oder Baronie ueber der Domaenenschwelle (S :49-117)
+			if = {
+				limit = {
+					NOT = { has_global_variable = mbq_gr_no_county }
+					OR = {
+						scope:title.tier = tier_county
+						scope:title.tier = tier_barony
+					}
+					mbq_gr_over_value > 0 # Schwelle plus erlaubte Grafschaften (Maxim Nr. 4); Entscheidung Chef 7.7: sofort, Schonfrist (D:1160) wird nicht abgewartet
+					scope:title = {
+						mbq_gr_not_capital_trigger = yes
+						trigger_if = { limit = { tier = tier_barony } is_capital_barony = no } # Logikcheck 20 M1: Hauptbaronie folgt ihrer Grafschaft (triggers.log:8662, wie mbq_gr_county_cand_trigger)
+						mbq_gr_title_ok_trigger = yes
+					}
+				}
+				if = {
+					limit = {
+						NOT = { mbq_gr_no_ask_trigger = yes }
+						scope:title = { mbq_gr_valuable_trigger = yes }
+					}
+					scope:title = { set_variable = { name = mbq_gr_asked value = yes days = 30 } } # 2.2.3, 2.2.5: laeuft nach 30 Tagen ab; schon gefragt, der Lauf (mbq_gr_ask_valuable_effect) fragt denselben Titel nicht noch einmal; mbq_gr.0001 loescht die Marke nach der Antwort
+					trigger_event = mbq_gr.0001
+				}
+				else = {
+					mbq_gr_county_grant_effect = yes
+				}
+			}
+		}
+	}
+}
+
+# Nach Erbfolge weiter am neuen Spielercharakter (Muster mbq_vassal_on_actions.txt).
+on_player_character_change = {
+	on_actions = {
+		mbq_gr_on_player_change
+	}
+}
+
+mbq_gr_on_player_change = {
+	effect = {
+		every_player = {
+			limit = {
+				is_ai = no
+				has_global_variable = mbq_gr_auto
+				NOT = { has_variable = mbq_gr_armed }
+			}
+			mbq_gr_arm_effect = yes
+		}
+	}
+}
+# 2.1.7 Wertvoll, Gewinn-Seite: kommt ein markierter Titel (egal auf welchem Weg, auch Erbfolge/Teilung) bei jemand anderem als dem neuen Spielercharakter an, faellt die Markierung.
+# Neuer Spielercharakter = neuer Inhaber ist Spieler (is_ai = no) oder der Spieler-Erbe des Vorbesitzers (scope:previous_holder.player_heir, V event_targets.log:700). NOR ist hier richtig gemeint:
+# weder Spieler noch Spieler-Erbe. Der Test t70a (Modder 2) zeigt, ob der Erbe zum Zeitpunkt schon is_ai = no ist oder nur der zweite Weg greift.
+mbq_gr_on_title_gain_kept = {
+	trigger = {
+		exists = scope:title
+		scope:title = { has_variable = mbq_gr_kept }
+		NOR = {
+			is_ai = no
+			AND = {
+				exists = scope:previous_holder
+				exists = scope:previous_holder.player_heir
+				scope:previous_holder.player_heir = root
+			}
+		}
+	}
+	effect = {
+		if = { # Fallen-Pruefung: scope:title kann im Effekt fehlen (LAFD, Muster V title_on_actions.txt:238-239)
+			limit = {
+				exists = scope:title
+				scope:title = { has_variable = mbq_gr_kept }
+			}
+			if = {
+				limit = { scope:transfer_type = flag:inheritance }
+				# 2.1.9 (Dev-Test 22-10, t70a): beim echten Tod ist der Erbe zum Uebertragungszeitpunkt noch nicht Spieler (weder is_ai = no noch previous_holder.player_heir greifen), der Erbe wuerde
+				# seine Markierungen mit verlieren. Darum bei Erbfolge/Teilung nicht sofort loeschen: Titel in die Liste mbq_wv_pending, nach 1 Tag prueft mbq_gr.9101 nur diese Titel.
+				add_to_global_variable_list = { name = mbq_wv_pending target = scope:title }
+				trigger_event = { id = mbq_gr.9101 days = 1 }
+			}
+			else = {
+				scope:title = { remove_variable = mbq_gr_kept }
+			}
+		}
+	}
+}
+
+# 2.1.7 Wertvoll (Maxim 21-10, Chef-Schaerfung): die Markierung mbq_gr_kept faellt bei JEDEM Titelverlust (V title_on_actions.txt:3479-3483, root = alter Inhaber, scope:title, scope:new_holder,
+# scope:transfer_type, alle Arten laut V title_on_actions.txt:3-27: Weitergabe, Widerruf, Eroberung, Teilung ...), AUSSER der Titel kommt beim neuen Spielercharakter an (Erbfolge zum Spieler-Erben,
+# Abdankung an den Spieler-Erben): scope:new_holder ist dann schon Spieler (is_ai = no) oder der Spieler-Erbe des alten Inhabers (root.player_heir, V event_targets.log:700 "Get player heir of
+# scoped character"). Geht ein Titel bei Teilung an Geschwister oder andere, faellt die Markierung. Ob der Erbe zum Uebertragungszeitpunkt schon is_ai = no ist, ist nicht belegt: darum beide Wege (Dev-Test).
+# Gewinn durch Eroberung loescht die Markierung ohnehin (mbq_gr_on_title_mark), neu markieren muss der Spieler von Hand.
+on_title_lost = {
+	on_actions = {
+		mbq_gr_on_title_lost_kept
+		mbq_gr_on_title_lost_free
+		mbq_gr_on_title_lost_asked # 2.2.3
+	}
+}
+# 2.2.3: die Marke 'schon gefragt' (mbq_gr_asked) faellt bei JEDEM Titelverlust, auch wenn die Rueckfrage nie beantwortet wurde. 2.2.5: ebenso die bleibende Marke 'beantwortet' (mbq_gr_answered);
+# wer den Titel spaeter wieder bekommt (auch der Erbe), wird neu gefragt. Form wie mbq_gr_on_title_lost_free (scope:title kann im Effekt fehlen, V title_on_actions.txt:238-239).
+mbq_gr_on_title_lost_asked = {
+	trigger = {
+		exists = scope:title
+		scope:title = {
+			OR = {
+				has_variable = mbq_gr_asked
+				has_variable = mbq_gr_answered
+			}
+		}
+	}
+	effect = {
+		if = {
+			limit = { exists = scope:title }
+			scope:title = {
+				if = {
+					limit = { has_variable = mbq_gr_asked }
+					remove_variable = mbq_gr_asked
+				}
+				if = {
+					limit = { has_variable = mbq_gr_answered }
+					remove_variable = mbq_gr_answered
+				}
+			}
+		}
+	}
+}
+# 2.1.38 (Maxim 25-10): mbq_gr_free (Baronie ausdruecklich nicht wertvoll, obwohl die Grafschaft markiert ist) faellt bei JEDEM Titelverlust, auch bei Erbfolge. Folge: ein Erbe, der die Grafschaftsmarke hat, sieht die
+# Baronie wieder geschuetzt (sicher: es wird nie mehr abgegeben als der Spieler wollte). Form wie mbq_gr_on_title_lost_kept (Fallen-Pruefung: scope:title kann im Effekt fehlen, V title_on_actions.txt:238-239).
+mbq_gr_on_title_lost_free = {
+	trigger = {
+		exists = scope:title
+		scope:title = { has_variable = mbq_gr_free }
+	}
+	effect = {
+		if = {
+			limit = {
+				exists = scope:title
+				scope:title = { has_variable = mbq_gr_free }
+			}
+			scope:title = { remove_variable = mbq_gr_free }
+		}
+	}
+}
+mbq_gr_on_title_lost_kept = {
+	trigger = {
+		exists = scope:title
+		scope:title = { has_variable = mbq_gr_kept }
+		NAND = { # NOT mit mehreren Bedingungen wirkt als NOR (Quellpruefung), hier ist "nicht (neuer Inhaber da und Spielercharakter)" gemeint
+			exists = scope:new_holder
+			OR = {
+				scope:new_holder = { is_ai = no }
+				AND = {
+					exists = root.player_heir
+					root.player_heir = scope:new_holder
+				}
+			}
+		}
+	}
+	effect = {
+		if = { # Fallen-Pruefung: scope:title kann im Effekt fehlen (LAFD, Muster V title_on_actions.txt:238-239)
+			limit = {
+				exists = scope:title
+				scope:title = { has_variable = mbq_gr_kept }
+			}
+			scope:title = { remove_variable = mbq_gr_kept }
+		}
+	}
+}

@@ -1,0 +1,7 @@
+﻿l_french:
+ MBQ_VS_G_VASSALS: "Vassaux"
+ MBQ_VS_G_TRIBUTE: "Tributaires"
+ MBQ_VS_G_BOTH: "Pour vassaux et tributaires"
+ MBQ_VS_G_NOW: "Exécuter maintenant"
+ MBQ_VS_MIN_LABEL: "Contrat : jamais en dessous"
+ MBQ_VS_NOW_NOTE: "Possible aussi sans automatisation"

@@ -1,0 +1,55 @@
+﻿# Better Quality of Life (Q07): pulse for granting vassals to their rightful liege.
+# Source: maxims_ck3_qol_mods common\on_action\zz_mqol_auto_actions.txt:10-50 (1:1, prefix mbq_).
+# realm_maintenance_quarterly_pulse: vanilla realm_maintenance_on_actions.txt:1, fired from
+# quarterly_playable_pulse (yearly_on_actions.txt:2979). on_actions lists merge, vanilla entries stay.
+# Performance: first gate is_ai = no, so AI rulers only cost one trigger check per quarter.
+# PERF 0311 (F1, Modder 1): the gate now sits in the on_action TRIGGER. Before, it was only inside the effect (below), so the effect started for every playable ruler (onactionstats.csv:
+# mbq_auto_actions_pulse 389249 executions, 0.71 s). Both effect branches already require is_ai = no, so behaviour is unchanged. Model: mbq_cp_pulse in the same mod (trigger is_ai = no, 43 executions).
+# Every quarterly pulse runs the grant (Maxim 16-10-2026: quarterly; before, only every second pulse).
+
+realm_maintenance_quarterly_pulse = {
+	on_actions = {
+		mbq_auto_actions_pulse
+	}
+}
+
+mbq_auto_actions_pulse = {
+	trigger = { is_ai = no } # PERF 0311 (F1)
+	effect = {
+		if = { # 2.1.2: Altspielstand ohne Fensteroeffnen uebernehmen (is_ai = no zuerst, danach nur ein Trigger je Vierteljahr)
+			limit = {
+				is_ai = no
+				NOT = { has_global_variable = mbq_menu_v2 }
+			}
+			mbq_menu_migrate_effect = yes
+		}
+		if = {
+			limit = {
+				is_ai = no
+				is_landed = yes
+				has_global_variable = mbq_auto_grant_vassals
+			}
+			if = {
+				limit = { NOT = { has_variable = mbq_gv_tick } }
+				set_variable = { name = mbq_gv_tick value = 0 }
+			}
+			change_variable = { name = mbq_gv_tick add = 1 }
+			if = {
+				limit = { var:mbq_gv_tick >= 1 } # 16-10-2026: every quarter (was >= 2, zz_mqol_auto_actions.txt:35)
+				set_variable = { name = mbq_gv_tick value = 0 }
+				mbq_auto_grant_vassals_run_effect = yes
+				if = {
+					limit = {
+						has_variable = mbq_gv_count
+						var:mbq_gv_count >= 1
+					}
+					send_interface_toast = {
+						type = event_toast_effect_good
+						title = mbq_auto_grant_vassals_toast
+						left_icon = root
+					}
+				}
+			}
+		}
+	}
+}

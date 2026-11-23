@@ -1,0 +1,60 @@
+﻿# Better Quality of Life 2.1.36 (Maxim 25-10-2026): Standard-Automatik der Hofaemter. Flaggen mbq_cp_lvl_0..3 (keine gesetzt = Standard inaktiv, nichts wird angefasst).
+# Globale Variablen ueberleben Speichern und Laden. Beschreibung: dev/fixliste.md v2.1.36. Anforderung und Wechsel der zwei Treiber: common/scripted_effects/zz_mbq_cp_effects.txt.
+# 2.1.43 (Maxim 25-10): fuenfte Stufe Aus. Klickfolge: Stufe 1 (lvl_0), 2, 3, 4 (lvl_3), Aus (keine Flagge), wieder Stufe 1.
+# Aus loescht nur die globale Flagge: kein Treiber, keine Aenderung an den Aemtern (jedes Amt behaelt seine eigene Stufe). Ohne Flagge (neues Spiel, alter Stand) verhaelt sich alles wie Aus.
+mbq_cp_next = {
+	scope = character
+	effect = {
+		mbq_cp_migrate_effect = yes  # 2.1.36: alte Flaggen des Vorgaengerstands zuerst uebernehmen, dann erst die naechste Stufe
+		if = {
+			limit = { has_global_variable = mbq_cp_lvl_0 }
+			remove_global_variable = mbq_cp_lvl_0
+			set_global_variable = { name = mbq_cp_lvl_1 value = yes }
+		}
+		else_if = {
+			limit = { has_global_variable = mbq_cp_lvl_1 }
+			remove_global_variable = mbq_cp_lvl_1
+			set_global_variable = { name = mbq_cp_lvl_2 value = yes }
+		}
+		else_if = {
+			limit = { has_global_variable = mbq_cp_lvl_2 }
+			remove_global_variable = mbq_cp_lvl_2
+			set_global_variable = { name = mbq_cp_lvl_3 value = yes }
+		}
+		else_if = {  # Stufe 4 -> Aus: nur die Flagge entfernen
+			limit = { has_global_variable = mbq_cp_lvl_3 }
+			remove_global_variable = mbq_cp_lvl_3
+		}
+		else = { set_global_variable = { name = mbq_cp_lvl_0 value = yes } }  # keine Flagge (Aus) -> Stufe 1
+		if = {  # Treiber nur, wenn jetzt eine Stufe gesetzt ist (bei Aus nichts anfordern, nichts ueberschreiben)
+			limit = {
+				OR = {
+					has_global_variable = mbq_cp_lvl_0
+					has_global_variable = mbq_cp_lvl_1
+					has_global_variable = mbq_cp_lvl_2
+					has_global_variable = mbq_cp_lvl_3
+				}
+			}
+			mbq_cp_request_effect = yes  # Treiber ueberschreibt einmal alle besetzten Aemter; laeuft schon einer, wird danach der andere gestartet
+		}
+	}
+}
+
+mbq_cp_clean = {  # Ende eines Laufs des Treibers A (gui/mbq_cp_driver.gui, Zustand mbq_cp_fertig)
+	scope = character
+	effect = {
+		mbq_cp_finish_effect = { DONE = mbq_cp_dirty NEXT = mbq_cp_dirty_b }
+	}
+}
+
+mbq_cp_clean_b = {  # Ende eines Laufs des Treibers B (gui/mbq_cp_driver_b.gui)
+	scope = character
+	effect = {
+		mbq_cp_finish_effect = { DONE = mbq_cp_dirty_b NEXT = mbq_cp_dirty }
+	}
+}
+
+mbq_cp_migrate = {  # Zustand _show der Liste (gui/00_mbq_court_positions.gui, vbox_court_positions)
+	scope = character
+	effect = { mbq_cp_migrate_effect = yes }
+}

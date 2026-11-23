@@ -1,0 +1,137 @@
+﻿# Better Quality of Life 2.1.15: the defaults of a NEW game as a scripted effect (content of the on_action block mbq_new_game_defaults, unchanged; every value only when not set yet).
+# Called by on_game_start (mbq_new_game_on_actions.txt) and by Dev Tools 'Run Rutsch' (test save copy).
+mbq_new_game_defaults_effect = {
+	# Annahmechance 60 Prozent (mbq_dconv_triggers.txt mbq_dc_min_ok_trigger; ohne Variable 80)
+	if = {
+		limit = { NOR = { has_global_variable = mbq_dc_min_any has_global_variable = mbq_dc_min_60 has_global_variable = mbq_dc_min_100 } }
+		set_global_variable = { name = mbq_dc_min_60 value = yes }
+	}
+	# Mindest-Loesegeld gestaffelt nach Haftdauer (scripted_guis/mbq_ransom.txt:140-150; ohne Variable 100 Prozent)
+	if = {
+		limit = { NOR = { has_global_variable = mbq_rs_min_now has_global_variable = mbq_rs_min_staffel } }
+		set_global_variable = { name = mbq_rs_min_staffel value = yes }
+	}
+	# Mute letters (mbq_silent_conversion_info_only, Maxim 21-10): keine Briefe zur Bekehrung; nur wo der Spieler weder Mute letters noch Automatisch antworten gewaehlt hat
+	if = {
+		limit = { NOR = { has_global_variable = mbq_silent_conversion_info_only has_global_variable = mbq_silent_conversion } }
+		set_global_variable = { name = mbq_silent_conversion_info_only value = yes }
+	}
+	# 2.1.2 (Maxim 21-10): Vasallen voreingestellt Vasallentum anbieten und Treueschwuere annehmen; der Hauptschalter bleibt aus, bis der Spieler ihn setzt.
+	if = {
+		limit = { NOT = { has_global_variable = mbq_menu_v2 } }
+		set_global_variable = { name = mbq_menu_v2 value = yes } # Merker: keine Uebernahme noetig
+		if = { limit = { NOT = { has_global_variable = mbq_vs_auto } } set_global_variable = { name = mbq_vs_auto value = yes } }
+		if = { limit = { NOT = { has_global_variable = mbq_vs_acc } } set_global_variable = { name = mbq_vs_acc value = yes } }
+	}
+	# Nur im Verlauf (mbq_tb_silent gesetzt = an, gui/mbq_settings.gui Haken mbq_vs_toggle_tb_windows)
+	if = {
+		limit = { NOT = { has_global_variable = mbq_tb_silent } }
+		set_global_variable = { name = mbq_tb_silent value = yes }
+	}
+	# 2.1.15 (Maxim 22-10, Fehlerliste Nr. 5): Titel abgeben startet in neuen Spielen mit seiner Einstellung, ausser der Automatik (bleibt aus). Jede Variable nur, wenn noch nicht gesetzt.
+	# Profil Eigene Wahl (Standard ohne Variable = Meine Familie zuerst)
+	if = {
+		limit = { NOR = { has_global_variable = mbq_gr_preset_1 has_global_variable = mbq_gr_preset_2 has_global_variable = mbq_gr_preset_3 has_global_variable = mbq_gr_preset_4 has_global_variable = mbq_gr_preset_5 } }
+		set_global_variable = { name = mbq_gr_preset_5 value = yes }
+	}
+	# Religion: nur der eigene Ritus (Standard: Ritus und Glaube; rel_2 abgehakt = Glaube aus). Nur, wenn noch keine Religionsstufe verstellt ist.
+	if = {
+		limit = { NOR = { has_global_variable = mbq_gr_fc_rel_3_flip has_global_variable = mbq_gr_fc_rel_2_flip has_global_variable = mbq_gr_fc_rel_1_flip has_global_variable = mbq_gr_fc_rel_0_flip } }
+		set_global_variable = { name = mbq_gr_fc_rel_2_flip value = yes }
+	}
+	# Alter: alle vier Haken (Standard: Unter 16 nicht gehakt, gehakt = Variable gesetzt)
+	if = {
+		limit = { NOR = { has_global_variable = mbq_gr_fc_age_7_flip has_global_variable = mbq_gr_fc_age_8_flip has_global_variable = mbq_gr_fc_age_9_flip has_global_variable = mbq_gr_fc_age_10_flip } }
+		set_global_variable = { name = mbq_gr_fc_age_7_flip value = yes }
+	}
+	# Vorliebe 5: Wenigste Titel (Standard Platz 5 = Nichts); Plaetze 1 bis 4 bleiben beim Standard Kinder, Enkel, Haus, Dynastie
+	if = {
+		limit = { NOR = { has_global_variable = mbq_gr_rc5_is_0 has_global_variable = mbq_gr_rc5_is_1 has_global_variable = mbq_gr_rc5_is_2 has_global_variable = mbq_gr_rc5_is_3 has_global_variable = mbq_gr_rc5_is_4 has_global_variable = mbq_gr_rc5_is_5 has_global_variable = mbq_gr_rc5_is_6 has_global_variable = mbq_gr_rc5_is_7 has_global_variable = mbq_gr_rc5_is_9 has_global_variable = mbq_gr_rc5_is_10 has_global_variable = mbq_gr_rc5_is_11 has_global_variable = mbq_gr_rc5_is_12 } } # gleiche Liste wie mbq_gr_rc5_unset_trigger (mbq_county_triggers.txt:286-299), dort scope-neutral nicht belegt
+		set_global_variable = { name = mbq_gr_rc5_is_9 value = yes }
+	}
+	# 2.1.32 (Maxim 24-10): Haken Erweiterte Einstellungen zeigen (Titel abgeben) angehakt. Globalvariable mbq_gr_adv_on (gui/mbq_settings.gui, Scripted GUI mbq_gr_toggle_adv);
+	# nur wenn noch nicht gesetzt, geladene Spiele ohne Variable bleiben ungehakt (dieser Effekt laeuft nur bei neuem Spiel).
+	if = {
+		limit = { NOT = { has_global_variable = mbq_gr_adv_on } }
+		set_global_variable = { name = mbq_gr_adv_on value = yes }
+	}
+	# 2.1.48 (Maxim 25-10): die Erklaerung (Fragezeichen) bei Titel abgeben ist in neuen Spielen AUS (kein Standardwert mehr). mbq_expl_on setzt nur der Klick (Scripted GUI mbq_expl_toggle, scripted_guis/mbq_county.txt);
+	# bestehende Spielstaende bleiben, wie sie sind (nichts wird geloescht oder zurueckgesetzt).
+	# 2.1.34 (Maxim 25-10, Bild 741/742): Haken 'Auch zu meinem Ritus beeinflussen' (Bekehrung automatisch verlangen) in neuen Spielen angehakt. Globalvariable mbq_dc_rite gesetzt = Haken an
+	# (gui/mbq_settings.gui, Scripted GUI mbq_dc_toggle_rite); nur wenn noch nicht gesetzt, geladene Spiele ohne Variable bleiben aus. Wirkt erst bei Automatik an (mbq_dconv.txt mbq_dc_run_effect).
+	if = {
+		limit = { NOT = { has_global_variable = mbq_dc_rite } }
+		set_global_variable = { name = mbq_dc_rite value = yes }
+	}
+}
+
+# 2.1.19 (Maxim 24-10): Startgrafschaften. Alle Grafschaften, die ein Spieler zu Beginn eines NEUEN Spiels haelt, bekommen den Haken Wertvoll und sind damit vor "Titel abgeben" geschuetzt.
+# Speicherung des Hakens: Variable mbq_gr_kept am Titel (gui/mbq_wertvoll.gui:28 liest sie, scripted_guis/mbq_county.txt:2149-2174 setzt sie; bei einer Grafschaft auf der Grafschaft selbst,
+# deren Baronien sind ueber mbq_county_triggers.txt:110-113 mit geschuetzt und zeigen den Haken). Nur Grafschaften (tier_county), nur wo noch nicht gesetzt; einzeln gehaltene Baronien bleiben unmarkiert.
+# Aufruf aus on_game_start_after_lobby (mbq_new_game_on_actions.txt): V common/on_action/game_start.txt:2552-2553 "called once the host (or player, in single player) exits the lobby. Good for
+# anything where you need to know who the players are", Beispiel dort :3839 random_player, :3883 every_player; im on_game_start sind die Spieler nicht belegt bekannt. Einmal-Merker
+# mbq_start_kept_done (global) und years_from_game_start < 1 (V triggers.log:1097): ein bestehender Spielstand wird nicht angefasst, auch wenn der on_action beim Laden feuern sollte (nicht belegt).
+# Verlust: die Markierung faellt bei jedem Titelverlust (mbq_county_on_actions.txt:205-236). Auch von Dev Tools 'Run Rutsch' (Spielstandkopie) gerufen.
+mbq_new_game_kept_effect = {
+	if = {
+		limit = {
+			NOT = { has_global_variable = mbq_start_kept_done }
+			OR = {
+				years_from_game_start < 1
+				has_global_variable = mbq_dbg_start_kept # Testhaken nur fuer Dev Tools Run Rutsch (Spielstandkopie ist aelter als ein Jahr); im normalen Spiel nie gesetzt
+			}
+		}
+		set_global_variable = { name = mbq_start_kept_done value = yes }
+		if = { limit = { always = no } set_global_variable = { name = mbq_dbg_start_kept value = yes } } # nur ein Setter fuer die Engine-Pruefung (sonst error.log 'is used but is never set', wie mmoc_scripted_effects.txt:504-506); gesetzt wird der Testhaken nur von Dev Tools Run Rutsch
+		every_player = {
+			set_variable = { name = mbq_kept_seen value = yes } # 2.1.22: dieser Charakter gilt als bearbeitet (kein erneutes Markieren beim Rueckwechsel)
+			every_held_title = { # 2.1.46 (Maxim 25-10): jede gehaltene Grafschaft UND jede gehaltene Baronie einzeln (keine Vererbung mehr)
+				limit = {
+					OR = { tier = tier_county tier = tier_barony }
+					NOT = { has_variable = mbq_gr_kept }
+				}
+				set_variable = { name = mbq_gr_kept value = yes }
+			}
+			set_variable = { name = mbq_kept_mig_2146 value = yes } # 2.1.46: ein neu markierter Spieler braucht die Umstellung nicht
+		}
+	}
+}
+
+# 2.1.22 (Maxim 24-10): manueller Spielerwechsel. Scope = der NEUE Spielercharakter. Pro Charakter einmal (Variable mbq_kept_seen, auch von mbq_new_game_kept_effect gesetzt), markiert seine gehaltenen
+# Grafschaften (tier_county) mit Wertvoll (mbq_gr_kept), nur wo noch keine Markierung ist. Aufruf aus on_player_character_change (mbq_new_game_on_actions.txt) und Dev Tools 'Run Rutsch' (Testfall A7).
+mbq_kept_switch_effect = {
+	if = {
+		limit = { NOT = { has_variable = mbq_kept_seen } }
+		set_variable = { name = mbq_kept_seen value = yes }
+		every_held_title = { # 2.1.46 (Maxim 25-10): jede gehaltene Grafschaft UND jede gehaltene Baronie einzeln (keine Vererbung mehr)
+			limit = {
+				OR = { tier = tier_county tier = tier_barony }
+				NOT = { has_variable = mbq_gr_kept }
+			}
+			set_variable = { name = mbq_gr_kept value = yes }
+		}
+		set_variable = { name = mbq_kept_mig_2146 value = yes } # 2.1.46: ein neu markierter Spieler braucht die Umstellung nicht
+	}
+}
+
+
+# 2.1.46 (Maxim 25-10): einmalige Umstellung je Spieler auf die Marke je Besitz. Scope = Spieler. Vorher schuetzte eine markierte Grafschaft ihre Baronien mit (ausser mbq_gr_free). Jetzt bekommt jede gehaltene Baronie
+# (nicht der Sitz der Grafschaft, der steht fuer die Grafschaft) die eigene Marke, wenn sie bisher so geschuetzt war; danach fallen alle mbq_gr_free. Der Schutz aendert sich nicht.
+# Verpachtete Titel (Tempel beim Kleriker) werden mitmarkiert, sie gehoeren dem Spieler weiter.
+mbq_kept_migrate_2146_effect = {
+	set_variable = { name = mbq_kept_mig_2146 value = yes }
+	every_held_title = {
+		limit = {
+			tier = tier_barony
+			is_capital_barony = no
+			NOT = { has_variable = mbq_gr_kept }
+			NOT = { has_variable = mbq_gr_free }
+			de_jure_liege ?= { has_variable = mbq_gr_kept }
+		}
+		set_variable = { name = mbq_gr_kept value = yes }
+	}
+	every_held_title = {
+		limit = { has_variable = mbq_gr_free }
+		remove_variable = mbq_gr_free
+	}
+}

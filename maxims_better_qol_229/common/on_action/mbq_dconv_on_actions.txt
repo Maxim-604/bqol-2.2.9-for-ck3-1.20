@@ -1,0 +1,19 @@
+﻿# Better Quality of Life 2.0.0 (Demand Conversion): nach Erbfolge weiter am neuen Spielercharakter (Muster mbq_vassal_on_actions.txt).
+on_player_character_change = {
+	on_actions = {
+		mbq_dc_on_player_change
+	}
+}
+
+mbq_dc_on_player_change = {
+	effect = {
+		every_player = {
+			limit = {
+				is_ai = no
+				has_global_variable = mbq_dc_auto
+				NOT = { has_variable = mbq_dc_armed }
+			}
+			mbq_dc_arm_effect = yes
+		}
+	}
+}

@@ -1,0 +1,7 @@
+﻿l_german:
+ MBQ_VS_G_VASSALS: "Vasallen"
+ MBQ_VS_G_TRIBUTE: "Tributzahler"
+ MBQ_VS_G_BOTH: "Für Vasallen und Tributzahler"
+ MBQ_VS_G_NOW: "Jetzt ausführen"
+ MBQ_VS_MIN_LABEL: "Vertrag: nie darunter"
+ MBQ_VS_NOW_NOTE: "Geht auch ohne Automatik"

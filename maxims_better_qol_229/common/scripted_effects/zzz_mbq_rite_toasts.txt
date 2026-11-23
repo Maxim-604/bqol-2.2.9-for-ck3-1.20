@@ -1,0 +1,181 @@
+﻿# Better Quality of Life 2.1.12 (Chef/Maxim 22-10-2026): Ritus-Durchlauf ohne Einzelzeilen im Feed (nur die Sammelmeldung), dev/umbau_2_1_2/v_ritus_stumm_2112.py.
+# Patch-Sicherheit: Kopie der Effekte pam_sway_to_rite_on_accept_effect (V common/scripted_effects/pam_effects.txt:11884-11989) und pam_sway_to_rite_on_decline_effect (:11992-12024),
+# Spielversion 1.20.1.2, md5 der Quelldatei 1c47577ae12a36811b213076b67ebf63. Beim Bau aus der Vanilla-Datei gelesen, nicht abgetippt.
+# Von uns geaendert (alles andere Zeichen fuer Zeichen Vanilla): (1) der Toast fuer den Spieler (send_interface_toast, Titel sway_ruler_to_my_rite_interaction_toast bzw. ..._decline_toast) wird nur
+# gesendet, wenn der Empfaenger NICHT das Flag mbq_rite_auto traegt; der Inhalt des Toast-Blocks steht dafuer unveraendert in den Hilfseffekten mbq_rite_accept_inner_effect /
+# mbq_rite_decline_inner_effect am Ende dieser Datei und laeuft in beiden Faellen; (2) im Decline-Zweig zaehlt mbq_dc_rr die Ablehnungen fuer die Sammelmeldung; (3) am Ende wird das Flag entfernt;
+# (4) debug_log in beiden Zweigen als Beleg der Ladereihenfolge (zzz_ sortiert nach pam_effects.txt; ob dieser Effekt den Vanilla-Effekt ersetzt, ist nur durch den Testlauf belegt).
+# Die Puppenspieler-Toasts (is_puppet_action) bleiben wie Vanilla. Bei CK3-Updates gegen pam_effects.txt:11884-12024 abgleichen (patch_stand.json, _stil/vanilla_beobachten.txt).
+
+# Shared on_accept for the three Sway to Rite interactions
+pam_sway_to_rite_on_accept_effect = {
+	if = {
+		limit = { scope:is_puppet_action ?= yes }
+		scope:puppet_or_actor = {
+			if = {
+				limit = { pam_sway_ruler_to_my_rite_cost_value > 0 }
+				add_piety = {
+					value = {
+						add = pam_sway_ruler_to_my_rite_cost_value
+						max = piety
+						multiply = -1
+					}
+				}
+			}
+		}
+	}
+	scope:puppet_or_actor = {
+		# mbq 2.1.12: answers triggered by BQoL (flag mbq_rite_auto on the recipient) come without the toast, same effect (helper below); manual requests keep the toast
+		if = {
+			limit = { scope:recipient ?= { has_variable = mbq_rite_auto } }
+			mbq_rite_accept_inner_effect = yes
+		}
+		else = {
+			send_interface_toast = {
+				type = event_toast_effect_good
+				title = sway_ruler_to_my_rite_interaction_toast
+				left_icon = scope:puppet_or_actor
+				right_icon = scope:recipient
+				mbq_rite_accept_inner_effect = yes
+			}
+		}
+		# Catalysts
+		if = {
+			limit = {
+				scope:puppet_or_actor.religion = religion:christianity_religion
+				situation:the_christian_church ?= { situation_top_has_catalyst = catalyst_the_christian_church_swayed_to_rite }
+			}
+			situation:the_christian_church = { trigger_situation_catalyst = catalyst_the_christian_church_swayed_to_rite }
+		}
+	}
+	if = {
+		limit = {
+			scope:is_puppet_action ?= yes
+			scope:actor != scope:recipient
+		}
+		scope:actor = {
+			send_interface_toast = {
+				type = event_toast_effect_good
+				title = sway_ruler_to_my_rite_interaction_toast_puppeteer
+				left_icon = scope:puppet_or_actor
+				right_icon = scope:recipient
+			}
+		}
+	}
+	scope:puppet_or_actor = {
+		pam_tax_nonbelievers_conversion_fulfillment_effect = yes
+	}
+	# mbq 2.1.12: the flag lives only until the answer (safety expiry 12 days, mbq_dconv.txt)
+	scope:recipient = { if = { limit = { has_variable = mbq_rite_auto } remove_variable = mbq_rite_auto } }
+}
+
+# Shared on_decline for the three Sway to Rite interactions.
+pam_sway_to_rite_on_decline_effect = {
+	scope:puppet_or_actor = {
+		# mbq 2.1.12: refusals to BQoL requests (flag mbq_rite_auto) come without the toast and are counted for the summary (mbq_dc_rr on the player)
+		if = {
+			limit = { scope:recipient ?= { has_variable = mbq_rite_auto } }
+			if = { limit = { NOT = { has_variable = mbq_dc_rr } } set_variable = { name = mbq_dc_rr value = 0 } }
+			change_variable = { name = mbq_dc_rr add = 1 }
+			mbq_rite_decline_inner_effect = yes
+		}
+		else = {
+			send_interface_toast = {
+				type = event_toast_effect_bad
+				title = sway_ruler_to_my_rite_interaction_decline_toast
+				right_icon = scope:recipient
+				mbq_rite_decline_inner_effect = yes
+			}
+		}
+	}
+	if = {
+		limit = {
+			scope:is_puppet_action ?= yes
+			scope:actor != scope:recipient
+		}
+		scope:actor = {
+			send_interface_toast = {
+				type = event_toast_effect_bad
+				title = sway_ruler_to_my_rite_interaction_decline_toast_puppeteer
+				left_icon = scope:puppet_or_actor
+				right_icon = scope:recipient
+			}
+		}
+	}
+	# mbq 2.1.12: the flag lives only until the answer
+	scope:recipient = { if = { limit = { has_variable = mbq_rite_auto } remove_variable = mbq_rite_auto } }
+}
+
+# mbq 2.1.12 helper: the content of the accept toast block of the vanilla effect above, character for character (scope: the actor, saved scopes as in the interaction)
+mbq_rite_accept_inner_effect = {
+	scope:recipient = {
+		set_character_rite = scope:puppet_or_actor.rite
+		if = {
+			limit = { is_ai = yes }
+			add_opinion = {
+				target = scope:puppet_or_actor
+				modifier = pious_opinion
+				opinion = 10
+			}
+		}
+		if = { # Accepting the founding wave of a freshly created rite pulls the whole domain and court along, but only if they are actually tied to us
+			limit = {
+				is_ruler = yes
+				is_landed = yes
+				scope:puppet_or_actor.rite ?= {
+					has_variable = pam_rite_founding_window
+				}
+				pam_rite_sway_connected_recipient_trigger = { ACTOR = scope:puppet_or_actor }
+			}
+			pam_convert_domain_counties_to_rite_effect = { RITE = scope:puppet_or_actor.rite }
+			pam_convert_court_to_rite_effect = { RITE = scope:puppet_or_actor.rite }
+		}
+		else_if = { # We also convert their capital county
+			limit = {
+				is_ruler = yes
+				is_landed = yes
+				capital_county = {
+					this.faith = scope:puppet_or_actor.faith # set_county_rite would drag a foreign-faith capital across faiths
+					this.rite != scope:puppet_or_actor.rite
+					any_neighboring_county = { # only if a neighbor shares the same liege or IS the liege, aka I'm not surrounded by complete strangers
+						OR = {
+							this.holder.liege = prev.holder.liege
+							this.holder = prev.holder.liege
+						}
+					}
+				}
+			}
+			capital_county = { set_county_rite = scope:puppet_or_actor.rite }
+		}
+		if = {
+			limit = { scope:pam_sway_pledge_favor ?= yes }
+			add_hook = {
+				target = scope:puppet_or_actor
+				type = favor_hook
+			}
+		}
+	}
+	if = {
+		limit = { scope:pam_sway_endowment ?= yes }
+		scope:puppet_or_actor = {
+			pay_treasury_or_gold = {
+				target = scope:recipient
+				value = pam_sway_to_rite_endowment_cost_value
+			}
+		}
+	}
+}
+
+# mbq 2.1.12 helper: the content of the decline toast block of the vanilla effect above, character for character
+mbq_rite_decline_inner_effect = {
+	scope:recipient = {
+		if = {
+			limit = { is_ai = yes }
+			add_opinion = {
+				target = scope:puppet_or_actor
+				modifier = annoyed_opinion
+				opinion = -10
+			}
+		}
+	}
+}

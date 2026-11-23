@@ -1,0 +1,419 @@
+﻿# Better Quality of Life 2.0.0 (Counties). Erwartet scope:mbq_gr_liege (Spieler).
+
+# Abgabe-Reihenfolge beim Aufraeumen: wenigste eigene Grafschaften zuerst (S :64-70). Titel-Scope.
+# 2.0.17: laufende Nummer des Titelgewinns (mbq_gr_on_title_mark), hoeher = neuer; Bestand ohne Nummer = 0 (alt). Scope = Titel.
+mbq_gr_gain_order_value = {
+	value = 0
+	if = {
+		limit = { has_variable = mbq_gr_gain_seq }
+		value = var:mbq_gr_gain_seq
+	}
+}
+# Logik-Test 2.0.17 RISIKO 1: Prioritaet x 0.001 statt Nummer x 1000 (der Zaehler waechst ueber die Kampagne).
+# 2.0.17 (Spieltest Qom/Tamisha): Aufraeumen ueber Baronien UND Grafschaften in einer Schleife, neueste zuerst; bei gleicher Nummer Baronie vor Grafschaft. Scope = Titel.
+mbq_gr_cleanup_order_value = {
+	value = mbq_gr_gain_order_value
+	multiply = 2
+	if = {
+		limit = { tier = tier_barony }
+		add = 1
+	}
+}
+
+# Ueberhang ueber der Domaenenschwelle. domain_size und domain_limit als Wert wie V common/script_values/00_activity_values.txt:2936
+# und 00_building_values.txt:343. Ersetzt S :421-428 (value = domain_limit_available, als Wert unbelegt).
+# Empfaenger-Bau 14-10 (Maxim Nr. 4): "Counties over your domain limit" 0 (Standard) bis 5; "No limit" = mbq_gr_no_county (nie Grafschaften abgeben).
+mbq_gr_allow_value = {
+	value = 0
+	if = { limit = { has_global_variable = mbq_gr_allow_1 } value = 1 }
+	else_if = { limit = { has_global_variable = mbq_gr_allow_2 } value = 2 }
+	else_if = { limit = { has_global_variable = mbq_gr_allow_3 } value = 3 }
+	else_if = { limit = { has_global_variable = mbq_gr_allow_4 } value = 4 }
+	else_if = { limit = { has_global_variable = mbq_gr_allow_5 } value = 5 }
+}
+
+mbq_gr_over_value = {
+	value = domain_size
+	subtract = domain_limit
+	subtract = mbq_gr_allow_value # erlaubte Grafschaften ueber der Schwelle
+}
+
+# C2 "Counties per vassal": Standard 4 (Maxim 15-10 Spieltest), sonst 1/2/6 (mbq_gr_ccap_1/2/6), mbq_gr_ccap_none = keine Grenze.
+mbq_gr_ccap_value = {
+	value = 4
+	if = { limit = { has_global_variable = mbq_gr_ccap_1 } value = 1 }
+	else_if = { limit = { has_global_variable = mbq_gr_ccap_2 } value = 2 }
+	else_if = { limit = { has_global_variable = mbq_gr_ccap_6 } value = 6 }
+	else_if = { limit = { has_global_variable = mbq_gr_ccap_none } value = 1000 } # keine Grenze wie bisher
+}
+mbq_gr_held_counties_value = {
+	value = 0
+	every_held_title = {
+		limit = { tier = tier_county }
+		add = 1
+	}
+}
+
+# Reihenfolge in der Sammelmeldung: Grafschaft vor Baronie. Titel-Scope.
+mbq_gr_order_value = {
+	value = 1
+	if = { limit = { tier = tier_county } value = 2 }
+}
+
+# Good vassal traits (Trichter-Bau 14-10, dev/grafschaften/trait_filter_recherche.md A). Punkte: content 20 (V common/traits/00_traits.txt:3683
+# opinion_of_liege +20), trusting 15 (:4095), loyal 15 (:12787 liege_opinion +15), humble 10 (:3104), patient 5 (:2884); dazu Meinung vom Lehnsherrn
+# in Stufen (Form V common/script_values/00_ai_values.txt:459-470 opinion = { target value >= }): ab 60 +30, ab 30 +20, ab 0 +10 (Stufen-Grenzen gesetzt,
+# nicht aus Vanilla: Startwerte, im Spiel eichen). Teilwert mbq_gr_k7_value = Summe / 10, hoechstens 9. Scope = Kandidat.
+mbq_gr_good_vassal_value = {
+	value = 0
+	if = { limit = { has_trait = content } add = 20 }
+	if = { limit = { has_trait = trusting } add = 15 }
+	if = { limit = { has_trait = loyal } add = 15 }
+	if = { limit = { has_trait = humble } add = 10 }
+	if = { limit = { has_trait = patient } add = 5 }
+	if = { limit = { opinion = { target = scope:mbq_gr_liege value >= 60 } } add = 30 }
+	else_if = { limit = { opinion = { target = scope:mbq_gr_liege value >= 30 } } add = 20 }
+	else_if = { limit = { opinion = { target = scope:mbq_gr_liege value >= 0 } } add = 10 }
+	divide = 10
+}
+
+# Teilwerte 0 bis 9 je Prioritaet (generiert, G0)
+mbq_gr_q1_value = {
+	value = 0
+	if = { limit = { mbq_gr_k1_value >= 8 } add = 4 }
+	else_if = { limit = { mbq_gr_k1_value >= 6 } add = 3 }
+	else_if = { limit = { mbq_gr_k1_value >= 4 } add = 2 }
+	else_if = { limit = { mbq_gr_k1_value >= 1 } add = 1 }
+}
+mbq_gr_q2_value = {
+	value = 0
+	if = { limit = { mbq_gr_k2_value >= 8 } add = 4 }
+	else_if = { limit = { mbq_gr_k2_value >= 6 } add = 3 }
+	else_if = { limit = { mbq_gr_k2_value >= 4 } add = 2 }
+	else_if = { limit = { mbq_gr_k2_value >= 1 } add = 1 }
+}
+mbq_gr_q3_value = {
+	value = 0
+	if = { limit = { mbq_gr_k3_value >= 8 } add = 4 }
+	else_if = { limit = { mbq_gr_k3_value >= 6 } add = 3 }
+	else_if = { limit = { mbq_gr_k3_value >= 4 } add = 2 }
+	else_if = { limit = { mbq_gr_k3_value >= 1 } add = 1 }
+}
+mbq_gr_q4_value = {
+	value = 0
+	if = { limit = { mbq_gr_k4_value >= 8 } add = 4 }
+	else_if = { limit = { mbq_gr_k4_value >= 6 } add = 3 }
+	else_if = { limit = { mbq_gr_k4_value >= 4 } add = 2 }
+	else_if = { limit = { mbq_gr_k4_value >= 1 } add = 1 }
+}
+mbq_gr_q5_value = {
+	value = 0
+	if = { limit = { mbq_gr_k5_value >= 8 } add = 4 }
+	else_if = { limit = { mbq_gr_k5_value >= 6 } add = 3 }
+	else_if = { limit = { mbq_gr_k5_value >= 4 } add = 2 }
+	else_if = { limit = { mbq_gr_k5_value >= 1 } add = 1 }
+}
+mbq_gr_q6_value = {
+	value = 0
+	if = { limit = { mbq_gr_k6_value >= 8 } add = 4 }
+	else_if = { limit = { mbq_gr_k6_value >= 6 } add = 3 }
+	else_if = { limit = { mbq_gr_k6_value >= 4 } add = 2 }
+	else_if = { limit = { mbq_gr_k6_value >= 1 } add = 1 }
+}
+mbq_gr_q7_value = {
+	value = 0
+	if = { limit = { mbq_gr_k7_value >= 8 } add = 4 }
+	else_if = { limit = { mbq_gr_k7_value >= 6 } add = 3 }
+	else_if = { limit = { mbq_gr_k7_value >= 4 } add = 2 }
+	else_if = { limit = { mbq_gr_k7_value >= 1 } add = 1 }
+}
+mbq_gr_q9_value = {
+	value = 0
+	if = { limit = { mbq_gr_k9_value >= 8 } add = 4 }
+	else_if = { limit = { mbq_gr_k9_value >= 6 } add = 3 }
+	else_if = { limit = { mbq_gr_k9_value >= 4 } add = 2 }
+	else_if = { limit = { mbq_gr_k9_value >= 1 } add = 1 }
+}
+mbq_gr_q10_value = {
+	value = 0
+	if = { limit = { mbq_gr_k10_value >= 8 } add = 4 }
+	else_if = { limit = { mbq_gr_k10_value >= 6 } add = 3 }
+	else_if = { limit = { mbq_gr_k10_value >= 4 } add = 2 }
+	else_if = { limit = { mbq_gr_k10_value >= 1 } add = 1 }
+}
+mbq_gr_q11_value = {
+	value = 0
+	if = { limit = { mbq_gr_k11_value >= 8 } add = 4 }
+	else_if = { limit = { mbq_gr_k11_value >= 6 } add = 3 }
+	else_if = { limit = { mbq_gr_k11_value >= 4 } add = 2 }
+	else_if = { limit = { mbq_gr_k11_value >= 1 } add = 1 }
+}
+mbq_gr_q12_value = {
+	value = 0
+	if = { limit = { mbq_gr_k12_value >= 8 } add = 4 }
+	else_if = { limit = { mbq_gr_k12_value >= 6 } add = 3 }
+	else_if = { limit = { mbq_gr_k12_value >= 4 } add = 2 }
+	else_if = { limit = { mbq_gr_k12_value >= 1 } add = 1 }
+}
+mbq_gr_k1_value = {
+	value = 0
+	if = { limit = { exists = dynasty exists = scope:mbq_gr_liege.dynasty dynasty = scope:mbq_gr_liege.dynasty } add = 9 } # event_targets.log:550
+	floor = yes # 00_basic_values.txt:460
+	min = 0 # wie mmoc_script_values.txt:170
+	max = 9 # Stufe 0 bis 9 (Staffelung)
+}
+mbq_gr_k2_value = {
+	value = 0
+	if = { limit = { exists = house exists = scope:mbq_gr_liege.house house = scope:mbq_gr_liege.house } add = 9 } # event_targets.log:610
+	floor = yes # 00_basic_values.txt:460
+	min = 0 # wie mmoc_script_values.txt:170
+	max = 9 # Stufe 0 bis 9 (Staffelung)
+}
+mbq_gr_k3_value = {
+	value = 0
+	if = { limit = { is_grandchild_of = scope:mbq_gr_liege } add = 9 } # triggers.log:5451
+	else_if = { limit = { is_great_grandchild_of = scope:mbq_gr_liege } add = 8 } # triggers.log:5463
+	else_if = { # eine Stufe tiefer ueber Vater/Mutter (event_targets.log:574, :682), billig: zwei Scopes
+		limit = {
+			OR = {
+				father ?= { is_great_grandchild_of = scope:mbq_gr_liege }
+				mother ?= { is_great_grandchild_of = scope:mbq_gr_liege }
+			}
+		}
+		add = 7
+	}
+	floor = yes # 00_basic_values.txt:460
+	min = 0 # wie mmoc_script_values.txt:170
+	max = 9 # Stufe 0 bis 9 (Staffelung)
+}
+mbq_gr_k4_value = {
+	value = 0
+	if = { limit = { is_child_of = scope:mbq_gr_liege } add = 9 } # triggers.log:5206; Haupterbe sperrt die rote Regel R4 (mbq_gr_recipient_valid_trigger)
+	floor = yes # 00_basic_values.txt:460
+	min = 0 # wie mmoc_script_values.txt:170
+	max = 9 # Stufe 0 bis 9 (Staffelung)
+}
+mbq_gr_k5_value = {
+	value = 0
+	if = { limit = { is_courtier_of = scope:mbq_gr_liege } add = 9 } # triggers.log:5309: schon an Eurem Hof
+	floor = yes # 00_basic_values.txt:460
+	min = 0 # wie mmoc_script_values.txt:170
+	max = 9 # Stufe 0 bis 9 (Staffelung)
+}
+mbq_gr_k6_value = {
+	value = 0
+	if = { # Grafschaft/Baronie: haelt das de-jure-Oberlehen (Herzogtum bzw. Grafschaft der Baronie), bisher Option De jure ruler
+		limit = {
+			scope:mbq_gr_grant_title.tier <= tier_county
+			scope:mbq_gr_grant_title.de_jure_liege.holder ?= this
+		}
+		add = 9
+	}
+	floor = yes # 00_basic_values.txt:460
+	min = 0 # wie mmoc_script_values.txt:170
+	max = 9 # Stufe 0 bis 9 (Staffelung)
+}
+mbq_gr_k7_value = {
+	value = 0
+	add = mbq_gr_good_vassal_value
+	floor = yes # 00_basic_values.txt:460
+	min = 0 # wie mmoc_script_values.txt:170
+	max = 9 # Stufe 0 bis 9 (Staffelung)
+}
+mbq_gr_k9_value = {
+	value = 0
+	add = 9 # Fewest titles (Maxim 15-10): 0 Titel 9, je gehaltenem Landtitel (Grafschaft, Herzogtum, Koenigreich) -2: 1=7, 2=5, 3=3, 4=1, 5+=0
+	every_held_title = { # E:4665 every_held_title (gehaltene Landtitel)
+		limit = {
+			tier >= tier_county
+			tier <= tier_kingdom
+			is_titular = no # T:8848
+		}
+		add = -2
+	}
+	floor = yes # 00_basic_values.txt:460
+	min = 0 # wie mmoc_script_values.txt:170
+	max = 9 # Stufe 0 bis 9 (Staffelung)
+}
+mbq_gr_k10_value = {
+	value = 0
+	if = { limit = { rite = scope:mbq_gr_liege.rite } add = 9 } # Closest faith (Maxim 15-10 final): Rite 9, Faith 6, Religion 3, sonst 0
+	else_if = { limit = { faith = scope:mbq_gr_liege.faith } add = 6 }
+	else_if = { limit = { religion = scope:mbq_gr_liege.religion } add = 3 }
+	floor = yes # 00_basic_values.txt:460
+	min = 0 # wie mmoc_script_values.txt:170
+	max = 9 # Stufe 0 bis 9 (Staffelung)
+}
+mbq_gr_k11_value = {
+	value = 0
+	if = { limit = { culture = scope:mbq_gr_liege.culture } add = 9 } # Closest culture (Maxim 15-10 final): Culture 9, Heritage 5, sonst 0
+	else_if = { limit = { culture = { has_same_culture_heritage = scope:mbq_gr_liege.culture } } add = 5 }
+	floor = yes # 00_basic_values.txt:460
+	min = 0 # wie mmoc_script_values.txt:170
+	max = 9 # Stufe 0 bis 9 (Staffelung)
+}
+mbq_gr_k12_value = {
+	value = 0
+	if = { limit = { stewardship >= 17 } add = 9 } # Best stewardship: hervorragend
+	else_if = { limit = { stewardship >= 13 } add = 7 } # gut
+	else_if = { limit = { stewardship >= 9 } add = 5 } # durchschnittlich
+	else_if = { limit = { stewardship >= 5 } add = 2 } # schwach
+	floor = yes # 00_basic_values.txt:460
+	min = 0 # wie mmoc_script_values.txt:170
+	max = 9 # Stufe 0 bis 9 (Staffelung)
+}
+mbq_gr_k8_value = {
+	value = 0
+	# New noble: vorhandene Kandidaten 0; wirkt als gedachter Kandidat im Auswahl-Effekt (mbq_gr_pick_c_effect)
+	floor = yes # 00_basic_values.txt:460
+	min = 0 # wie mmoc_script_values.txt:170
+	max = 9 # Stufe 0 bis 9 (Staffelung)
+}
+
+# Platzwerte und Rang (generiert, G0)
+mbq_gr_s1_value = {
+	value = 0
+	# Satz c (gemeinsam), ab 2.1 einziger Satz (Satz d fuer Herzogtum/Koenigreich entfaellt)
+	if = { limit = { has_global_variable = mbq_gr_rc1_is_1 } add = mbq_gr_q1_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc1_is_2 } add = mbq_gr_q2_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc1_is_3 } add = mbq_gr_q3_value }
+	else_if = { limit = { OR = { has_global_variable = mbq_gr_rc1_is_4 mbq_gr_rc1_unset_trigger = yes } } add = mbq_gr_q4_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc1_is_5 } add = mbq_gr_q5_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc1_is_6 } add = mbq_gr_q6_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc1_is_7 } add = mbq_gr_q7_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc1_is_9 } add = mbq_gr_q9_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc1_is_10 } add = mbq_gr_q10_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc1_is_11 } add = mbq_gr_q11_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc1_is_12 } add = mbq_gr_q12_value }
+}
+mbq_gr_s2_value = {
+	value = 0
+	# Satz c (gemeinsam), ab 2.1 einziger Satz (Satz d fuer Herzogtum/Koenigreich entfaellt)
+	if = { limit = { has_global_variable = mbq_gr_rc2_is_1 NOR = { has_global_variable = mbq_gr_rc1_is_1 } } add = mbq_gr_q1_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc2_is_2 NOR = { has_global_variable = mbq_gr_rc1_is_2 } } add = mbq_gr_q2_value }
+	else_if = { limit = { OR = { has_global_variable = mbq_gr_rc2_is_3 mbq_gr_rc2_unset_trigger = yes } NOR = { has_global_variable = mbq_gr_rc1_is_3 } } add = mbq_gr_q3_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc2_is_4 NOR = { OR = { has_global_variable = mbq_gr_rc1_is_4 mbq_gr_rc1_unset_trigger = yes } } } add = mbq_gr_q4_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc2_is_5 NOR = { has_global_variable = mbq_gr_rc1_is_5 } } add = mbq_gr_q5_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc2_is_6 NOR = { has_global_variable = mbq_gr_rc1_is_6 } } add = mbq_gr_q6_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc2_is_7 NOR = { has_global_variable = mbq_gr_rc1_is_7 } } add = mbq_gr_q7_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc2_is_9 NOR = { has_global_variable = mbq_gr_rc1_is_9 } } add = mbq_gr_q9_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc2_is_10 NOR = { has_global_variable = mbq_gr_rc1_is_10 } } add = mbq_gr_q10_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc2_is_11 NOR = { has_global_variable = mbq_gr_rc1_is_11 } } add = mbq_gr_q11_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc2_is_12 NOR = { has_global_variable = mbq_gr_rc1_is_12 } } add = mbq_gr_q12_value }
+}
+mbq_gr_s3_value = {
+	value = 0
+	# Satz c (gemeinsam), ab 2.1 einziger Satz (Satz d fuer Herzogtum/Koenigreich entfaellt)
+	if = { limit = { has_global_variable = mbq_gr_rc3_is_1 NOR = { has_global_variable = mbq_gr_rc1_is_1 has_global_variable = mbq_gr_rc2_is_1 } } add = mbq_gr_q1_value }
+	else_if = { limit = { OR = { has_global_variable = mbq_gr_rc3_is_2 mbq_gr_rc3_unset_trigger = yes } NOR = { has_global_variable = mbq_gr_rc1_is_2 has_global_variable = mbq_gr_rc2_is_2 } } add = mbq_gr_q2_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc3_is_3 NOR = { has_global_variable = mbq_gr_rc1_is_3 OR = { has_global_variable = mbq_gr_rc2_is_3 mbq_gr_rc2_unset_trigger = yes } } } add = mbq_gr_q3_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc3_is_4 NOR = { OR = { has_global_variable = mbq_gr_rc1_is_4 mbq_gr_rc1_unset_trigger = yes } has_global_variable = mbq_gr_rc2_is_4 } } add = mbq_gr_q4_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc3_is_5 NOR = { has_global_variable = mbq_gr_rc1_is_5 has_global_variable = mbq_gr_rc2_is_5 } } add = mbq_gr_q5_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc3_is_6 NOR = { has_global_variable = mbq_gr_rc1_is_6 has_global_variable = mbq_gr_rc2_is_6 } } add = mbq_gr_q6_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc3_is_7 NOR = { has_global_variable = mbq_gr_rc1_is_7 has_global_variable = mbq_gr_rc2_is_7 } } add = mbq_gr_q7_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc3_is_9 NOR = { has_global_variable = mbq_gr_rc1_is_9 has_global_variable = mbq_gr_rc2_is_9 } } add = mbq_gr_q9_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc3_is_10 NOR = { has_global_variable = mbq_gr_rc1_is_10 has_global_variable = mbq_gr_rc2_is_10 } } add = mbq_gr_q10_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc3_is_11 NOR = { has_global_variable = mbq_gr_rc1_is_11 has_global_variable = mbq_gr_rc2_is_11 } } add = mbq_gr_q11_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc3_is_12 NOR = { has_global_variable = mbq_gr_rc1_is_12 has_global_variable = mbq_gr_rc2_is_12 } } add = mbq_gr_q12_value }
+}
+mbq_gr_s4_value = {
+	value = 0
+	# Satz c (gemeinsam), ab 2.1 einziger Satz (Satz d fuer Herzogtum/Koenigreich entfaellt)
+	if = { limit = { OR = { has_global_variable = mbq_gr_rc4_is_1 mbq_gr_rc4_unset_trigger = yes } NOR = { has_global_variable = mbq_gr_rc1_is_1 has_global_variable = mbq_gr_rc2_is_1 has_global_variable = mbq_gr_rc3_is_1 } } add = mbq_gr_q1_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc4_is_2 NOR = { has_global_variable = mbq_gr_rc1_is_2 has_global_variable = mbq_gr_rc2_is_2 OR = { has_global_variable = mbq_gr_rc3_is_2 mbq_gr_rc3_unset_trigger = yes } } } add = mbq_gr_q2_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc4_is_3 NOR = { has_global_variable = mbq_gr_rc1_is_3 OR = { has_global_variable = mbq_gr_rc2_is_3 mbq_gr_rc2_unset_trigger = yes } has_global_variable = mbq_gr_rc3_is_3 } } add = mbq_gr_q3_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc4_is_4 NOR = { OR = { has_global_variable = mbq_gr_rc1_is_4 mbq_gr_rc1_unset_trigger = yes } has_global_variable = mbq_gr_rc2_is_4 has_global_variable = mbq_gr_rc3_is_4 } } add = mbq_gr_q4_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc4_is_5 NOR = { has_global_variable = mbq_gr_rc1_is_5 has_global_variable = mbq_gr_rc2_is_5 has_global_variable = mbq_gr_rc3_is_5 } } add = mbq_gr_q5_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc4_is_6 NOR = { has_global_variable = mbq_gr_rc1_is_6 has_global_variable = mbq_gr_rc2_is_6 has_global_variable = mbq_gr_rc3_is_6 } } add = mbq_gr_q6_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc4_is_7 NOR = { has_global_variable = mbq_gr_rc1_is_7 has_global_variable = mbq_gr_rc2_is_7 has_global_variable = mbq_gr_rc3_is_7 } } add = mbq_gr_q7_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc4_is_9 NOR = { has_global_variable = mbq_gr_rc1_is_9 has_global_variable = mbq_gr_rc2_is_9 has_global_variable = mbq_gr_rc3_is_9 } } add = mbq_gr_q9_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc4_is_10 NOR = { has_global_variable = mbq_gr_rc1_is_10 has_global_variable = mbq_gr_rc2_is_10 has_global_variable = mbq_gr_rc3_is_10 } } add = mbq_gr_q10_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc4_is_11 NOR = { has_global_variable = mbq_gr_rc1_is_11 has_global_variable = mbq_gr_rc2_is_11 has_global_variable = mbq_gr_rc3_is_11 } } add = mbq_gr_q11_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc4_is_12 NOR = { has_global_variable = mbq_gr_rc1_is_12 has_global_variable = mbq_gr_rc2_is_12 has_global_variable = mbq_gr_rc3_is_12 } } add = mbq_gr_q12_value }
+}
+mbq_gr_s5_value = {
+	value = 0
+	# Satz c (gemeinsam), ab 2.1 einziger Satz (Satz d fuer Herzogtum/Koenigreich entfaellt)
+	if = { limit = { has_global_variable = mbq_gr_rc5_is_1 NOR = { has_global_variable = mbq_gr_rc1_is_1 has_global_variable = mbq_gr_rc2_is_1 has_global_variable = mbq_gr_rc3_is_1 OR = { has_global_variable = mbq_gr_rc4_is_1 mbq_gr_rc4_unset_trigger = yes } } } add = mbq_gr_q1_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc5_is_2 NOR = { has_global_variable = mbq_gr_rc1_is_2 has_global_variable = mbq_gr_rc2_is_2 OR = { has_global_variable = mbq_gr_rc3_is_2 mbq_gr_rc3_unset_trigger = yes } has_global_variable = mbq_gr_rc4_is_2 } } add = mbq_gr_q2_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc5_is_3 NOR = { has_global_variable = mbq_gr_rc1_is_3 OR = { has_global_variable = mbq_gr_rc2_is_3 mbq_gr_rc2_unset_trigger = yes } has_global_variable = mbq_gr_rc3_is_3 has_global_variable = mbq_gr_rc4_is_3 } } add = mbq_gr_q3_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc5_is_4 NOR = { OR = { has_global_variable = mbq_gr_rc1_is_4 mbq_gr_rc1_unset_trigger = yes } has_global_variable = mbq_gr_rc2_is_4 has_global_variable = mbq_gr_rc3_is_4 has_global_variable = mbq_gr_rc4_is_4 } } add = mbq_gr_q4_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc5_is_5 NOR = { has_global_variable = mbq_gr_rc1_is_5 has_global_variable = mbq_gr_rc2_is_5 has_global_variable = mbq_gr_rc3_is_5 has_global_variable = mbq_gr_rc4_is_5 } } add = mbq_gr_q5_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc5_is_6 NOR = { has_global_variable = mbq_gr_rc1_is_6 has_global_variable = mbq_gr_rc2_is_6 has_global_variable = mbq_gr_rc3_is_6 has_global_variable = mbq_gr_rc4_is_6 } } add = mbq_gr_q6_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc5_is_7 NOR = { has_global_variable = mbq_gr_rc1_is_7 has_global_variable = mbq_gr_rc2_is_7 has_global_variable = mbq_gr_rc3_is_7 has_global_variable = mbq_gr_rc4_is_7 } } add = mbq_gr_q7_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc5_is_9 NOR = { has_global_variable = mbq_gr_rc1_is_9 has_global_variable = mbq_gr_rc2_is_9 has_global_variable = mbq_gr_rc3_is_9 has_global_variable = mbq_gr_rc4_is_9 } } add = mbq_gr_q9_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc5_is_10 NOR = { has_global_variable = mbq_gr_rc1_is_10 has_global_variable = mbq_gr_rc2_is_10 has_global_variable = mbq_gr_rc3_is_10 has_global_variable = mbq_gr_rc4_is_10 } } add = mbq_gr_q10_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc5_is_11 NOR = { has_global_variable = mbq_gr_rc1_is_11 has_global_variable = mbq_gr_rc2_is_11 has_global_variable = mbq_gr_rc3_is_11 has_global_variable = mbq_gr_rc4_is_11 } } add = mbq_gr_q11_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc5_is_12 NOR = { has_global_variable = mbq_gr_rc1_is_12 has_global_variable = mbq_gr_rc2_is_12 has_global_variable = mbq_gr_rc3_is_12 has_global_variable = mbq_gr_rc4_is_12 } } add = mbq_gr_q12_value }
+}
+mbq_gr_s6_value = {
+	value = 0
+	# Satz c (gemeinsam), ab 2.1 einziger Satz (Satz d fuer Herzogtum/Koenigreich entfaellt)
+	if = { limit = { has_global_variable = mbq_gr_rc6_is_1 NOR = { has_global_variable = mbq_gr_rc1_is_1 has_global_variable = mbq_gr_rc2_is_1 has_global_variable = mbq_gr_rc3_is_1 OR = { has_global_variable = mbq_gr_rc4_is_1 mbq_gr_rc4_unset_trigger = yes } has_global_variable = mbq_gr_rc5_is_1 } } add = mbq_gr_q1_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc6_is_2 NOR = { has_global_variable = mbq_gr_rc1_is_2 has_global_variable = mbq_gr_rc2_is_2 OR = { has_global_variable = mbq_gr_rc3_is_2 mbq_gr_rc3_unset_trigger = yes } has_global_variable = mbq_gr_rc4_is_2 has_global_variable = mbq_gr_rc5_is_2 } } add = mbq_gr_q2_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc6_is_3 NOR = { has_global_variable = mbq_gr_rc1_is_3 OR = { has_global_variable = mbq_gr_rc2_is_3 mbq_gr_rc2_unset_trigger = yes } has_global_variable = mbq_gr_rc3_is_3 has_global_variable = mbq_gr_rc4_is_3 has_global_variable = mbq_gr_rc5_is_3 } } add = mbq_gr_q3_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc6_is_4 NOR = { OR = { has_global_variable = mbq_gr_rc1_is_4 mbq_gr_rc1_unset_trigger = yes } has_global_variable = mbq_gr_rc2_is_4 has_global_variable = mbq_gr_rc3_is_4 has_global_variable = mbq_gr_rc4_is_4 has_global_variable = mbq_gr_rc5_is_4 } } add = mbq_gr_q4_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc6_is_5 NOR = { has_global_variable = mbq_gr_rc1_is_5 has_global_variable = mbq_gr_rc2_is_5 has_global_variable = mbq_gr_rc3_is_5 has_global_variable = mbq_gr_rc4_is_5 has_global_variable = mbq_gr_rc5_is_5 } } add = mbq_gr_q5_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc6_is_6 NOR = { has_global_variable = mbq_gr_rc1_is_6 has_global_variable = mbq_gr_rc2_is_6 has_global_variable = mbq_gr_rc3_is_6 has_global_variable = mbq_gr_rc4_is_6 has_global_variable = mbq_gr_rc5_is_6 } } add = mbq_gr_q6_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc6_is_7 NOR = { has_global_variable = mbq_gr_rc1_is_7 has_global_variable = mbq_gr_rc2_is_7 has_global_variable = mbq_gr_rc3_is_7 has_global_variable = mbq_gr_rc4_is_7 has_global_variable = mbq_gr_rc5_is_7 } } add = mbq_gr_q7_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc6_is_9 NOR = { has_global_variable = mbq_gr_rc1_is_9 has_global_variable = mbq_gr_rc2_is_9 has_global_variable = mbq_gr_rc3_is_9 has_global_variable = mbq_gr_rc4_is_9 has_global_variable = mbq_gr_rc5_is_9 } } add = mbq_gr_q9_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc6_is_10 NOR = { has_global_variable = mbq_gr_rc1_is_10 has_global_variable = mbq_gr_rc2_is_10 has_global_variable = mbq_gr_rc3_is_10 has_global_variable = mbq_gr_rc4_is_10 has_global_variable = mbq_gr_rc5_is_10 } } add = mbq_gr_q10_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc6_is_11 NOR = { has_global_variable = mbq_gr_rc1_is_11 has_global_variable = mbq_gr_rc2_is_11 has_global_variable = mbq_gr_rc3_is_11 has_global_variable = mbq_gr_rc4_is_11 has_global_variable = mbq_gr_rc5_is_11 } } add = mbq_gr_q11_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc6_is_12 NOR = { has_global_variable = mbq_gr_rc1_is_12 has_global_variable = mbq_gr_rc2_is_12 has_global_variable = mbq_gr_rc3_is_12 has_global_variable = mbq_gr_rc4_is_12 has_global_variable = mbq_gr_rc5_is_12 } } add = mbq_gr_q12_value }
+}
+mbq_gr_s7_value = {
+	value = 0
+	# Satz c (gemeinsam), ab 2.1 einziger Satz (Satz d fuer Herzogtum/Koenigreich entfaellt)
+	if = { limit = { has_global_variable = mbq_gr_rc7_is_1 NOR = { has_global_variable = mbq_gr_rc1_is_1 has_global_variable = mbq_gr_rc2_is_1 has_global_variable = mbq_gr_rc3_is_1 OR = { has_global_variable = mbq_gr_rc4_is_1 mbq_gr_rc4_unset_trigger = yes } has_global_variable = mbq_gr_rc5_is_1 has_global_variable = mbq_gr_rc6_is_1 } } add = mbq_gr_q1_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc7_is_2 NOR = { has_global_variable = mbq_gr_rc1_is_2 has_global_variable = mbq_gr_rc2_is_2 OR = { has_global_variable = mbq_gr_rc3_is_2 mbq_gr_rc3_unset_trigger = yes } has_global_variable = mbq_gr_rc4_is_2 has_global_variable = mbq_gr_rc5_is_2 has_global_variable = mbq_gr_rc6_is_2 } } add = mbq_gr_q2_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc7_is_3 NOR = { has_global_variable = mbq_gr_rc1_is_3 OR = { has_global_variable = mbq_gr_rc2_is_3 mbq_gr_rc2_unset_trigger = yes } has_global_variable = mbq_gr_rc3_is_3 has_global_variable = mbq_gr_rc4_is_3 has_global_variable = mbq_gr_rc5_is_3 has_global_variable = mbq_gr_rc6_is_3 } } add = mbq_gr_q3_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc7_is_4 NOR = { OR = { has_global_variable = mbq_gr_rc1_is_4 mbq_gr_rc1_unset_trigger = yes } has_global_variable = mbq_gr_rc2_is_4 has_global_variable = mbq_gr_rc3_is_4 has_global_variable = mbq_gr_rc4_is_4 has_global_variable = mbq_gr_rc5_is_4 has_global_variable = mbq_gr_rc6_is_4 } } add = mbq_gr_q4_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc7_is_5 NOR = { has_global_variable = mbq_gr_rc1_is_5 has_global_variable = mbq_gr_rc2_is_5 has_global_variable = mbq_gr_rc3_is_5 has_global_variable = mbq_gr_rc4_is_5 has_global_variable = mbq_gr_rc5_is_5 has_global_variable = mbq_gr_rc6_is_5 } } add = mbq_gr_q5_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc7_is_6 NOR = { has_global_variable = mbq_gr_rc1_is_6 has_global_variable = mbq_gr_rc2_is_6 has_global_variable = mbq_gr_rc3_is_6 has_global_variable = mbq_gr_rc4_is_6 has_global_variable = mbq_gr_rc5_is_6 has_global_variable = mbq_gr_rc6_is_6 } } add = mbq_gr_q6_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc7_is_7 NOR = { has_global_variable = mbq_gr_rc1_is_7 has_global_variable = mbq_gr_rc2_is_7 has_global_variable = mbq_gr_rc3_is_7 has_global_variable = mbq_gr_rc4_is_7 has_global_variable = mbq_gr_rc5_is_7 has_global_variable = mbq_gr_rc6_is_7 } } add = mbq_gr_q7_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc7_is_9 NOR = { has_global_variable = mbq_gr_rc1_is_9 has_global_variable = mbq_gr_rc2_is_9 has_global_variable = mbq_gr_rc3_is_9 has_global_variable = mbq_gr_rc4_is_9 has_global_variable = mbq_gr_rc5_is_9 has_global_variable = mbq_gr_rc6_is_9 } } add = mbq_gr_q9_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc7_is_10 NOR = { has_global_variable = mbq_gr_rc1_is_10 has_global_variable = mbq_gr_rc2_is_10 has_global_variable = mbq_gr_rc3_is_10 has_global_variable = mbq_gr_rc4_is_10 has_global_variable = mbq_gr_rc5_is_10 has_global_variable = mbq_gr_rc6_is_10 } } add = mbq_gr_q10_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc7_is_11 NOR = { has_global_variable = mbq_gr_rc1_is_11 has_global_variable = mbq_gr_rc2_is_11 has_global_variable = mbq_gr_rc3_is_11 has_global_variable = mbq_gr_rc4_is_11 has_global_variable = mbq_gr_rc5_is_11 has_global_variable = mbq_gr_rc6_is_11 } } add = mbq_gr_q11_value }
+	else_if = { limit = { has_global_variable = mbq_gr_rc7_is_12 NOR = { has_global_variable = mbq_gr_rc1_is_12 has_global_variable = mbq_gr_rc2_is_12 has_global_variable = mbq_gr_rc3_is_12 has_global_variable = mbq_gr_rc4_is_12 has_global_variable = mbq_gr_rc5_is_12 has_global_variable = mbq_gr_rc6_is_12 } } add = mbq_gr_q12_value }
+}
+# Rangwert (Better Marriages mmoc_rank_value, mmoc_script_values.txt:382-390), sieben Plaetze Basis 5 (GR_W).
+mbq_gr_rank_value = {
+	value = 0
+	add = { value = mbq_gr_s1_value multiply = 15625 }
+	add = { value = mbq_gr_s2_value multiply = 3125 }
+	add = { value = mbq_gr_s3_value multiply = 625 }
+	add = { value = mbq_gr_s4_value multiply = 125 }
+	add = { value = mbq_gr_s5_value multiply = 25 }
+	add = { value = mbq_gr_s6_value multiply = 5 }
+	add = { value = mbq_gr_s7_value multiply = 1 }
+}
+# Gleichstand (Runde 3, Maxim 15-10): Meinung von Euch, dann juenger, dann Verwaltung. Eigener Wert, nur im zweiten Durchgang unter Gleichen
+# (mbq_gr_pick_<Stufe>_effect), darum kein Aufschlag auf den Rang. Hoechstwert 200 x 3131 + 100 x 31 + 30 = 629330 < 9.000.000 (V 00_distance_values.txt:15).
+mbq_gr_tie_value = {
+	value = 0
+	add = {
+		value = 0
+		if = { limit = { save_temporary_opinion_value_as = { name = mbq_gr_op target = scope:mbq_gr_liege } } } # Form V script_values/00_dlc_fp3_script_values.txt:456-459
+		add = scope:mbq_gr_op # Form V character_interactions/09_mpo_interactions.txt:524
+		add = 100
+		min = 0
+		max = 200
+		multiply = 3131
+	}
+	add = {
+		value = 100
+		subtract = age # V script_values/00_age_values.txt:9
+		min = 0
+		max = 100
+		multiply = 31
+	}
+	add = {
+		value = stewardship # V script_values/00_basic_values.txt:602
+		min = 0
+		max = 30
+	}
+}
+# Ordnung (Nachtrag Feedback 15-10): Naehe vor Prioritaeten, Satz wie mbq_gr_filter_trigger
+mbq_gr_pick_order_value = {
+	value = mbq_gr_rank_value
+}

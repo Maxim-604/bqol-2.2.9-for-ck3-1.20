@@ -1,0 +1,979 @@
+﻿# Better Quality of Life (Q04): conversion replies handled silently (bauvorlage_q04.md, prefix mbq_).
+# Overrides ONLY the event IDs religious_interaction.2003, .2011, .2012 with id_override_priority = 1
+# (_events.info:74-81). religious_interaction.2002 is NOT touched.
+# Bodies are vanilla CK3 1.20 1:1 from events\religion_events\religious_interaction_events.txt:
+#   2003 = :1340-1536, 2011 = :1541-1691, 2012 = :1695-1833
+# Added per event: id_override_priority, trigger, on_trigger_fail (directly after the opening line).
+# Modes (global variables, independent since 2.1.2, settings window gui/mbq_settings.gui):
+#   mbq_silent_conversion           = everything automatic (2003, 2011, 2012 silent)
+#   mbq_silent_conversion_info_only = info letters only (2003 silent)
+# 0.3.13: under "Automatic" four force boxes (mbq_conv_force_strong/_gold/_weak/_favor, scripted_triggers/mbq_conversion_force_triggers.txt);
+#   0.3.18: four priority dropdowns (flags mbq_p<slot>_is_<value>, scripted_effects/mbq_conv_prio.txt) replace the force boxes.
+#   Every handled reply is logged for one feed message 3 days later (scripted_effects/mbq_conv_summary.txt).
+# Hot reload ignores the override priority: always test after a game restart.
+# PATCH CHECK: compare with vanilla after every CK3 patch.
+
+namespace = religious_interaction
+
+#Refuses conversion
+religious_interaction.2003 = {
+	# mbq: id_override_priority (_events.info:74-81) replaces the vanilla definition of this ID only.
+	id_override_priority = 1
+	# mbq: silent in "everything automatic"; in "info letters only" silent unless the player can choose to use a hook (0.3.4)
+	trigger = { # 0.3.2: AI senders stay vanilla (demand_conversion_vassal_ruler_interaction is used by the AI, 00_religious_interactions.txt:780-805)
+		OR = {
+			is_ai = yes
+			NOR = {
+				has_global_variable = mbq_silent_conversion
+				has_global_variable = mbq_silent_conversion_info_only
+			}
+			# 0.3.4 (Maxim): "Mute letters" mutes only letters without a real choice. Options a and b exclude each other (:1442-1447, :1462-1467),
+			# c is exclusive (:1503-1505); the only real choice is option d, using a hook (trigger :1522-1524). Its condition is repeated here:
+			# hooking_out_of_conversion is set in immediate (:1406-1418) when refusing is a crime and they hold a strong usable hook on us.
+			AND = {
+				has_global_variable = mbq_silent_conversion_info_only
+				NOT = { has_global_variable = mbq_silent_conversion }
+				NOT = { has_government = landless_adventurer_government }
+				has_usable_hook = scope:recipient
+				NOT = {
+					AND = {
+						refusing_conversion_is_crime_trigger = { CHARACTER = scope:recipient }
+						scope:recipient = { has_strong_usable_hook = root }
+					}
+				}
+			}
+		}
+	}
+	# mbq: on_trigger_fail (_events.info:159-163) runs when the trigger fails for a directly triggered event.
+	on_trigger_fail = {
+		# --- vanilla immediate 1:1 (religious_interaction_events.txt:1358-1424) ---
+		if = {
+			limit = {
+				has_government = landless_adventurer_government
+			}
+			scope:recipient = {
+				#Negative opinions
+				add_opinion = {
+					modifier = unwanted_religious_conversion_opinion
+					target = scope:puppet_or_actor
+				}
+				if = {
+					limit = {
+						top_liege != this
+						liege ?= {
+							faith != scope:puppet_or_actor.faith
+						}
+					}
+					liege = {
+						add_opinion = {
+							modifier = religious_rebel_opinion
+							target = scope:puppet_or_actor
+						}
+					}
+				}
+			}
+		}
+		else = {
+			hidden_effect = {
+				if = {
+					limit = {
+						exists = scope:recipient.capital_county
+						scope:recipient.capital_county.faith = scope:recipient.faith
+					}
+					save_scope_value_as = {
+						name = convert_capital
+						value = yes
+					}
+				}
+			}
+			scope:recipient = {
+				add_opinion = {
+					modifier = compelled_me_to_convert_opinion
+					target = root
+					opinion = -10 # religious_interaction_events.txt:1401
+				}
+			}
+			if = {
+				limit = {
+					refusing_conversion_is_crime_trigger = {
+						CHARACTER = scope:recipient
+					}
+					scope:recipient = {
+						has_strong_usable_hook = root
+					}
+				}
+				save_scope_value_as = {
+					name = hooking_out_of_conversion
+					value = yes
+				}
+			}
+		}
+		scope:recipient = { give_piety_for_clinging_to_state_faith_effect = yes }
+		notify_puppeteer_of_outcome_effect = {
+			TYPE = event_toast_effect_bad
+			TITLE = religious_interaction.2003.toast_puppeteer
+		}
+		# --- policy (bauvorlage_q04.md section 5, README 72 of the old collector) ---
+		if = {
+			# they hook out of it: effects of option c (religious_interaction_events.txt:1503-1512)
+			limit = { exists = scope:hooking_out_of_conversion }
+			scope:recipient = {
+				use_hook = root
+			}
+			hidden_effect = {
+				add_opinion = {
+					target = scope:recipient
+					modifier = resisted_conversion_opinion
+					years = 20 # :1510
+				}
+			}
+			mbq_conv_log_effect = { KIND = 13 } # 0.3.14 summary (dev/bau_v0314_sammelmeldung.md 2b)
+		}
+		else = { # 0.3.18: our priorities, then refuse as before
+			mbq_conv_prio_defaults_effect = yes # 0.3.22: empty slots get the defaults first
+			mbq_conv_prio_effect = { SLOT = 1 GOLD = no FAVOR = no } # 0.3.18 priority 1 (bau_v0315_prioritaeten.md 4)
+			mbq_conv_prio_effect = { SLOT = 2 GOLD = no FAVOR = no } # 0.3.18 priority 2 (bau_v0315_prioritaeten.md 4)
+			mbq_conv_prio_effect = { SLOT = 3 GOLD = no FAVOR = no } # 0.3.18 priority 3 (bau_v0315_prioritaeten.md 4)
+			mbq_conv_prio_effect = { SLOT = 4 GOLD = no FAVOR = no } # 0.3.18 priority 4 (bau_v0315_prioritaeten.md 4)
+			if = {
+				limit = { NOT = { exists = scope:mbq_conv_done } }
+				if = {
+					# refusing is a crime: option b (trigger :1462-1467, effects :1468-1490)
+					limit = {
+						refusing_conversion_is_crime_trigger = {
+							CHARACTER = scope:recipient
+						}
+					}
+					if = {
+						limit = {
+							is_landless_adventurer = no
+						}
+						if = {
+							limit = {
+								has_title = title:e_minister_of_rites
+								top_liege.faith != scope:recipient.faith
+							}
+							top_liege = {
+								add_opinion = {
+									target = scope:recipient
+									modifier = illegal_resisted_conversion_opinion
+									years = 10 # :1481
+								}
+							}
+						}
+						add_opinion = {
+							target = scope:recipient
+							modifier = illegal_resisted_conversion_opinion
+							years = 10 # :1488
+						}
+					}
+					mbq_conv_log_effect = { KIND = 12 } # 0.3.14 summary (dev/bau_v0314_sammelmeldung.md 2b)
+				}
+				else = {
+					# legal refusal: option a (effects :1438-1449)
+					if = {
+						limit = {
+							is_landless_adventurer = no
+						}
+						hidden_effect = {
+							add_opinion = {
+								target = scope:recipient
+								modifier = resisted_conversion_opinion
+								years = 15 # :1446
+							}
+						}
+					}
+					mbq_conv_log_effect = { KIND = 11 } # 0.3.14 summary (dev/bau_v0314_sammelmeldung.md 2b)
+				}
+			}
+		}
+	}
+	type = letter_event
+	opening = {
+		desc = religious_interaction.1.opening
+	}
+	desc = {
+		desc = religious_interaction.2003.desc
+		triggered_desc = {
+			trigger = { exists = scope:hooking_out_of_conversion }
+			desc = religious_interaction.2003.hooking_out
+		}
+	}
+	sender = {
+		character = scope:recipient
+		animation = dismissal
+	}
+
+	immediate = {
+		if = {
+			limit = {
+				has_government = landless_adventurer_government
+			}
+			scope:recipient = {
+				#Negative opinions
+				add_opinion = {
+					modifier = unwanted_religious_conversion_opinion
+					target = scope:puppet_or_actor
+				}
+				if = {
+					limit = {
+						top_liege != this
+						liege ?= {
+							faith != scope:puppet_or_actor.faith
+						}
+					}
+					liege = {
+						add_opinion = {
+							modifier = religious_rebel_opinion
+							target = scope:puppet_or_actor
+						}
+					}
+				}
+			}
+		}
+		else = {
+			hidden_effect = {
+				if = {
+					limit = {
+						exists = scope:recipient.capital_county
+						scope:recipient.capital_county.faith = scope:recipient.faith
+					}
+					save_scope_value_as = {
+						name = convert_capital
+						value = yes
+					}
+				}
+			}
+			scope:recipient = {
+				add_opinion = {
+					modifier = compelled_me_to_convert_opinion
+					target = root
+					opinion = -10
+				}
+			}
+			if = {
+				limit = {
+					refusing_conversion_is_crime_trigger = {
+						CHARACTER = scope:recipient
+					}
+					scope:recipient = {
+						has_strong_usable_hook = root
+					}
+				}
+				save_scope_value_as = {
+					name = hooking_out_of_conversion
+					value = yes
+				}
+			}
+		}
+		# If appropriate, give 'em piety.
+		scope:recipient = { give_piety_for_clinging_to_state_faith_effect = yes }
+		notify_puppeteer_of_outcome_effect = {
+			TYPE = event_toast_effect_bad
+			TITLE = religious_interaction.2003.toast_puppeteer
+		}
+	}
+	
+	#It's not illegal
+	option = {
+		name = religious_interaction.2003.a
+		trigger = {
+			NOT = { exists = scope:hooking_out_of_conversion }
+			NOT = {
+				refusing_conversion_is_crime_trigger = {
+					CHARACTER = scope:recipient
+				}
+			}
+		}
+		if = {
+			limit = {
+				is_landless_adventurer = no
+			}
+			hidden_effect = {
+				add_opinion = {
+					target = scope:recipient
+					modifier = resisted_conversion_opinion
+					years = 15
+				}
+			}
+		}
+		ai_chance = {
+			base = 100
+			ai_value_modifier = {
+				ai_vengefulness = 1
+				ai_zeal = -0.5
+			}
+		}
+	}
+
+	#It's a Crime
+	option = {
+		name = religious_interaction.2003.b
+		trigger = {
+			NOT = { exists = scope:hooking_out_of_conversion }
+			refusing_conversion_is_crime_trigger = {
+				CHARACTER = scope:recipient
+			}
+		}
+		if = {
+			limit = {
+				is_landless_adventurer = no
+			}
+			if = {
+				limit = {
+					has_title = title:e_minister_of_rites
+					top_liege.faith != scope:recipient.faith
+				}
+				top_liege = {
+					add_opinion = {
+						target = scope:recipient
+						modifier = illegal_resisted_conversion_opinion
+						years = 10
+					}
+				}
+			}
+			add_opinion = {
+				target = scope:recipient
+				modifier = illegal_resisted_conversion_opinion
+				years = 10
+			}
+		}
+		ai_chance = {
+			base = 100
+		}
+	}
+
+	#It's a Crime, but the target has a Hook on you
+	option = {
+		name = religious_interaction.2003.c
+		trigger = {
+			exists = scope:hooking_out_of_conversion
+		}
+		exclusive = yes
+		scope:recipient = {
+			use_hook = root
+		}
+		hidden_effect = {
+			add_opinion = {
+				target = scope:recipient
+				modifier = resisted_conversion_opinion
+				years = 20
+			}
+		}
+		ai_chance = {
+			base = 100
+		}
+	}
+
+	#Use a Hook to force it through
+	option = {
+		name = religious_interaction.2003.d
+		trigger = {
+			NOT = { exists = scope:hooking_out_of_conversion }
+			NOT = { has_government = landless_adventurer_government }
+			has_usable_hook = scope:recipient
+		}
+		use_hook = scope:recipient
+
+		demand_conversion_interaction_effect = yes
+		ai_chance = {
+			base = 100
+			ai_value_modifier = {
+				ai_rationality = 1
+			}
+		}
+	}
+}
+
+#They ask for Gold
+religious_interaction.2011 = {
+	# mbq: id_override_priority (_events.info:74-81) replaces the vanilla definition of this ID only.
+	id_override_priority = 1
+	# mbq: silent only in "everything automatic"; in "info letters only" the choice letter still shows
+	trigger = { # 0.3.2: AI senders stay vanilla (00_religious_interactions.txt:780-805 ai_frequency_by_tier)
+		OR = {
+			is_ai = yes
+			NOT = { has_global_variable = mbq_silent_conversion }
+		}
+	}
+	on_trigger_fail = {
+		# --- vanilla immediate 1:1 (religious_interaction_events.txt:1550-1572) ---
+		hidden_effect = {
+			if = {
+				limit = {
+					exists = scope:recipient.capital_county
+					scope:recipient.capital_county.faith = scope:recipient.faith
+				}
+				save_scope_value_as = {
+					name = convert_capital
+					value = yes
+				}
+			}
+		}
+		scope:recipient = {
+			add_opinion = {
+				modifier = compelled_me_to_convert_opinion
+				target = root
+				opinion = -10
+			}
+		}
+		notify_puppeteer_of_outcome_effect = {
+			TYPE = event_toast_effect_bad
+			TITLE = religious_interaction.2011.toast_puppeteer
+		}
+		# --- policy 0.3.18 (dev/bau_v0315_prioritaeten.md 4): priorities 1-4 from the window, what the letter does not offer falls through, then refuse ---
+		mbq_conv_prio_defaults_effect = yes # 0.3.22: empty slots get the defaults first
+		mbq_conv_prio_effect = { SLOT = 1 GOLD = yes FAVOR = no } # 0.3.18 priority 1 (bau_v0315_prioritaeten.md 4)
+		mbq_conv_prio_effect = { SLOT = 2 GOLD = yes FAVOR = no } # 0.3.18 priority 2 (bau_v0315_prioritaeten.md 4)
+		mbq_conv_prio_effect = { SLOT = 3 GOLD = yes FAVOR = no } # 0.3.18 priority 3 (bau_v0315_prioritaeten.md 4)
+		mbq_conv_prio_effect = { SLOT = 4 GOLD = yes FAVOR = no } # 0.3.18 priority 4 (bau_v0315_prioritaeten.md 4)
+		if = { # 0.3.18: nothing of our priorities worked: refuse (vanilla option b)
+			limit = { NOT = { exists = scope:mbq_conv_done } }
+			# refuse: option b 1:1 (religious_interaction_events.txt:1626-1661)
+			if = {
+				limit = {
+					refusing_conversion_is_crime_trigger = {
+						CHARACTER = scope:recipient
+					}
+				}
+				if = {
+					limit = {
+						has_title = title:e_minister_of_rites
+						top_liege.faith != scope:recipient.faith
+					}
+					top_liege = {
+						add_opinion = {
+							target = scope:recipient
+							modifier = illegal_resisted_conversion_opinion
+							years = 15
+						}
+					}
+				}
+				add_opinion = {
+					target = scope:recipient
+					modifier = illegal_resisted_conversion_opinion
+					years = 15
+				}
+			}
+			else = {
+				hidden_effect = {
+					add_opinion = {
+						target = scope:recipient
+						modifier = resisted_conversion_opinion
+						years = 15
+					}
+				}
+			}
+			scope:recipient = { give_piety_for_clinging_to_state_faith_effect = yes }
+			# 0.3.14 summary: refused, crime (12) or legal (11)
+			if = {
+				limit = { refusing_conversion_is_crime_trigger = { CHARACTER = scope:recipient } }
+				mbq_conv_log_effect = { KIND = 12 }
+			}
+			else = {
+				mbq_conv_log_effect = { KIND = 11 }
+			}
+		}
+	}
+	type = letter_event
+	opening = {
+		desc = religious_interaction.1.opening
+	}
+	desc = religious_interaction.2011.desc
+	sender = scope:recipient
+
+	immediate = {
+		hidden_effect = {
+			if = {
+				limit = {
+					exists = scope:recipient.capital_county
+					scope:recipient.capital_county.faith = scope:recipient.faith
+				}
+				save_scope_value_as = {
+					name = convert_capital
+					value = yes
+				}
+			}
+		}
+		scope:recipient = {
+			add_opinion = {
+				modifier = compelled_me_to_convert_opinion
+				target = root
+				opinion = -10
+			}
+		}
+		notify_puppeteer_of_outcome_effect = {
+			TYPE = event_toast_effect_bad
+			TITLE = religious_interaction.2011.toast_puppeteer
+		}
+	}
+
+	#Accept
+	option = {
+		name = religious_interaction.2011.a
+
+		pay_treasury_or_gold = {
+			target = scope:recipient
+			value = demand_conversion_bribe_size
+		}
+		
+		demand_conversion_interaction_effect = yes
+
+		stress_and_fulfillment_impact = {
+			greedy = medium_stress_impact_gain
+		}
+
+		if = {
+			limit = {
+				has_title = title:e_minister_of_rites
+			}
+			change_influence = {
+				value = minor_influence_gain
+				multiply = scope:recipient.primary_title.tier
+			}
+			add_piety = {
+				value = minor_piety_gain
+				multiply = scope:recipient.primary_title.tier
+			}
+		}
+
+		ai_chance = {
+			base = 100
+			ai_value_modifier = {
+				ai_greed = -1
+				ai_zeal = 0.5
+			}
+			modifier = {
+				factor = 0
+				OR = {
+					has_trait = greedy
+					short_term_gold <= major_gold_value
+					short_term_treasury <= major_treasury_value
+					has_variable = conqueror
+					ai_should_focus_on_building_in_their_capital = yes
+				}
+			}
+		}
+	}
+
+	#Refuse
+	option = {
+		name = religious_interaction.2011.b
+		if = {
+			# show player opinion change if it gives imprisonment reason
+			limit = {
+				refusing_conversion_is_crime_trigger = {
+					CHARACTER = scope:recipient
+				}
+			}
+			if = {
+				limit = {
+					has_title = title:e_minister_of_rites
+					top_liege.faith != scope:recipient.faith
+				}
+				top_liege = {
+					add_opinion = {
+						target = scope:recipient
+						modifier = illegal_resisted_conversion_opinion
+						years = 15
+					}
+				}
+			}
+			add_opinion = {
+				target = scope:recipient
+				modifier = illegal_resisted_conversion_opinion
+				years = 15
+			}
+		}
+		else = {
+			hidden_effect = {
+				add_opinion = {
+					target = scope:recipient
+					modifier = resisted_conversion_opinion
+					years = 15
+				}
+			}
+		}
+		scope:recipient = { give_piety_for_clinging_to_state_faith_effect = yes }
+
+		ai_chance = {
+			base = 10
+			modifier = {
+				add = 100
+				OR = {
+					treasury < demand_conversion_bribe_size
+					gold < demand_conversion_bribe_size
+				}
+			}
+		}
+	}
+
+	#Use a Hook to force it through
+	option = {
+		name = religious_interaction.2011.c
+		trigger = {
+			has_usable_hook = scope:recipient
+		}
+		use_hook = scope:recipient
+		
+		demand_conversion_interaction_effect = yes
+		ai_chance = {
+			base = 100
+			ai_value_modifier = {
+				ai_rationality = 1
+			}
+		}
+	}
+}
+
+#They ask for a Favor
+religious_interaction.2012 = {
+	# mbq: id_override_priority (_events.info:74-81) replaces the vanilla definition of this ID only.
+	id_override_priority = 1
+	# mbq: silent only in "everything automatic"; in "info letters only" the choice letter still shows
+	trigger = { # 0.3.2: AI senders stay vanilla (00_religious_interactions.txt:780-805 ai_frequency_by_tier)
+		OR = {
+			is_ai = yes
+			NOT = { has_global_variable = mbq_silent_conversion }
+		}
+	}
+	on_trigger_fail = {
+		# --- vanilla immediate 1:1 (religious_interaction_events.txt:1704-1726) ---
+		hidden_effect = {
+			if = {
+				limit = {
+					exists = scope:recipient.capital_county
+					scope:recipient.capital_county.faith = scope:recipient.faith
+				}
+				save_scope_value_as = {
+					name = convert_capital
+					value = yes
+				}
+			}
+		}
+		scope:recipient = {
+			add_opinion = {
+				modifier = compelled_me_to_convert_opinion
+				target = root
+				opinion = -10
+			}
+		}
+		notify_puppeteer_of_outcome_effect = {
+			TYPE = event_toast_effect_bad
+			TITLE = religious_interaction.2012.toast_puppeteer
+		}
+		# --- policy 0.3.18 (dev/bau_v0315_prioritaeten.md 4): priorities 1-4 from the window, what the letter does not offer falls through, then refuse ---
+		mbq_conv_prio_defaults_effect = yes # 0.3.22: empty slots get the defaults first
+		mbq_conv_prio_effect = { SLOT = 1 GOLD = no FAVOR = yes } # 0.3.18 priority 1 (bau_v0315_prioritaeten.md 4)
+		mbq_conv_prio_effect = { SLOT = 2 GOLD = no FAVOR = yes } # 0.3.18 priority 2 (bau_v0315_prioritaeten.md 4)
+		mbq_conv_prio_effect = { SLOT = 3 GOLD = no FAVOR = yes } # 0.3.18 priority 3 (bau_v0315_prioritaeten.md 4)
+		mbq_conv_prio_effect = { SLOT = 4 GOLD = no FAVOR = yes } # 0.3.18 priority 4 (bau_v0315_prioritaeten.md 4)
+		if = { # 0.3.18: nothing of our priorities worked: refuse (vanilla option b)
+			limit = { NOT = { exists = scope:mbq_conv_done } }
+			# refuse: option b 1:1 (religious_interaction_events.txt:1776-1811)
+			if = {
+				limit = {
+					refusing_conversion_is_crime_trigger = {
+						CHARACTER = scope:recipient
+					}
+				}
+				if = {
+					limit = {
+						has_title = title:e_minister_of_rites
+						top_liege.faith != scope:recipient.faith
+					}
+					top_liege = {
+						add_opinion = {
+							target = scope:recipient
+							modifier = illegal_resisted_conversion_opinion
+							years = 15
+						}
+					}
+				}
+				add_opinion = {
+					target = scope:recipient
+					modifier = illegal_resisted_conversion_opinion
+					years = 15
+				}
+			}
+			else = {
+				hidden_effect = {
+					add_opinion = {
+						target = scope:recipient
+						modifier = resisted_conversion_opinion
+						years = 15
+					}
+				}
+			}
+			scope:recipient = { give_piety_for_clinging_to_state_faith_effect = yes }
+			# 0.3.14 summary: refused, crime (12) or legal (11)
+			if = {
+				limit = { refusing_conversion_is_crime_trigger = { CHARACTER = scope:recipient } }
+				mbq_conv_log_effect = { KIND = 12 }
+			}
+			else = {
+				mbq_conv_log_effect = { KIND = 11 }
+			}
+		}
+	}
+	type = letter_event
+	opening = {
+		desc = religious_interaction.1.opening
+	}
+	desc = religious_interaction.2012.desc
+	sender = scope:recipient
+
+	immediate = {
+		hidden_effect = {
+			if = {
+				limit = {
+					exists = scope:recipient.capital_county
+					scope:recipient.capital_county.faith = scope:recipient.faith
+				}
+				save_scope_value_as = {
+					name = convert_capital
+					value = yes
+				}
+			}
+		}
+		scope:recipient = {
+			add_opinion = {
+				modifier = compelled_me_to_convert_opinion
+				target = root
+				opinion = -10
+			}
+		}
+		notify_puppeteer_of_outcome_effect = {
+			TYPE = event_toast_effect_bad
+			TITLE = religious_interaction.2012.toast_puppeteer
+		}
+	}
+
+	#Accept
+	option = {
+		name = religious_interaction.2012.a
+		scope:recipient = {
+			if = { # Check that they don't already have a hook on root
+				limit = {
+					NOT = {
+						has_hook_of_type = {
+							target = root
+							type = favor_hook
+						}
+					}
+				}
+				add_hook = {
+					target = root
+					type = favor_hook
+				}
+			}
+		}
+		demand_conversion_interaction_effect = yes
+
+		stress_and_fulfillment_impact = {
+			greedy = medium_stress_impact_gain
+		}
+
+		if = {
+			limit = {
+				has_title = title:e_minister_of_rites
+			}
+			change_influence = {
+				value = minor_influence_gain
+				multiply = scope:recipient.primary_title.tier
+			}
+			add_piety = {
+				value = minor_piety_gain
+				multiply = scope:recipient.primary_title.tier
+			}
+		}
+
+		ai_chance = {
+			base = 100
+		}
+	}
+
+	#Refuse
+	option = {
+		name = religious_interaction.2012.b
+		if = {
+			# show player opinion change if it gives imprisonment reason
+			limit = {
+				refusing_conversion_is_crime_trigger = {
+					CHARACTER = scope:recipient
+				}
+			}
+			if = {
+				limit = {
+					has_title = title:e_minister_of_rites
+					top_liege.faith != scope:recipient.faith
+				}
+				top_liege = {
+					add_opinion = {
+						target = scope:recipient
+						modifier = illegal_resisted_conversion_opinion
+						years = 15
+					}
+				}
+			}
+			add_opinion = {
+				target = scope:recipient
+				modifier = illegal_resisted_conversion_opinion
+				years = 15
+			}
+		}
+		else = {
+			hidden_effect = {
+				add_opinion = {
+					target = scope:recipient
+					modifier = resisted_conversion_opinion
+					years = 15
+				}
+			}
+		}
+		scope:recipient = { give_piety_for_clinging_to_state_faith_effect = yes }
+
+		ai_chance = {
+			base = 10
+		}
+	}
+
+	#Use a Hook to force it through
+	option = {
+		name = religious_interaction.2012.c
+		trigger = {
+			has_usable_hook = scope:recipient
+		}
+		use_hook = scope:recipient
+		demand_conversion_interaction_effect = yes
+		ai_chance = {
+			base = 100
+			ai_value_modifier = {
+				ai_rationality = 1
+			}
+		}
+	}
+}
+
+#Accepts conversion
+religious_interaction.2002 = {
+	# mbq 2.1: id_override_priority (_events.info:74-81) replaces the vanilla definition of this ID only (vanilla religious_interaction_events.txt:1271-1336).
+	id_override_priority = 1
+	trigger = { # 2.1.2 (Maxim 21-10): Bestaetigungsbrief nur, wenn "Mute letters" aus ist; "Automatisch antworten" allein aendert ihn nicht (Stand bis 2.0.25); KI-Absender bleiben vanilla
+		OR = {
+			is_ai = yes
+			NOT = { has_global_variable = mbq_silent_conversion_info_only }
+		}
+	}
+	on_trigger_fail = {
+		# --- vanilla immediate without the tooltip effects (:1289-1305) ---
+		if = {
+			limit = {
+				has_title = title:e_minister_of_rites
+			}
+			change_influence = {
+				value = minor_influence_gain
+				multiply = scope:recipient.primary_title.tier
+			}
+			add_piety = {
+				value = minor_piety_gain
+				multiply = scope:recipient.primary_title.tier
+			}
+		}
+		notify_puppeteer_of_outcome_effect = {
+			TYPE = event_toast_effect_good
+			TITLE = religious_interaction.2002.toast_puppeteer
+		}
+		mbq_conv_log_effect = { KIND = 5 } # 2.1.1 summary: accepted without a counter-demand
+		# --- vanilla option a (:1308-1335) ---
+		if = {
+			limit = {
+				has_government = landless_adventurer_government
+				scope:recipient.highest_held_title_tier >= tier_barony
+			}
+			faith = {
+				change_fervor = {
+					value = {
+						add = trivial_fervor_value
+						multiply = scope:recipient.highest_held_title_tier
+					}
+					desc = imperial_capital_sacked_fervor_gain
+				}
+			}
+			add_prestige = {
+				value = 200
+				multiply = scope:recipient.highest_held_title_tier
+				if = {
+					limit = {
+						scope:recipient.highest_held_title_tier >= tier_kingdom
+					}
+					multiply = 2
+				}
+			}
+		}
+	}
+	type = letter_event
+	opening = {
+		desc = religious_interaction.1.opening
+	}
+	desc = religious_interaction.2002.desc
+	sender = scope:recipient
+
+	immediate = {
+		if = {
+			limit = {
+				has_government = landless_adventurer_government
+			}
+			show_as_tooltip = { demand_conversion_interaction_effect = yes }
+		}
+		else = {
+			show_as_tooltip = { demand_conversion_vassal_ruler_interaction_effect = yes }
+		}
+		if = {
+			limit = {
+				has_title = title:e_minister_of_rites
+			}
+			change_influence = {
+				value = minor_influence_gain
+				multiply = scope:recipient.primary_title.tier
+			}
+			add_piety = {
+				value = minor_piety_gain
+				multiply = scope:recipient.primary_title.tier
+			}
+		}
+		notify_puppeteer_of_outcome_effect = {
+			TYPE = event_toast_effect_good
+			TITLE = religious_interaction.2002.toast_puppeteer
+		}
+	}
+
+	option = {
+		name = religious_interaction.2002.a
+		if = {
+			limit = {
+				has_government = landless_adventurer_government
+				scope:recipient.highest_held_title_tier >= tier_barony
+			}
+			faith = {
+				change_fervor = {
+					value = {
+						add = trivial_fervor_value
+						multiply = scope:recipient.highest_held_title_tier
+					}
+					desc = imperial_capital_sacked_fervor_gain
+				}
+			}
+			add_prestige = {
+				value = 200
+				multiply = scope:recipient.highest_held_title_tier
+				if = {
+					limit = {
+						scope:recipient.highest_held_title_tier >= tier_kingdom
+					}
+					multiply = 2
+				}
+			}
+		}
+	}
+}

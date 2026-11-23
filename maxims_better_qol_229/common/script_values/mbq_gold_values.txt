@@ -1,0 +1,7 @@
+﻿# Better Quality of Life 2.1.10 (Gold-Untergrenze der Bekehrungs-Automatik): noetiges Gold vor der Option "Gegenleistung Gold" = geforderte Summe + Reserve.
+# Die Summe demand_conversion_bribe_size ist der Vanilla-Wert (religious_interaction_events.txt:1578-1602, gleiche Quelle wie mbq_conversion_force_triggers.txt:4-12).
+# Reserve 250 Gold: Vorgabe Maxim 22-10, kein Vanilla-Wert.
+mbq_conv_gold_need_value = {
+	value = demand_conversion_bribe_size
+	add = 250
+}

@@ -1,0 +1,791 @@
+﻿# Better Quality of Life 0.3.21: pieces of the conversion summary (dev/bau_v0314_sammelmeldung.md 2d, no nested Custom).
+# One line per person. Converted people come in groups by kind, in the order of the four priorities (pass s = priority s; a kind
+# already shown by an earlier priority is skipped); pass 5 shows kinds no priority holds any more. Pattern 00_activity_loc.txt:274-297.
+mbq_conv_conv_head = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_cv_conv }
+		localization_key = mbq_conv_converted_head
+	}
+	text = {
+		localization_key = mbq_conv_empty
+	}
+}
+mbq_conv_s1_c1 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_cc1 var:mbq_ck1 = 1 has_global_variable = mbq_p1_is_1 }
+		localization_key = mbq_conv_c1_gold
+	}
+	text = {
+		trigger = { exists = var:mbq_cc1 var:mbq_ck1 = 2 has_global_variable = mbq_p1_is_2 }
+		localization_key = mbq_conv_c1_weak
+	}
+	text = {
+		trigger = { exists = var:mbq_cc1 var:mbq_ck1 = 3 has_global_variable = mbq_p1_is_3 }
+		localization_key = mbq_conv_c1_strong
+	}
+	text = {
+		trigger = { exists = var:mbq_cc1 var:mbq_ck1 = 4 has_global_variable = mbq_p1_is_4 }
+		localization_key = mbq_conv_c1_favor
+	}
+	text = {
+		localization_key = mbq_conv_empty
+	}
+}
+mbq_conv_s1_c2 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_cc2 var:mbq_ck2 = 1 has_global_variable = mbq_p1_is_1 }
+		localization_key = mbq_conv_c2_gold
+	}
+	text = {
+		trigger = { exists = var:mbq_cc2 var:mbq_ck2 = 2 has_global_variable = mbq_p1_is_2 }
+		localization_key = mbq_conv_c2_weak
+	}
+	text = {
+		trigger = { exists = var:mbq_cc2 var:mbq_ck2 = 3 has_global_variable = mbq_p1_is_3 }
+		localization_key = mbq_conv_c2_strong
+	}
+	text = {
+		trigger = { exists = var:mbq_cc2 var:mbq_ck2 = 4 has_global_variable = mbq_p1_is_4 }
+		localization_key = mbq_conv_c2_favor
+	}
+	text = {
+		localization_key = mbq_conv_empty
+	}
+}
+mbq_conv_s1_c3 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_cc3 var:mbq_ck3 = 1 has_global_variable = mbq_p1_is_1 }
+		localization_key = mbq_conv_c3_gold
+	}
+	text = {
+		trigger = { exists = var:mbq_cc3 var:mbq_ck3 = 2 has_global_variable = mbq_p1_is_2 }
+		localization_key = mbq_conv_c3_weak
+	}
+	text = {
+		trigger = { exists = var:mbq_cc3 var:mbq_ck3 = 3 has_global_variable = mbq_p1_is_3 }
+		localization_key = mbq_conv_c3_strong
+	}
+	text = {
+		trigger = { exists = var:mbq_cc3 var:mbq_ck3 = 4 has_global_variable = mbq_p1_is_4 }
+		localization_key = mbq_conv_c3_favor
+	}
+	text = {
+		localization_key = mbq_conv_empty
+	}
+}
+mbq_conv_s1_c4 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_cc4 var:mbq_ck4 = 1 has_global_variable = mbq_p1_is_1 }
+		localization_key = mbq_conv_c4_gold
+	}
+	text = {
+		trigger = { exists = var:mbq_cc4 var:mbq_ck4 = 2 has_global_variable = mbq_p1_is_2 }
+		localization_key = mbq_conv_c4_weak
+	}
+	text = {
+		trigger = { exists = var:mbq_cc4 var:mbq_ck4 = 3 has_global_variable = mbq_p1_is_3 }
+		localization_key = mbq_conv_c4_strong
+	}
+	text = {
+		trigger = { exists = var:mbq_cc4 var:mbq_ck4 = 4 has_global_variable = mbq_p1_is_4 }
+		localization_key = mbq_conv_c4_favor
+	}
+	text = {
+		localization_key = mbq_conv_empty
+	}
+}
+mbq_conv_s1_c5 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_cc5 var:mbq_ck5 = 1 has_global_variable = mbq_p1_is_1 }
+		localization_key = mbq_conv_c5_gold
+	}
+	text = {
+		trigger = { exists = var:mbq_cc5 var:mbq_ck5 = 2 has_global_variable = mbq_p1_is_2 }
+		localization_key = mbq_conv_c5_weak
+	}
+	text = {
+		trigger = { exists = var:mbq_cc5 var:mbq_ck5 = 3 has_global_variable = mbq_p1_is_3 }
+		localization_key = mbq_conv_c5_strong
+	}
+	text = {
+		trigger = { exists = var:mbq_cc5 var:mbq_ck5 = 4 has_global_variable = mbq_p1_is_4 }
+		localization_key = mbq_conv_c5_favor
+	}
+	text = {
+		localization_key = mbq_conv_empty
+	}
+}
+mbq_conv_s1_c6 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_cc6 var:mbq_ck6 = 1 has_global_variable = mbq_p1_is_1 }
+		localization_key = mbq_conv_c6_gold
+	}
+	text = {
+		trigger = { exists = var:mbq_cc6 var:mbq_ck6 = 2 has_global_variable = mbq_p1_is_2 }
+		localization_key = mbq_conv_c6_weak
+	}
+	text = {
+		trigger = { exists = var:mbq_cc6 var:mbq_ck6 = 3 has_global_variable = mbq_p1_is_3 }
+		localization_key = mbq_conv_c6_strong
+	}
+	text = {
+		trigger = { exists = var:mbq_cc6 var:mbq_ck6 = 4 has_global_variable = mbq_p1_is_4 }
+		localization_key = mbq_conv_c6_favor
+	}
+	text = {
+		localization_key = mbq_conv_empty
+	}
+}
+mbq_conv_s2_c1 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_cc1 var:mbq_ck1 = 1 has_global_variable = mbq_p2_is_1 NOR = { has_global_variable = mbq_p1_is_1 } }
+		localization_key = mbq_conv_c1_gold
+	}
+	text = {
+		trigger = { exists = var:mbq_cc1 var:mbq_ck1 = 2 has_global_variable = mbq_p2_is_2 NOR = { has_global_variable = mbq_p1_is_2 } }
+		localization_key = mbq_conv_c1_weak
+	}
+	text = {
+		trigger = { exists = var:mbq_cc1 var:mbq_ck1 = 3 has_global_variable = mbq_p2_is_3 NOR = { has_global_variable = mbq_p1_is_3 } }
+		localization_key = mbq_conv_c1_strong
+	}
+	text = {
+		trigger = { exists = var:mbq_cc1 var:mbq_ck1 = 4 has_global_variable = mbq_p2_is_4 NOR = { has_global_variable = mbq_p1_is_4 } }
+		localization_key = mbq_conv_c1_favor
+	}
+	text = {
+		localization_key = mbq_conv_empty
+	}
+}
+mbq_conv_s2_c2 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_cc2 var:mbq_ck2 = 1 has_global_variable = mbq_p2_is_1 NOR = { has_global_variable = mbq_p1_is_1 } }
+		localization_key = mbq_conv_c2_gold
+	}
+	text = {
+		trigger = { exists = var:mbq_cc2 var:mbq_ck2 = 2 has_global_variable = mbq_p2_is_2 NOR = { has_global_variable = mbq_p1_is_2 } }
+		localization_key = mbq_conv_c2_weak
+	}
+	text = {
+		trigger = { exists = var:mbq_cc2 var:mbq_ck2 = 3 has_global_variable = mbq_p2_is_3 NOR = { has_global_variable = mbq_p1_is_3 } }
+		localization_key = mbq_conv_c2_strong
+	}
+	text = {
+		trigger = { exists = var:mbq_cc2 var:mbq_ck2 = 4 has_global_variable = mbq_p2_is_4 NOR = { has_global_variable = mbq_p1_is_4 } }
+		localization_key = mbq_conv_c2_favor
+	}
+	text = {
+		localization_key = mbq_conv_empty
+	}
+}
+mbq_conv_s2_c3 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_cc3 var:mbq_ck3 = 1 has_global_variable = mbq_p2_is_1 NOR = { has_global_variable = mbq_p1_is_1 } }
+		localization_key = mbq_conv_c3_gold
+	}
+	text = {
+		trigger = { exists = var:mbq_cc3 var:mbq_ck3 = 2 has_global_variable = mbq_p2_is_2 NOR = { has_global_variable = mbq_p1_is_2 } }
+		localization_key = mbq_conv_c3_weak
+	}
+	text = {
+		trigger = { exists = var:mbq_cc3 var:mbq_ck3 = 3 has_global_variable = mbq_p2_is_3 NOR = { has_global_variable = mbq_p1_is_3 } }
+		localization_key = mbq_conv_c3_strong
+	}
+	text = {
+		trigger = { exists = var:mbq_cc3 var:mbq_ck3 = 4 has_global_variable = mbq_p2_is_4 NOR = { has_global_variable = mbq_p1_is_4 } }
+		localization_key = mbq_conv_c3_favor
+	}
+	text = {
+		localization_key = mbq_conv_empty
+	}
+}
+mbq_conv_s2_c4 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_cc4 var:mbq_ck4 = 1 has_global_variable = mbq_p2_is_1 NOR = { has_global_variable = mbq_p1_is_1 } }
+		localization_key = mbq_conv_c4_gold
+	}
+	text = {
+		trigger = { exists = var:mbq_cc4 var:mbq_ck4 = 2 has_global_variable = mbq_p2_is_2 NOR = { has_global_variable = mbq_p1_is_2 } }
+		localization_key = mbq_conv_c4_weak
+	}
+	text = {
+		trigger = { exists = var:mbq_cc4 var:mbq_ck4 = 3 has_global_variable = mbq_p2_is_3 NOR = { has_global_variable = mbq_p1_is_3 } }
+		localization_key = mbq_conv_c4_strong
+	}
+	text = {
+		trigger = { exists = var:mbq_cc4 var:mbq_ck4 = 4 has_global_variable = mbq_p2_is_4 NOR = { has_global_variable = mbq_p1_is_4 } }
+		localization_key = mbq_conv_c4_favor
+	}
+	text = {
+		localization_key = mbq_conv_empty
+	}
+}
+mbq_conv_s2_c5 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_cc5 var:mbq_ck5 = 1 has_global_variable = mbq_p2_is_1 NOR = { has_global_variable = mbq_p1_is_1 } }
+		localization_key = mbq_conv_c5_gold
+	}
+	text = {
+		trigger = { exists = var:mbq_cc5 var:mbq_ck5 = 2 has_global_variable = mbq_p2_is_2 NOR = { has_global_variable = mbq_p1_is_2 } }
+		localization_key = mbq_conv_c5_weak
+	}
+	text = {
+		trigger = { exists = var:mbq_cc5 var:mbq_ck5 = 3 has_global_variable = mbq_p2_is_3 NOR = { has_global_variable = mbq_p1_is_3 } }
+		localization_key = mbq_conv_c5_strong
+	}
+	text = {
+		trigger = { exists = var:mbq_cc5 var:mbq_ck5 = 4 has_global_variable = mbq_p2_is_4 NOR = { has_global_variable = mbq_p1_is_4 } }
+		localization_key = mbq_conv_c5_favor
+	}
+	text = {
+		localization_key = mbq_conv_empty
+	}
+}
+mbq_conv_s2_c6 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_cc6 var:mbq_ck6 = 1 has_global_variable = mbq_p2_is_1 NOR = { has_global_variable = mbq_p1_is_1 } }
+		localization_key = mbq_conv_c6_gold
+	}
+	text = {
+		trigger = { exists = var:mbq_cc6 var:mbq_ck6 = 2 has_global_variable = mbq_p2_is_2 NOR = { has_global_variable = mbq_p1_is_2 } }
+		localization_key = mbq_conv_c6_weak
+	}
+	text = {
+		trigger = { exists = var:mbq_cc6 var:mbq_ck6 = 3 has_global_variable = mbq_p2_is_3 NOR = { has_global_variable = mbq_p1_is_3 } }
+		localization_key = mbq_conv_c6_strong
+	}
+	text = {
+		trigger = { exists = var:mbq_cc6 var:mbq_ck6 = 4 has_global_variable = mbq_p2_is_4 NOR = { has_global_variable = mbq_p1_is_4 } }
+		localization_key = mbq_conv_c6_favor
+	}
+	text = {
+		localization_key = mbq_conv_empty
+	}
+}
+mbq_conv_s3_c1 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_cc1 var:mbq_ck1 = 1 has_global_variable = mbq_p3_is_1 NOR = { has_global_variable = mbq_p1_is_1 has_global_variable = mbq_p2_is_1 } }
+		localization_key = mbq_conv_c1_gold
+	}
+	text = {
+		trigger = { exists = var:mbq_cc1 var:mbq_ck1 = 2 has_global_variable = mbq_p3_is_2 NOR = { has_global_variable = mbq_p1_is_2 has_global_variable = mbq_p2_is_2 } }
+		localization_key = mbq_conv_c1_weak
+	}
+	text = {
+		trigger = { exists = var:mbq_cc1 var:mbq_ck1 = 3 has_global_variable = mbq_p3_is_3 NOR = { has_global_variable = mbq_p1_is_3 has_global_variable = mbq_p2_is_3 } }
+		localization_key = mbq_conv_c1_strong
+	}
+	text = {
+		trigger = { exists = var:mbq_cc1 var:mbq_ck1 = 4 has_global_variable = mbq_p3_is_4 NOR = { has_global_variable = mbq_p1_is_4 has_global_variable = mbq_p2_is_4 } }
+		localization_key = mbq_conv_c1_favor
+	}
+	text = {
+		localization_key = mbq_conv_empty
+	}
+}
+mbq_conv_s3_c2 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_cc2 var:mbq_ck2 = 1 has_global_variable = mbq_p3_is_1 NOR = { has_global_variable = mbq_p1_is_1 has_global_variable = mbq_p2_is_1 } }
+		localization_key = mbq_conv_c2_gold
+	}
+	text = {
+		trigger = { exists = var:mbq_cc2 var:mbq_ck2 = 2 has_global_variable = mbq_p3_is_2 NOR = { has_global_variable = mbq_p1_is_2 has_global_variable = mbq_p2_is_2 } }
+		localization_key = mbq_conv_c2_weak
+	}
+	text = {
+		trigger = { exists = var:mbq_cc2 var:mbq_ck2 = 3 has_global_variable = mbq_p3_is_3 NOR = { has_global_variable = mbq_p1_is_3 has_global_variable = mbq_p2_is_3 } }
+		localization_key = mbq_conv_c2_strong
+	}
+	text = {
+		trigger = { exists = var:mbq_cc2 var:mbq_ck2 = 4 has_global_variable = mbq_p3_is_4 NOR = { has_global_variable = mbq_p1_is_4 has_global_variable = mbq_p2_is_4 } }
+		localization_key = mbq_conv_c2_favor
+	}
+	text = {
+		localization_key = mbq_conv_empty
+	}
+}
+mbq_conv_s3_c3 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_cc3 var:mbq_ck3 = 1 has_global_variable = mbq_p3_is_1 NOR = { has_global_variable = mbq_p1_is_1 has_global_variable = mbq_p2_is_1 } }
+		localization_key = mbq_conv_c3_gold
+	}
+	text = {
+		trigger = { exists = var:mbq_cc3 var:mbq_ck3 = 2 has_global_variable = mbq_p3_is_2 NOR = { has_global_variable = mbq_p1_is_2 has_global_variable = mbq_p2_is_2 } }
+		localization_key = mbq_conv_c3_weak
+	}
+	text = {
+		trigger = { exists = var:mbq_cc3 var:mbq_ck3 = 3 has_global_variable = mbq_p3_is_3 NOR = { has_global_variable = mbq_p1_is_3 has_global_variable = mbq_p2_is_3 } }
+		localization_key = mbq_conv_c3_strong
+	}
+	text = {
+		trigger = { exists = var:mbq_cc3 var:mbq_ck3 = 4 has_global_variable = mbq_p3_is_4 NOR = { has_global_variable = mbq_p1_is_4 has_global_variable = mbq_p2_is_4 } }
+		localization_key = mbq_conv_c3_favor
+	}
+	text = {
+		localization_key = mbq_conv_empty
+	}
+}
+mbq_conv_s3_c4 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_cc4 var:mbq_ck4 = 1 has_global_variable = mbq_p3_is_1 NOR = { has_global_variable = mbq_p1_is_1 has_global_variable = mbq_p2_is_1 } }
+		localization_key = mbq_conv_c4_gold
+	}
+	text = {
+		trigger = { exists = var:mbq_cc4 var:mbq_ck4 = 2 has_global_variable = mbq_p3_is_2 NOR = { has_global_variable = mbq_p1_is_2 has_global_variable = mbq_p2_is_2 } }
+		localization_key = mbq_conv_c4_weak
+	}
+	text = {
+		trigger = { exists = var:mbq_cc4 var:mbq_ck4 = 3 has_global_variable = mbq_p3_is_3 NOR = { has_global_variable = mbq_p1_is_3 has_global_variable = mbq_p2_is_3 } }
+		localization_key = mbq_conv_c4_strong
+	}
+	text = {
+		trigger = { exists = var:mbq_cc4 var:mbq_ck4 = 4 has_global_variable = mbq_p3_is_4 NOR = { has_global_variable = mbq_p1_is_4 has_global_variable = mbq_p2_is_4 } }
+		localization_key = mbq_conv_c4_favor
+	}
+	text = {
+		localization_key = mbq_conv_empty
+	}
+}
+mbq_conv_s3_c5 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_cc5 var:mbq_ck5 = 1 has_global_variable = mbq_p3_is_1 NOR = { has_global_variable = mbq_p1_is_1 has_global_variable = mbq_p2_is_1 } }
+		localization_key = mbq_conv_c5_gold
+	}
+	text = {
+		trigger = { exists = var:mbq_cc5 var:mbq_ck5 = 2 has_global_variable = mbq_p3_is_2 NOR = { has_global_variable = mbq_p1_is_2 has_global_variable = mbq_p2_is_2 } }
+		localization_key = mbq_conv_c5_weak
+	}
+	text = {
+		trigger = { exists = var:mbq_cc5 var:mbq_ck5 = 3 has_global_variable = mbq_p3_is_3 NOR = { has_global_variable = mbq_p1_is_3 has_global_variable = mbq_p2_is_3 } }
+		localization_key = mbq_conv_c5_strong
+	}
+	text = {
+		trigger = { exists = var:mbq_cc5 var:mbq_ck5 = 4 has_global_variable = mbq_p3_is_4 NOR = { has_global_variable = mbq_p1_is_4 has_global_variable = mbq_p2_is_4 } }
+		localization_key = mbq_conv_c5_favor
+	}
+	text = {
+		localization_key = mbq_conv_empty
+	}
+}
+mbq_conv_s3_c6 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_cc6 var:mbq_ck6 = 1 has_global_variable = mbq_p3_is_1 NOR = { has_global_variable = mbq_p1_is_1 has_global_variable = mbq_p2_is_1 } }
+		localization_key = mbq_conv_c6_gold
+	}
+	text = {
+		trigger = { exists = var:mbq_cc6 var:mbq_ck6 = 2 has_global_variable = mbq_p3_is_2 NOR = { has_global_variable = mbq_p1_is_2 has_global_variable = mbq_p2_is_2 } }
+		localization_key = mbq_conv_c6_weak
+	}
+	text = {
+		trigger = { exists = var:mbq_cc6 var:mbq_ck6 = 3 has_global_variable = mbq_p3_is_3 NOR = { has_global_variable = mbq_p1_is_3 has_global_variable = mbq_p2_is_3 } }
+		localization_key = mbq_conv_c6_strong
+	}
+	text = {
+		trigger = { exists = var:mbq_cc6 var:mbq_ck6 = 4 has_global_variable = mbq_p3_is_4 NOR = { has_global_variable = mbq_p1_is_4 has_global_variable = mbq_p2_is_4 } }
+		localization_key = mbq_conv_c6_favor
+	}
+	text = {
+		localization_key = mbq_conv_empty
+	}
+}
+mbq_conv_s4_c1 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_cc1 var:mbq_ck1 = 1 has_global_variable = mbq_p4_is_1 NOR = { has_global_variable = mbq_p1_is_1 has_global_variable = mbq_p2_is_1 has_global_variable = mbq_p3_is_1 } }
+		localization_key = mbq_conv_c1_gold
+	}
+	text = {
+		trigger = { exists = var:mbq_cc1 var:mbq_ck1 = 2 has_global_variable = mbq_p4_is_2 NOR = { has_global_variable = mbq_p1_is_2 has_global_variable = mbq_p2_is_2 has_global_variable = mbq_p3_is_2 } }
+		localization_key = mbq_conv_c1_weak
+	}
+	text = {
+		trigger = { exists = var:mbq_cc1 var:mbq_ck1 = 3 has_global_variable = mbq_p4_is_3 NOR = { has_global_variable = mbq_p1_is_3 has_global_variable = mbq_p2_is_3 has_global_variable = mbq_p3_is_3 } }
+		localization_key = mbq_conv_c1_strong
+	}
+	text = {
+		trigger = { exists = var:mbq_cc1 var:mbq_ck1 = 4 has_global_variable = mbq_p4_is_4 NOR = { has_global_variable = mbq_p1_is_4 has_global_variable = mbq_p2_is_4 has_global_variable = mbq_p3_is_4 } }
+		localization_key = mbq_conv_c1_favor
+	}
+	text = {
+		localization_key = mbq_conv_empty
+	}
+}
+mbq_conv_s4_c2 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_cc2 var:mbq_ck2 = 1 has_global_variable = mbq_p4_is_1 NOR = { has_global_variable = mbq_p1_is_1 has_global_variable = mbq_p2_is_1 has_global_variable = mbq_p3_is_1 } }
+		localization_key = mbq_conv_c2_gold
+	}
+	text = {
+		trigger = { exists = var:mbq_cc2 var:mbq_ck2 = 2 has_global_variable = mbq_p4_is_2 NOR = { has_global_variable = mbq_p1_is_2 has_global_variable = mbq_p2_is_2 has_global_variable = mbq_p3_is_2 } }
+		localization_key = mbq_conv_c2_weak
+	}
+	text = {
+		trigger = { exists = var:mbq_cc2 var:mbq_ck2 = 3 has_global_variable = mbq_p4_is_3 NOR = { has_global_variable = mbq_p1_is_3 has_global_variable = mbq_p2_is_3 has_global_variable = mbq_p3_is_3 } }
+		localization_key = mbq_conv_c2_strong
+	}
+	text = {
+		trigger = { exists = var:mbq_cc2 var:mbq_ck2 = 4 has_global_variable = mbq_p4_is_4 NOR = { has_global_variable = mbq_p1_is_4 has_global_variable = mbq_p2_is_4 has_global_variable = mbq_p3_is_4 } }
+		localization_key = mbq_conv_c2_favor
+	}
+	text = {
+		localization_key = mbq_conv_empty
+	}
+}
+mbq_conv_s4_c3 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_cc3 var:mbq_ck3 = 1 has_global_variable = mbq_p4_is_1 NOR = { has_global_variable = mbq_p1_is_1 has_global_variable = mbq_p2_is_1 has_global_variable = mbq_p3_is_1 } }
+		localization_key = mbq_conv_c3_gold
+	}
+	text = {
+		trigger = { exists = var:mbq_cc3 var:mbq_ck3 = 2 has_global_variable = mbq_p4_is_2 NOR = { has_global_variable = mbq_p1_is_2 has_global_variable = mbq_p2_is_2 has_global_variable = mbq_p3_is_2 } }
+		localization_key = mbq_conv_c3_weak
+	}
+	text = {
+		trigger = { exists = var:mbq_cc3 var:mbq_ck3 = 3 has_global_variable = mbq_p4_is_3 NOR = { has_global_variable = mbq_p1_is_3 has_global_variable = mbq_p2_is_3 has_global_variable = mbq_p3_is_3 } }
+		localization_key = mbq_conv_c3_strong
+	}
+	text = {
+		trigger = { exists = var:mbq_cc3 var:mbq_ck3 = 4 has_global_variable = mbq_p4_is_4 NOR = { has_global_variable = mbq_p1_is_4 has_global_variable = mbq_p2_is_4 has_global_variable = mbq_p3_is_4 } }
+		localization_key = mbq_conv_c3_favor
+	}
+	text = {
+		localization_key = mbq_conv_empty
+	}
+}
+mbq_conv_s4_c4 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_cc4 var:mbq_ck4 = 1 has_global_variable = mbq_p4_is_1 NOR = { has_global_variable = mbq_p1_is_1 has_global_variable = mbq_p2_is_1 has_global_variable = mbq_p3_is_1 } }
+		localization_key = mbq_conv_c4_gold
+	}
+	text = {
+		trigger = { exists = var:mbq_cc4 var:mbq_ck4 = 2 has_global_variable = mbq_p4_is_2 NOR = { has_global_variable = mbq_p1_is_2 has_global_variable = mbq_p2_is_2 has_global_variable = mbq_p3_is_2 } }
+		localization_key = mbq_conv_c4_weak
+	}
+	text = {
+		trigger = { exists = var:mbq_cc4 var:mbq_ck4 = 3 has_global_variable = mbq_p4_is_3 NOR = { has_global_variable = mbq_p1_is_3 has_global_variable = mbq_p2_is_3 has_global_variable = mbq_p3_is_3 } }
+		localization_key = mbq_conv_c4_strong
+	}
+	text = {
+		trigger = { exists = var:mbq_cc4 var:mbq_ck4 = 4 has_global_variable = mbq_p4_is_4 NOR = { has_global_variable = mbq_p1_is_4 has_global_variable = mbq_p2_is_4 has_global_variable = mbq_p3_is_4 } }
+		localization_key = mbq_conv_c4_favor
+	}
+	text = {
+		localization_key = mbq_conv_empty
+	}
+}
+mbq_conv_s4_c5 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_cc5 var:mbq_ck5 = 1 has_global_variable = mbq_p4_is_1 NOR = { has_global_variable = mbq_p1_is_1 has_global_variable = mbq_p2_is_1 has_global_variable = mbq_p3_is_1 } }
+		localization_key = mbq_conv_c5_gold
+	}
+	text = {
+		trigger = { exists = var:mbq_cc5 var:mbq_ck5 = 2 has_global_variable = mbq_p4_is_2 NOR = { has_global_variable = mbq_p1_is_2 has_global_variable = mbq_p2_is_2 has_global_variable = mbq_p3_is_2 } }
+		localization_key = mbq_conv_c5_weak
+	}
+	text = {
+		trigger = { exists = var:mbq_cc5 var:mbq_ck5 = 3 has_global_variable = mbq_p4_is_3 NOR = { has_global_variable = mbq_p1_is_3 has_global_variable = mbq_p2_is_3 has_global_variable = mbq_p3_is_3 } }
+		localization_key = mbq_conv_c5_strong
+	}
+	text = {
+		trigger = { exists = var:mbq_cc5 var:mbq_ck5 = 4 has_global_variable = mbq_p4_is_4 NOR = { has_global_variable = mbq_p1_is_4 has_global_variable = mbq_p2_is_4 has_global_variable = mbq_p3_is_4 } }
+		localization_key = mbq_conv_c5_favor
+	}
+	text = {
+		localization_key = mbq_conv_empty
+	}
+}
+mbq_conv_s4_c6 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_cc6 var:mbq_ck6 = 1 has_global_variable = mbq_p4_is_1 NOR = { has_global_variable = mbq_p1_is_1 has_global_variable = mbq_p2_is_1 has_global_variable = mbq_p3_is_1 } }
+		localization_key = mbq_conv_c6_gold
+	}
+	text = {
+		trigger = { exists = var:mbq_cc6 var:mbq_ck6 = 2 has_global_variable = mbq_p4_is_2 NOR = { has_global_variable = mbq_p1_is_2 has_global_variable = mbq_p2_is_2 has_global_variable = mbq_p3_is_2 } }
+		localization_key = mbq_conv_c6_weak
+	}
+	text = {
+		trigger = { exists = var:mbq_cc6 var:mbq_ck6 = 3 has_global_variable = mbq_p4_is_3 NOR = { has_global_variable = mbq_p1_is_3 has_global_variable = mbq_p2_is_3 has_global_variable = mbq_p3_is_3 } }
+		localization_key = mbq_conv_c6_strong
+	}
+	text = {
+		trigger = { exists = var:mbq_cc6 var:mbq_ck6 = 4 has_global_variable = mbq_p4_is_4 NOR = { has_global_variable = mbq_p1_is_4 has_global_variable = mbq_p2_is_4 has_global_variable = mbq_p3_is_4 } }
+		localization_key = mbq_conv_c6_favor
+	}
+	text = {
+		localization_key = mbq_conv_empty
+	}
+}
+mbq_conv_s5_c1 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_cc1 var:mbq_ck1 = 1 NOR = { has_global_variable = mbq_p1_is_1 has_global_variable = mbq_p2_is_1 has_global_variable = mbq_p3_is_1 has_global_variable = mbq_p4_is_1 } }
+		localization_key = mbq_conv_c1_gold
+	}
+	text = {
+		trigger = { exists = var:mbq_cc1 var:mbq_ck1 = 2 NOR = { has_global_variable = mbq_p1_is_2 has_global_variable = mbq_p2_is_2 has_global_variable = mbq_p3_is_2 has_global_variable = mbq_p4_is_2 } }
+		localization_key = mbq_conv_c1_weak
+	}
+	text = {
+		trigger = { exists = var:mbq_cc1 var:mbq_ck1 = 3 NOR = { has_global_variable = mbq_p1_is_3 has_global_variable = mbq_p2_is_3 has_global_variable = mbq_p3_is_3 has_global_variable = mbq_p4_is_3 } }
+		localization_key = mbq_conv_c1_strong
+	}
+	text = {
+		trigger = { exists = var:mbq_cc1 var:mbq_ck1 = 4 NOR = { has_global_variable = mbq_p1_is_4 has_global_variable = mbq_p2_is_4 has_global_variable = mbq_p3_is_4 has_global_variable = mbq_p4_is_4 } }
+		localization_key = mbq_conv_c1_favor
+	}
+	text = {
+		trigger = { exists = var:mbq_cc1 var:mbq_ck1 = 5 }
+		localization_key = mbq_conv_c1_acc
+	}
+	text = {
+		localization_key = mbq_conv_empty
+	}
+}
+mbq_conv_s5_c2 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_cc2 var:mbq_ck2 = 1 NOR = { has_global_variable = mbq_p1_is_1 has_global_variable = mbq_p2_is_1 has_global_variable = mbq_p3_is_1 has_global_variable = mbq_p4_is_1 } }
+		localization_key = mbq_conv_c2_gold
+	}
+	text = {
+		trigger = { exists = var:mbq_cc2 var:mbq_ck2 = 2 NOR = { has_global_variable = mbq_p1_is_2 has_global_variable = mbq_p2_is_2 has_global_variable = mbq_p3_is_2 has_global_variable = mbq_p4_is_2 } }
+		localization_key = mbq_conv_c2_weak
+	}
+	text = {
+		trigger = { exists = var:mbq_cc2 var:mbq_ck2 = 3 NOR = { has_global_variable = mbq_p1_is_3 has_global_variable = mbq_p2_is_3 has_global_variable = mbq_p3_is_3 has_global_variable = mbq_p4_is_3 } }
+		localization_key = mbq_conv_c2_strong
+	}
+	text = {
+		trigger = { exists = var:mbq_cc2 var:mbq_ck2 = 4 NOR = { has_global_variable = mbq_p1_is_4 has_global_variable = mbq_p2_is_4 has_global_variable = mbq_p3_is_4 has_global_variable = mbq_p4_is_4 } }
+		localization_key = mbq_conv_c2_favor
+	}
+	text = {
+		trigger = { exists = var:mbq_cc2 var:mbq_ck2 = 5 }
+		localization_key = mbq_conv_c2_acc
+	}
+	text = {
+		localization_key = mbq_conv_empty
+	}
+}
+mbq_conv_s5_c3 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_cc3 var:mbq_ck3 = 1 NOR = { has_global_variable = mbq_p1_is_1 has_global_variable = mbq_p2_is_1 has_global_variable = mbq_p3_is_1 has_global_variable = mbq_p4_is_1 } }
+		localization_key = mbq_conv_c3_gold
+	}
+	text = {
+		trigger = { exists = var:mbq_cc3 var:mbq_ck3 = 2 NOR = { has_global_variable = mbq_p1_is_2 has_global_variable = mbq_p2_is_2 has_global_variable = mbq_p3_is_2 has_global_variable = mbq_p4_is_2 } }
+		localization_key = mbq_conv_c3_weak
+	}
+	text = {
+		trigger = { exists = var:mbq_cc3 var:mbq_ck3 = 3 NOR = { has_global_variable = mbq_p1_is_3 has_global_variable = mbq_p2_is_3 has_global_variable = mbq_p3_is_3 has_global_variable = mbq_p4_is_3 } }
+		localization_key = mbq_conv_c3_strong
+	}
+	text = {
+		trigger = { exists = var:mbq_cc3 var:mbq_ck3 = 4 NOR = { has_global_variable = mbq_p1_is_4 has_global_variable = mbq_p2_is_4 has_global_variable = mbq_p3_is_4 has_global_variable = mbq_p4_is_4 } }
+		localization_key = mbq_conv_c3_favor
+	}
+	text = {
+		trigger = { exists = var:mbq_cc3 var:mbq_ck3 = 5 }
+		localization_key = mbq_conv_c3_acc
+	}
+	text = {
+		localization_key = mbq_conv_empty
+	}
+}
+mbq_conv_s5_c4 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_cc4 var:mbq_ck4 = 1 NOR = { has_global_variable = mbq_p1_is_1 has_global_variable = mbq_p2_is_1 has_global_variable = mbq_p3_is_1 has_global_variable = mbq_p4_is_1 } }
+		localization_key = mbq_conv_c4_gold
+	}
+	text = {
+		trigger = { exists = var:mbq_cc4 var:mbq_ck4 = 2 NOR = { has_global_variable = mbq_p1_is_2 has_global_variable = mbq_p2_is_2 has_global_variable = mbq_p3_is_2 has_global_variable = mbq_p4_is_2 } }
+		localization_key = mbq_conv_c4_weak
+	}
+	text = {
+		trigger = { exists = var:mbq_cc4 var:mbq_ck4 = 3 NOR = { has_global_variable = mbq_p1_is_3 has_global_variable = mbq_p2_is_3 has_global_variable = mbq_p3_is_3 has_global_variable = mbq_p4_is_3 } }
+		localization_key = mbq_conv_c4_strong
+	}
+	text = {
+		trigger = { exists = var:mbq_cc4 var:mbq_ck4 = 4 NOR = { has_global_variable = mbq_p1_is_4 has_global_variable = mbq_p2_is_4 has_global_variable = mbq_p3_is_4 has_global_variable = mbq_p4_is_4 } }
+		localization_key = mbq_conv_c4_favor
+	}
+	text = {
+		trigger = { exists = var:mbq_cc4 var:mbq_ck4 = 5 }
+		localization_key = mbq_conv_c4_acc
+	}
+	text = {
+		localization_key = mbq_conv_empty
+	}
+}
+mbq_conv_s5_c5 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_cc5 var:mbq_ck5 = 1 NOR = { has_global_variable = mbq_p1_is_1 has_global_variable = mbq_p2_is_1 has_global_variable = mbq_p3_is_1 has_global_variable = mbq_p4_is_1 } }
+		localization_key = mbq_conv_c5_gold
+	}
+	text = {
+		trigger = { exists = var:mbq_cc5 var:mbq_ck5 = 2 NOR = { has_global_variable = mbq_p1_is_2 has_global_variable = mbq_p2_is_2 has_global_variable = mbq_p3_is_2 has_global_variable = mbq_p4_is_2 } }
+		localization_key = mbq_conv_c5_weak
+	}
+	text = {
+		trigger = { exists = var:mbq_cc5 var:mbq_ck5 = 3 NOR = { has_global_variable = mbq_p1_is_3 has_global_variable = mbq_p2_is_3 has_global_variable = mbq_p3_is_3 has_global_variable = mbq_p4_is_3 } }
+		localization_key = mbq_conv_c5_strong
+	}
+	text = {
+		trigger = { exists = var:mbq_cc5 var:mbq_ck5 = 4 NOR = { has_global_variable = mbq_p1_is_4 has_global_variable = mbq_p2_is_4 has_global_variable = mbq_p3_is_4 has_global_variable = mbq_p4_is_4 } }
+		localization_key = mbq_conv_c5_favor
+	}
+	text = {
+		trigger = { exists = var:mbq_cc5 var:mbq_ck5 = 5 }
+		localization_key = mbq_conv_c5_acc
+	}
+	text = {
+		localization_key = mbq_conv_empty
+	}
+}
+mbq_conv_s5_c6 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_cc6 var:mbq_ck6 = 1 NOR = { has_global_variable = mbq_p1_is_1 has_global_variable = mbq_p2_is_1 has_global_variable = mbq_p3_is_1 has_global_variable = mbq_p4_is_1 } }
+		localization_key = mbq_conv_c6_gold
+	}
+	text = {
+		trigger = { exists = var:mbq_cc6 var:mbq_ck6 = 2 NOR = { has_global_variable = mbq_p1_is_2 has_global_variable = mbq_p2_is_2 has_global_variable = mbq_p3_is_2 has_global_variable = mbq_p4_is_2 } }
+		localization_key = mbq_conv_c6_weak
+	}
+	text = {
+		trigger = { exists = var:mbq_cc6 var:mbq_ck6 = 3 NOR = { has_global_variable = mbq_p1_is_3 has_global_variable = mbq_p2_is_3 has_global_variable = mbq_p3_is_3 has_global_variable = mbq_p4_is_3 } }
+		localization_key = mbq_conv_c6_strong
+	}
+	text = {
+		trigger = { exists = var:mbq_cc6 var:mbq_ck6 = 4 NOR = { has_global_variable = mbq_p1_is_4 has_global_variable = mbq_p2_is_4 has_global_variable = mbq_p3_is_4 has_global_variable = mbq_p4_is_4 } }
+		localization_key = mbq_conv_c6_favor
+	}
+	text = {
+		trigger = { exists = var:mbq_cc6 var:mbq_ck6 = 5 }
+		localization_key = mbq_conv_c6_acc
+	}
+	text = {
+		localization_key = mbq_conv_empty
+	}
+}
+mbq_conv_conv_more = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_cv_conv_more }
+		localization_key = mbq_conv_converted_more
+	}
+	text = {
+		localization_key = mbq_conv_empty
+	}
+}
+mbq_conv_ref_head = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_cv_ref exists = var:mbq_cv_conv }
+		localization_key = mbq_conv_refused_head_nl
+	}
+	text = {
+		trigger = { exists = var:mbq_cv_ref }
+		localization_key = mbq_conv_refused_head
+	}
+	text = {
+		localization_key = mbq_conv_empty
+	}
+}
+mbq_conv_r1 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_cr1 }
+		localization_key = mbq_conv_r1
+	}
+	text = {
+		localization_key = mbq_conv_empty
+	}
+}
+mbq_conv_r2 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_cr2 }
+		localization_key = mbq_conv_r2
+	}
+	text = {
+		localization_key = mbq_conv_empty
+	}
+}
+mbq_conv_r3 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_cr3 }
+		localization_key = mbq_conv_r3
+	}
+	text = {
+		localization_key = mbq_conv_empty
+	}
+}
+mbq_conv_r4 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_cr4 }
+		localization_key = mbq_conv_r4
+	}
+	text = {
+		localization_key = mbq_conv_empty
+	}
+}
+mbq_conv_r5 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_cr5 }
+		localization_key = mbq_conv_r5
+	}
+	text = {
+		localization_key = mbq_conv_empty
+	}
+}
+mbq_conv_r6 = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_cr6 }
+		localization_key = mbq_conv_r6
+	}
+	text = {
+		localization_key = mbq_conv_empty
+	}
+}
+mbq_conv_ref_more = {
+	type = character
+	text = {
+		trigger = { exists = var:mbq_cv_ref_more }
+		localization_key = mbq_conv_refused_more
+	}
+	text = {
+		localization_key = mbq_conv_empty
+	}
+}

@@ -1,0 +1,116 @@
+﻿# Better Quality of Life 0.3.18: one priority slot of "Automatic" (dev/bau_v0315_prioritaeten.md 4). Scope: the player, scope:recipient = the vassal.
+# Called four times per letter, SLOT 1-4. An option the letter does not offer (GOLD/FAVOR = no) or that is not possible falls through;
+# the first one that works sets scope:mbq_conv_done. Costs are the vanilla options 1:1 (copied from religious_interaction_events.txt).
+mbq_conv_prio_effect = {
+	if = {
+		limit = {
+			exists = scope:recipient # 0.3.25: code report H1
+			has_global_variable = mbq_silent_conversion # only in "Automatic": 2003 also runs this block in "Mute letters" (events trigger, 0.3.4)
+			NOT = { exists = scope:mbq_conv_done }
+		}
+		if = { # gold: option a of 2011 (religious_interaction_events.txt:1578-1602)
+			limit = { has_global_variable = mbq_p$SLOT$_is_1 always = $GOLD$ mbq_opt_gold_ok_trigger = yes }
+				pay_treasury_or_gold = {
+					target = scope:recipient
+					value = demand_conversion_bribe_size
+				}
+				demand_conversion_interaction_effect = yes
+				stress_and_fulfillment_impact = {
+					greedy = medium_stress_impact_gain
+				}
+				if = {
+					limit = {
+						has_title = title:e_minister_of_rites
+					}
+					change_influence = {
+						value = minor_influence_gain
+						multiply = scope:recipient.primary_title.tier
+					}
+					add_piety = {
+						value = minor_piety_gain
+						multiply = scope:recipient.primary_title.tier
+					}
+				}
+			mbq_conv_log_effect = { KIND = 1 }
+				save_scope_value_as = { name = mbq_conv_done value = yes }
+		}
+		else_if = { # weak hook: option d of 2003 / c of 2011 and 2012, the hook is spent (effects.log:10984)
+			limit = { has_global_variable = mbq_p$SLOT$_is_2 mbq_opt_weak_ok_trigger = yes }
+			if = { limit = { has_strong_usable_hook = scope:recipient } save_temporary_scope_value_as = { name = mbq_had_strong value = yes } }
+			use_hook = scope:recipient
+			demand_conversion_interaction_effect = yes
+			# 0.3.21: log the hook that was really spent: a spent strong hook goes on cooldown (effects.log:10984), a weak one is removed
+			if = {
+				limit = { exists = scope:mbq_had_strong NOT = { has_strong_usable_hook = scope:recipient } }
+				mbq_conv_log_effect = { KIND = 3 }
+			}
+			else = {
+				mbq_conv_log_effect = { KIND = 2 }
+			}
+				save_scope_value_as = { name = mbq_conv_done value = yes }
+		}
+		else_if = { # strong hook: same options, the hook only goes on cooldown
+			limit = { has_global_variable = mbq_p$SLOT$_is_3 mbq_opt_strong_ok_trigger = yes }
+			if = { limit = { has_strong_usable_hook = scope:recipient } save_temporary_scope_value_as = { name = mbq_had_strong value = yes } }
+			use_hook = scope:recipient
+			demand_conversion_interaction_effect = yes
+			# 0.3.21: log the hook that was really spent: a spent strong hook goes on cooldown (effects.log:10984), a weak one is removed
+			if = {
+				limit = { exists = scope:mbq_had_strong NOT = { has_strong_usable_hook = scope:recipient } }
+				mbq_conv_log_effect = { KIND = 3 }
+			}
+			else = {
+				mbq_conv_log_effect = { KIND = 2 }
+			}
+				save_scope_value_as = { name = mbq_conv_done value = yes }
+		}
+		else_if = { # favor: option a of 2012 (religious_interaction_events.txt:1732-1766)
+			limit = { has_global_variable = mbq_p$SLOT$_is_4 always = $FAVOR$ }
+				scope:recipient = {
+					if = { # Check that they don't already have a hook on root
+						limit = {
+							NOT = {
+								has_hook_of_type = {
+									target = root
+									type = favor_hook
+								}
+							}
+						}
+						add_hook = {
+							target = root
+							type = favor_hook
+						}
+					}
+				}
+				demand_conversion_interaction_effect = yes
+				stress_and_fulfillment_impact = {
+					greedy = medium_stress_impact_gain
+				}
+				if = {
+					limit = {
+						has_title = title:e_minister_of_rites
+					}
+					change_influence = {
+						value = minor_influence_gain
+						multiply = scope:recipient.primary_title.tier
+					}
+					add_piety = {
+						value = minor_piety_gain
+						multiply = scope:recipient.primary_title.tier
+					}
+				}
+			mbq_conv_log_effect = { KIND = 4 }
+				save_scope_value_as = { name = mbq_conv_done value = yes }
+		}
+	}
+}
+
+# 0.3.22: every priority slot without a value gets the default (weak hook, strong hook, favor, nothing). Saves in which Automatic
+# was ticked before 0.3.18 have no mbq_p<slot>_is_<value> flags (they are only set when Automatic is ticked), so all four slots
+# were empty and every reply was refused (Chef test 0.3.21). Called by the Automatic box and at the start of every handled letter.
+mbq_conv_prio_defaults_effect = {
+	if = { limit = { NOR = { has_global_variable = mbq_p1_is_0 has_global_variable = mbq_p1_is_1 has_global_variable = mbq_p1_is_2 has_global_variable = mbq_p1_is_3 has_global_variable = mbq_p1_is_4 } } set_global_variable = { name = mbq_p1_is_2 value = yes } }
+	if = { limit = { NOR = { has_global_variable = mbq_p2_is_0 has_global_variable = mbq_p2_is_1 has_global_variable = mbq_p2_is_2 has_global_variable = mbq_p2_is_3 has_global_variable = mbq_p2_is_4 } } set_global_variable = { name = mbq_p2_is_3 value = yes } }
+	if = { limit = { NOR = { has_global_variable = mbq_p3_is_0 has_global_variable = mbq_p3_is_1 has_global_variable = mbq_p3_is_2 has_global_variable = mbq_p3_is_3 has_global_variable = mbq_p3_is_4 } } set_global_variable = { name = mbq_p3_is_4 value = yes } }
+	if = { limit = { NOR = { has_global_variable = mbq_p4_is_0 has_global_variable = mbq_p4_is_1 has_global_variable = mbq_p4_is_2 has_global_variable = mbq_p4_is_3 has_global_variable = mbq_p4_is_4 } } set_global_variable = { name = mbq_p4_is_0 value = yes } }
+}

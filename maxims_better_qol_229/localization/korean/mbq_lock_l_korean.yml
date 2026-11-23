@@ -1,0 +1,7 @@
+﻿l_korean:
+ MBQ_LOCK_DC: "#N 잠김: 먼저 '$MBQ_DC_AUTO$'을(를) 체크하세요.#!"
+ MBQ_LOCK_PRIO: "#N 잠김: 먼저 '$MBQ_GEN_CONV_ANSWER$'을(를) 체크하세요.#!"
+ MBQ_LOCK_AUTO: "#N 잠김: 먼저 '$MBQ_GR_AUTO$'을(를) 체크하세요.#!"
+ MBQ_LOCK_SILENT: "#N 잠김: 먼저 '$MBQ_VS_MASTER$'을(를) 체크하세요.#!"
+ MBQ_LOCK_TRIB: "#N 잠김: 먼저 '$MBQ_VS_AUTO_TB$' 또는 '$MBQ_VS_ACC_TB$'을(를) 체크하세요.#!"
+ MBQ_LOCK_TAKEN: "#N 잠김: 다른 곳에서 이미 선택했습니다.#!"

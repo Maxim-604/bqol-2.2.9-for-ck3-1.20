@@ -1,0 +1,7 @@
+﻿l_russian:
+ MBQ_LOCK_DC: "#N Закрыто: сначала отметьте '$MBQ_DC_AUTO$'.#!"
+ MBQ_LOCK_PRIO: "#N Закрыто: сначала отметьте '$MBQ_GEN_CONV_ANSWER$'.#!"
+ MBQ_LOCK_AUTO: "#N Закрыто: сначала отметьте '$MBQ_GR_AUTO$'.#!"
+ MBQ_LOCK_SILENT: "#N Закрыто: сначала отметьте '$MBQ_VS_MASTER$'.#!"
+ MBQ_LOCK_TRIB: "#N Закрыто: сначала отметьте '$MBQ_VS_AUTO_TB$' или '$MBQ_VS_ACC_TB$'.#!"
+ MBQ_LOCK_TAKEN: "#N Закрыто: уже выбрано в другом месте.#!"

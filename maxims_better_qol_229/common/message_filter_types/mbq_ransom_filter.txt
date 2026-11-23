@@ -1,0 +1,5 @@
+﻿# Better Quality of Life 2.0.0: eigener Filter, Feed wie courtier_arrived (V common/message_filter_types/00_message_filter_types.txt:162-165).
+mbq_ransom_summary = {
+	display = feed
+	group = court
+}

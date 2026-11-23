@@ -1,0 +1,129 @@
+﻿# Better Quality of Life (Q07): grant vassals to their rightful liege.
+# Quelle: maxims_ck3_qol_mods zz_mqol_auto_grant_vassals.txt, angeglichen an Vanilla (Chef/Maxim: was Vanilla anbietet, nicht strenger).
+# 2.0.10 (Experte 16-10-2026, Maxim: Leistung in grossen Reichen): KEINE innere Schleife ueber alle Vasallen mehr. Je Vasall wird
+#   die de-jure-Kette ueber seinem Primaertitel gelesen (hoechstens Herzogtum, Koenigreich, Kaiserreich, Hegemonie):
+#   primary_title (event_targets.log:736) -> ordered_this_title_or_de_jure_above (effects.log:12060, Vanilla
+#   03_bp1_scripted_effects.txt:753-757 mit order_by = tier) -> holder (event_targets.log:920).
+#   Ziel = Halter des NAECHSTEN Titels ueber dem Primaertitel, dessen Halter der Spieler selbst oder ein direkter Vasall des
+#   Spielers ist (is_vassal_of, triggers.log:6058). Haelt der Spieler diesen Titel selbst, ist er schon der rechtmaessige
+#   Lehnsherr: nichts tun. Titel ohne Halter oder mit Halter ausserhalb des Reiches werden uebersprungen.
+#   order_by = { value = 10 subtract = tier }: niedrigster Rang zuerst (Inline-Wert wie Vanilla coronation.txt:3139).
+# Vanilla-Belege, common\character_interactions\00_vassal_interactions.txt, grant_vassal_interaction:
+#   can_be_picked 131-190: Vasall hoeher als Baronie (133); Empfaenger hoeherer Hoechstrang als Vasall (134);
+#     Krieg Vasall gegen Spieler (149-152); Krieg Vasallenbaum des Spielers gegen den Vasallen (169-181, puppet = Spieler);
+#     Diarch (150-155); Adelsfamilien-Regel (183-190, root = Kandidat, any_held_title noble = no).
+#   is_valid 50-129: Empfaenger nicht Gallivanter (54); Krieg Spieler-Empfaenger (56); Krieg Vasall-Empfaenger (59);
+#     Rang Empfaenger > Vasall (60); Haus-Bloc-Fuehrer (119-127); Ritsuryo nicht zu Soryo (110-118).
+#   Vasallen-Limit (62-78) und Admin-Regel (99-109) gelten in Vanilla nur bei KI-Aktor, fuer den Spieler nicht. Hier nicht uebernommen.
+#   Kriegspruefung Vasallenbaum (169-181) nur, wenn der Vasall ueberhaupt im Krieg ist (is_at_war, triggers.log:5046):
+#     gleiche Bedeutung, spart die Suche ueber alle Untervasallen fuer jeden Vasallen im Frieden.
+# Die Anzeige "Kann Vasallen ... uebertragen: N" zaehlt Vanilla in der Engine (C++), in den Skripten nicht gefunden.
+# Vanilla-Interaktion nicht ausgeloest: kein Beleg, dass run_interaction fuer grant_vassal zuverlaessig laeuft (Vault: "Reason: Unknown").
+# Nebenwirkungen: mbq_grant_nebenwirkungen_src.txt (Vanilla on_accept 268-416).
+# PATCH CHECK: nach jedem CK3-Patch mit grant_vassal_interaction vergleichen.
+
+mbq_auto_grant_vassals_run_effect = {
+	set_variable = { name = mbq_gv_count value = 0 }
+
+	every_vassal = {
+		limit = {
+			# der Vasall, der verliehen wird (can_be_picked 131-190); billige Pruefungen zuerst
+			is_landed = yes
+			highest_held_title_tier > tier_barony                        # can_be_picked :133
+			NOT = { is_at_war_with = root }                              # can_be_picked :149-152
+			NOT = { root.diarch ?= this }                                # can_be_picked :150-155 (puppet.diarch ?= root)
+			# is_valid :119-127 Haus-Bloc-Fuehrer. 2.0.11: NAND statt NOT. NOT mit mehreren Kindern wirkt wie NOR und schloss JEDEN Hauschef aus
+			# (Messlauf 2.0.10: nur Vasallen ohne Haus oder Nicht-Hauschefs geprueft, Geraud de Geneve nie). Vanilla: NOT mit EINEM Kind
+			# (scope:secondary_actor ?= { ... }) bzw. NAND fuer mehrere Bedingungen (V :100, :113; "nand - a negated AND trigger", triggers.log:928).
+			NAND = {
+				exists = house.house_confederation.leading_house
+				house.house_confederation.leading_house ?= house
+				is_house_head = yes
+			}
+			any_held_title = { is_noble_family_title = no }              # can_be_picked :183-190 (Adelsfamilien-Regel)
+			trigger_if = {                                               # can_be_picked :169-181 (puppet = Spieler)
+				limit = { is_at_war = yes }
+				save_temporary_scope_as = mbq_gv_candidate
+				NOT = { root = { any_vassal_or_below = { is_at_war_with = scope:mbq_gv_candidate } } }
+			}
+		}
+		save_scope_as = mbq_gv_vassal
+
+		# naechster de-jure-Titel ueber dem Primaertitel, dessen Halter der Spieler oder ein direkter Vasall des Spielers ist
+		save_scope_value_as = { name = mbq_gv_hat_titel value = 0 } # 2.0.16: Merker je Vasall (clear_saved_scope wirkt im Lauf nicht)
+		primary_title = {
+			ordered_this_title_or_de_jure_above = {
+				limit = {
+					tier > scope:mbq_gv_vassal.primary_title.tier
+					exists = holder
+					holder = {
+						OR = {
+							this = root
+							is_vassal_of = root
+						}
+					}
+				}
+				order_by = { value = 10 subtract = tier }
+				save_scope_as = mbq_gv_titel
+				save_scope_value_as = { name = mbq_gv_hat_titel value = 1 }
+			}
+		}
+
+		if = {
+			limit = {
+				scope:mbq_gv_hat_titel = 1 # 2.0.16: nur ein Titel aus DIESEM Durchgang
+				scope:mbq_gv_titel.holder = {
+					this != root                                             # Spieler ist schon der rechtmaessige Lehnsherr
+					this != scope:mbq_gv_vassal
+					is_vassal_of = root                                      # populate_actor_list :11-15
+					is_landed = yes                                          # is_valid :52
+					NOT = { has_trait = gallivanter }                        # is_valid :54
+					NOT = { is_at_war_with = root }                          # is_valid :56
+					NOT = { is_at_war_with = scope:mbq_gv_vassal }           # is_valid :59
+					NAND = {                                                 # is_valid :112-117 Ritsuryo
+						root = { has_government = japan_administrative_government }
+						has_government = japan_administrative_government
+						scope:mbq_gv_vassal = { has_government = japan_feudal_government }
+					}
+					primary_title.tier > scope:mbq_gv_vassal.primary_title.tier   # is_valid :60
+					highest_held_title_tier > scope:mbq_gv_vassal.highest_held_title_tier   # can_be_picked :134
+				}
+			}
+			scope:mbq_gv_titel.holder = { save_scope_as = mbq_gv_liege }
+
+			root = {
+				create_title_and_vassal_change = {
+					type = granted
+					save_scope_as = mbq_gv_change
+					add_claim_on_loss = no
+				}
+			}
+			scope:mbq_gv_vassal = {
+				change_liege = {
+					liege = scope:mbq_gv_liege
+					change = scope:mbq_gv_change
+				}
+			}
+			root = { resolve_title_and_vassal_change = scope:mbq_gv_change }
+
+			# 2.1.40 Erfolgspruefung (Audit 25-10, Delft: die Engine kann eine Uebertragung ohne Fehlerzeile verwerfen): nur wenn der Vasall wirklich beim neuen Lehnsherrn ist,
+			# wird gezaehlt (Toast in mbq_auto_actions.txt) und gelten Meinung und Nebenwirkungen; sonst bleibt alles still und ehrlich (kein "N verliehen")
+			if = {
+				limit = { scope:mbq_gv_vassal = { is_vassal_of = scope:mbq_gv_liege } }
+				root = { change_variable = { name = mbq_gv_count add = 1 } }
+
+				# Meinungsbonus wie in der Vanilla-Interaktion (opinion_modifiers\00_title_opinions.txt:38)
+				scope:mbq_gv_liege = {
+					add_opinion = {
+						target = root
+						modifier = granted_vassal
+					}
+				}
+
+				# Nebenwirkungen wie Vanilla on_accept (Clan-Einheit, Katalysator, Kontroverse, Meinung)
+				scope:mbq_gv_liege = { mbq_grant_nebenwirkungen_effect = yes }
+			}
+		}
+		# 2.0.16: clear_saved_scope = mbq_gv_titel entfernt (wirkte nicht), Merker mbq_gv_hat_titel ersetzt es
+	}
+}

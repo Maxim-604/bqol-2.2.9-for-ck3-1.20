@@ -1,0 +1,17 @@
+﻿# Better Quality of Life 2.1.24 (Overhaul, Maxim 24-10): Leistenhintergrund fuer Abschnittsueberschriften nach der Vanilla-Vorlage Ritter-Erlaubnisse.
+# Quelle: V gui/window_knights.gui:1165-1179 (widget_permission_header: Background_Area_Dark, alpha 0.7, margin_left 16, margin_right 10, Verlaufsmaske),
+# Background_Area_Dark V gui/shared/backgrounds.gui:51-58. Eigener Name (Vorsatz Mbqw), kein Vanilla-Name wird ueberschrieben.
+template Mbqw_Background_Header
+{
+	background = {
+		using = Background_Area_Dark
+		alpha = 0.7
+		margin_left = 16
+		margin_right = 10
+
+		modify_texture = {
+			texture = "gfx/interface/component_masks/mask_fade_horizontal_extended.dds"
+			blend_mode = alphamultiply
+		}
+	}
+}

@@ -1,0 +1,179 @@
+﻿# Better Quality of Life 2.0.0 (Counties). root = Spieler. scope:mbq_gr_grant_title und scope:mbq_gr_liege kommen aus dem on_title_gain-Hook.
+namespace = mbq_gr
+
+# Rueckfrage bei wertvollen Besitzungen (S events/zz_mqol_county_events.txt:10-64, Optionen Behalten / Weitergeben, dazu neu
+# "Behalten und eine andere abgeben", Sinn laut S :71-74: lieber eine alte abstossen).
+mbq_gr.0001 = {
+	type = character_event
+	title = mbq_gr.0001.t
+	theme = realm
+	desc = {
+		desc = mbq_gr.0001.desc
+		first_valid = {
+			triggered_desc = {
+				trigger = {
+					OR = {
+						scope:mbq_gr_grant_title.tier = tier_barony
+						scope:mbq_gr_grant_title = { any_county_province = { OR = { has_special_building = yes has_special_building_slot = yes } } }
+					}
+				}
+				desc = mbq_gr.0001.desc_special
+			}
+			triggered_desc = { # Menue v2: heilige Staette (nur bei Schutz aus gefragt)
+				trigger = { scope:mbq_gr_grant_title = { mbq_gr_holy_trigger = yes } }
+				desc = mbq_gr.0001.desc_holy
+			}
+			desc = mbq_gr.0001.desc_ducal
+		}
+		first_valid = { # Maxim 15-10: Empfaenger nennen wie mbq_gr.0002
+			triggered_desc = {
+				trigger = { exists = scope:mbq_gr_pick_ok scope:mbq_gr_pick_ok = 1 } # 2.0.16
+				desc = mbq_gr.0001.desc_rec
+			}
+			triggered_desc = {
+				trigger = { exists = scope:mbq_gr_nn_planned scope:mbq_gr_nn_planned = 1 }
+				desc = mbq_gr.0001.desc_nn
+			}
+			desc = mbq_gr.0001.desc_norec
+		}
+	}
+	left_portrait = {
+		character = root
+		animation = personality_rational
+	}
+	right_portrait = { # wie mbq_gr.0002 (V events/activities/activity_system_events.txt:90)
+		trigger = { exists = scope:mbq_gr_pick_ok scope:mbq_gr_pick_ok = 1 } # 2.0.16
+		character = scope:mbq_gr_recipient
+		animation = happiness
+	}
+	immediate = {
+		save_scope_as = mbq_gr_liege
+		save_scope_value_as = { name = mbq_gr_preview value = 1 } # Auswahl wie die Automatik (mbq_gr_county_pick_effect), ohne neuen Adligen zu erschaffen
+		mbq_gr_county_pick_effect = yes
+		save_scope_value_as = { name = mbq_gr_preview value = 0 } # 2.0.16: Ueberschreiben statt Loeschen (wirkte im Lauf nicht)
+	}
+	after = { # 2.2.3: Antwort gegeben, die Marke aus der Automatik (mbq_gr_asked) faellt; 2.2.5 (Maxim 01-11): dazu bleibende Marke mbq_gr_answered, solange der Titel beim Spieler liegt (Weitergeben: der Titel ist dann weg, die Marke faellt auch bei Titelverlust, mbq_county_on_actions.txt). Nichts markiert von selbst: das Haeken mbq_gr_kept setzt nur die Option Behalten.
+		scope:mbq_gr_grant_title = {
+			if = {
+				limit = { has_variable = mbq_gr_asked }
+				remove_variable = mbq_gr_asked
+			}
+			if = {
+				limit = { holder ?= root }
+				set_variable = { name = mbq_gr_answered value = yes }
+			}
+		}
+	}
+	option = { # Behalten: Titel merken, die Automatik fragt nie wieder
+		name = mbq_gr.0001.keep
+		custom_tooltip = mbq_gr.0001.keep_tt
+		scope:mbq_gr_grant_title = { set_variable = { name = mbq_gr_kept value = yes } }
+	}
+	option = { # Weitergeben an genau den gezeigten Empfaenger (Maxim 15-10)
+		name = mbq_gr.0001.give
+		trigger = { exists = scope:mbq_gr_pick_ok scope:mbq_gr_pick_ok = 1 scope:mbq_gr_recipient ?= { mbq_gr_cand_ok_trigger = yes } } # wie mbq_gr.0002; Bug 16-10: Filter und Grenzen (cand_ok, :804) beim Klick neu pruefen
+		custom_tooltip = mbq_gr.0001.give_tt
+		hidden_effect = {
+			if = {
+				limit = {
+					scope:mbq_gr_grant_title.holder ?= root
+					mbq_gr_over_value > 0 # Experte 8.4 Luecke 3: beim Klick noch ueber der Schwelle (plus erlaubte Grafschaften)
+				}
+				mbq_gr_do_grant_effect = yes
+			}
+		}
+	}
+	option = { # Bug 16-10 (Myslava 5/4): gezeigter Empfaenger passt beim Klick nicht mehr (z. B. Grenze inzwischen erreicht): neu waehlen wie die Automatik
+		name = mbq_gr.0001.give
+		trigger = {
+			exists = scope:mbq_gr_pick_ok scope:mbq_gr_pick_ok = 1 # 2.0.16
+			NOT = { scope:mbq_gr_recipient = { mbq_gr_cand_ok_trigger = yes } }
+		}
+		custom_tooltip = mbq_gr.0001.give_other_tt
+		hidden_effect = {
+			if = {
+				limit = {
+					scope:mbq_gr_grant_title.holder ?= root
+					mbq_gr_over_value > 0
+				}
+				mbq_gr_county_grant_effect = yes # neue Auswahl (:1226), sonst nofit bzw. neuer Adliger nach Haken
+			}
+		}
+	}
+	option = { # Weitergeben an einen neuen Adligen (Haken New noble if nobody fits, niemand passt)
+		name = mbq_gr.0001.give
+		trigger = {
+			scope:mbq_gr_pick_ok = 0 # 2.0.16
+			exists = scope:mbq_gr_nn_planned
+			scope:mbq_gr_nn_planned = 1
+		}
+		custom_tooltip = mbq_gr.0001.give_nn_tt
+		hidden_effect = {
+			if = {
+				limit = {
+					scope:mbq_gr_grant_title.holder ?= root
+					mbq_gr_over_value > 0
+				}
+				mbq_gr_county_grant_effect = yes # erschafft jetzt den neuen Adligen (Auswahl ohne Vorschau)
+			}
+		}
+	}
+}
+
+# Takt-Schleife (Muster mbq_vassal.0001)
+mbq_gr.0010 = {
+	hidden = yes
+	immediate = {
+		if = {
+			limit = {
+				exists = scope:mbq_gr_gen
+				has_variable = mbq_gr_gen
+				scope:mbq_gr_gen = var:mbq_gr_gen
+			}
+			remove_variable = mbq_gr_armed
+			if = {
+				limit = {
+					has_global_variable = mbq_gr_auto
+					is_alive = yes
+					is_ai = no
+				}
+				if = {
+					limit = { is_imprisoned = no } # Pause in Haft wie Loesegeld und Vassals
+					mbq_gr_run_effect = yes
+				}
+				mbq_gr_arm_effect = yes
+			}
+		}
+		else_if = {
+			limit = {
+				NOT = { exists = scope:mbq_gr_gen }
+				has_global_variable = mbq_gr_auto
+				is_alive = yes
+				is_ai = no
+			}
+			mbq_gr_arm_effect = yes
+		}
+	}
+}
+
+mbq_gr.0011 = {
+	hidden = yes
+	immediate = { mbq_gr_summary_effect = yes }
+}
+# 2.1.9 Wertvoll nach Erbfolge/Teilung (Dev-Test 22-10): der Gewinn-Haken mbq_gr_on_title_gain_kept (mbq_county_on_actions.txt) schreibt markierte Titel, die bei Erbfolge ankommen, in die globale Liste
+# mbq_wv_pending und plant dieses Event 1 Tag spaeter. Zu diesem Zeitpunkt ist der Erbe der neue Spielercharakter (is_ai = no): Markierung bleibt. Jeder Titel bei der KI (Geschwister, anderer Erbe) verliert sie.
+# Geprueft werden nur die Titel der Liste; danach wird sie geleert (Muster clear_global_variable_list V game_start.txt:7320, every_in_global_list V activity_invite_rules.txt:712).
+mbq_gr.9101 = {
+	hidden = yes
+	immediate = {
+		every_in_global_list = {
+			variable = mbq_wv_pending
+			limit = {
+				has_variable = mbq_gr_kept
+				NOT = { holder ?= { is_ai = no } }
+			}
+			remove_variable = mbq_gr_kept
+		}
+		clear_global_variable_list = mbq_wv_pending
+	}
+}

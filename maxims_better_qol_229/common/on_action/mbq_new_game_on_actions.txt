@@ -1,0 +1,49 @@
+﻿# Better Quality of Life 2.0.23 (Maxim 20-10, CK3\UPDATE_SAMMLUNG_2010.md 1 C): Standardwerte nur bei neuem Spiel. on_game_start laeuft beim
+# Spielstart nach der Geschichtserzeugung (V common/on_action/game_start.txt:1-21: Startaufbau, Seuchen-Schonfrist), nicht beim Laden eines Spielstands;
+# bestehende Spielstaende behalten ihre Einstellungen. Listen werden gemergt wie mbq_county_on_actions.txt:3-9.
+on_game_start = {
+	on_actions = {
+		mbq_new_game_defaults
+	}
+}
+
+mbq_new_game_defaults = {
+	effect = {
+		mbq_new_game_defaults_effect = yes # 2.1.15: the effect lives in common/scripted_effects/mbq_new_game_defaults.txt
+
+	}
+}
+
+# 2.1.19 (Maxim 24-10): Startgrafschaften des Spielers im neuen Spiel markieren (Wertvoll), siehe mbq_new_game_kept_effect in common/scripted_effects/mbq_new_game_defaults.txt.
+# Eigener on_action, weil erst nach der Lobby feststeht, wer die Spieler sind (V game_start.txt:2552-2553); Listen werden gemergt wie oben.
+on_game_start_after_lobby = {
+	on_actions = {
+		mbq_new_game_kept
+	}
+}
+
+mbq_new_game_kept = {
+	effect = {
+		mbq_new_game_kept_effect = yes
+	}
+}
+
+# 2.1.22 (Maxim 24-10): manueller Spielerwechsel (Konsole 'play <id>', Charakter-Wechsel) markiert die gehaltenen Grafschaften des neuen Charakters als Wertvoll, siehe mbq_kept_switch_effect.
+# V common/on_action/player_change_on_actions.txt:3-6: on_player_character_change feuert bei ALLEN Wechseln, Root = neuer Spielercharakter, scope:previous_player_character = der alte.
+# Erbfolge nach Tod ist auch ein Wechsel: dort ist der alte Charakter tot, darum verlangt der Trigger is_alive = yes (Tod/Erbfolge markiert nichts).
+on_player_character_change = {
+	on_actions = {
+		mbq_player_switch_kept
+	}
+}
+
+mbq_player_switch_kept = {
+	trigger = {
+		is_ai = no
+		exists = scope:previous_player_character
+		scope:previous_player_character = { is_alive = yes }
+	}
+	effect = {
+		mbq_kept_switch_effect = yes
+	}
+}

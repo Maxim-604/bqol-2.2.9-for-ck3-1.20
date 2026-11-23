@@ -1,0 +1,11 @@
+﻿l_simp_chinese:
+ MBQ_WIN_PRIO_1: "优先级 1"
+ MBQ_WIN_PRIO_2: "优先级 2"
+ MBQ_WIN_PRIO_3: "优先级 3"
+ MBQ_WIN_PRIO_4: "优先级 4"
+ MBQ_PRIO_OPT_0: "@cross_icon! 无"
+ MBQ_PRIO_OPT_1: "@gold_icon! 支付对方索要的金钱"
+ MBQ_PRIO_OPT_2: "@weak_hook_icon! 使用弱牵制"
+ MBQ_PRIO_OPT_3: "@unspent_strong_hook_icon! 使用强牵制"
+ MBQ_PRIO_OPT_4: "@hook_on_me_icon! 给予对方索要的人情"
+ MBQ_TT_PRIO: "#T 优先级：按顺序尝试#!\n$EFFECT_LIST_BULLET$ 使用第一个可行的选项，否则尝试下一个\n$EFFECT_LIST_BULLET$ 都不可行时，请求会被拒绝"

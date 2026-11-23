@@ -1,0 +1,5 @@
+﻿# Better Quality of Life 2.0.0 (Demand Conversion): eigener Filter, Feed in der Gruppe realm wie mbq_vassal_summary.
+mbq_dconv_summary = {
+	display = feed
+	group = realm
+}

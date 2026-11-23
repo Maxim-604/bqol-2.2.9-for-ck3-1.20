@@ -1,0 +1,106 @@
+﻿# Better Quality of Life 0.3.7 (Best terms): can at least one ticked box still change the new tributary's contract?
+# Scope: the new tributary. Same contract choice as common/scripted_effects/mbq_best_terms.txt; triggers.log:7776, :7781.
+mbq_best_terms_any_change_trigger = {
+	OR = {
+		AND = {
+			mbq_bt_want_tax_trigger = yes
+			OR = {
+				AND = { has_subject_contract_group = tributary_nomadic tributary_contract_obligation_level_can_be_increased = nomad_government_herd }
+				AND = { NOT = { has_subject_contract_group = tributary_nomadic } tributary_contract_obligation_level_can_be_increased = default_tributary_taxes }
+			}
+		}
+		AND = {
+			mbq_bt_want_prestige_trigger = yes
+			OR = {
+				AND = { OR = { has_subject_contract_group = tributary_nomadic has_subject_contract_group = tributary_steppe } tributary_contract_obligation_level_can_be_increased = nomad_government_prestige }
+				AND = { NOR = { has_subject_contract_group = tributary_nomadic has_subject_contract_group = tributary_steppe } tributary_contract_obligation_level_can_be_increased = default_tributary_prestige }
+			}
+		}
+		AND = {
+			mbq_bt_want_war_support_trigger = yes
+			tributary_contract_obligation_level_can_be_increased = tributary_war_participation_obligation
+		}
+		AND = {
+			mbq_bt_want_no_guarantee_trigger = yes
+			tributary_contract_obligation_level_can_be_decreased = suzerain_war_participation_guarantee
+		}
+	}
+}
+
+# BQoL 2.0 (Maxim 15-10, gemeinsame Vertragswuensche): nach der Umstellung (mbq_tbo_mig) die Wuensche aus Vassals (mbq_tbo_*), vorher unveraendert 0.3.11/0.3.21.
+mbq_bt_want_tax_trigger = {
+	OR = {
+		AND = {
+			has_global_variable = mbq_tbo_mig
+			mbq_tbo_want_tax_trigger = yes
+		}
+		AND = {
+			NOT = { has_global_variable = mbq_tbo_mig }
+			OR = {
+				AND = { mbq_tribute_nomad_on_trigger = yes government_has_flag = government_has_herd has_global_variable = mbq_terms_nomad_tax }
+				AND = {
+					mbq_tribute_all_on_trigger = yes
+					NOT = { government_has_flag = government_has_herd } # 0.3.21: Everyone else never covers herd governments
+					has_global_variable = mbq_terms_all_tax
+				}
+			}
+		}
+	}
+}
+mbq_bt_want_prestige_trigger = {
+	OR = {
+		AND = {
+			has_global_variable = mbq_tbo_mig
+			mbq_tbo_want_prestige_trigger = yes
+		}
+		AND = {
+			NOT = { has_global_variable = mbq_tbo_mig }
+			OR = {
+				AND = { mbq_tribute_nomad_on_trigger = yes government_has_flag = government_has_herd has_global_variable = mbq_terms_nomad_prestige }
+				AND = {
+					mbq_tribute_all_on_trigger = yes
+					NOT = { government_has_flag = government_has_herd } # 0.3.21: Everyone else never covers herd governments
+					has_global_variable = mbq_terms_all_prestige
+				}
+			}
+		}
+	}
+}
+mbq_bt_want_war_support_trigger = {
+	OR = {
+		AND = {
+			has_global_variable = mbq_tbo_mig
+			mbq_tbo_want_war_support_trigger = yes
+		}
+		AND = {
+			NOT = { has_global_variable = mbq_tbo_mig }
+			OR = {
+				AND = { mbq_tribute_nomad_on_trigger = yes government_has_flag = government_has_herd has_global_variable = mbq_terms_nomad_war_support }
+				AND = {
+					mbq_tribute_all_on_trigger = yes
+					NOT = { government_has_flag = government_has_herd } # 0.3.21: Everyone else never covers herd governments
+					has_global_variable = mbq_terms_all_war_support
+				}
+			}
+		}
+	}
+}
+mbq_bt_want_no_guarantee_trigger = {
+	OR = {
+		AND = {
+			has_global_variable = mbq_tbo_mig
+			mbq_tbo_want_no_guarantee_trigger = yes
+		}
+		AND = {
+			NOT = { has_global_variable = mbq_tbo_mig }
+			OR = {
+				AND = { mbq_tribute_nomad_on_trigger = yes government_has_flag = government_has_herd has_global_variable = mbq_terms_nomad_no_guarantee }
+				AND = {
+					mbq_tribute_all_on_trigger = yes
+					NOT = { government_has_flag = government_has_herd } # 0.3.21: Everyone else never covers herd governments
+					has_global_variable = mbq_terms_all_no_guarantee
+				}
+			}
+		}
+	}
+}

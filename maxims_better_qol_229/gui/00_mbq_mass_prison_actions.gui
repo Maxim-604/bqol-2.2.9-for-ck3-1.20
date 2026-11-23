@@ -1,0 +1,86 @@
+﻿# Better Quality of Life 2.0.0 (Maxim 14-10): Typ hbox_mass_prison_actions aus Vanilla 1.20.1 gui/window_court.gui:841-893 1:1 plus vierter Knopf.
+# PATCH CHECK: nach jedem CK3-Patch mit Vanilla vergleichen (Assert in build_loesegeld.py). Better UI ruft den Typ nur auf (kein Override).
+types MbqPrisonTypes
+{
+	type hbox_mass_prison_actions = hbox {
+		margin = { 10 0 }
+		spacing = 3
+
+		text_single = {
+			text = "MASS_PRISONER_ACTIONS"
+			default_format = "#low"
+			align = nobaseline
+		}
+
+		spacer = {
+			size = { 5 5 }
+		}
+
+		button_round  = {
+			name = "ransom"
+			enabled = "[CourtWindow.CanDoMassPrisonerAction('ransom')]"
+
+			button_prison_ransom = {
+				shortcut = "sub_tab_1"
+				parentanchor = center
+				onclick = "[CourtWindow.MassPrisonerAction('ransom')]"
+				tooltip = "[CourtWindow.GetMassPrisonerActionTooltip('ransom')]"
+				using = tooltip_se
+			}
+		}
+
+		button_round  = {
+			name = "release"
+			enabled = "[CourtWindow.CanDoMassPrisonerAction('release')]"
+
+			button_prison_release = {
+				shortcut = "sub_tab_2"
+				parentanchor = center
+				onclick = "[CourtWindow.MassPrisonerAction('release')]"
+				tooltip = "[CourtWindow.GetMassPrisonerActionTooltip('release')]"
+				using = tooltip_se
+			}
+		}
+
+		button_round  = {
+			name = "execute"
+			enabled = "[CourtWindow.CanDoMassPrisonerAction('execute')]"
+
+			button_prison_execute = {
+				shortcut = "sub_tab_3"
+				parentanchor = center
+				onclick = "[CourtWindow.MassPrisonerAction('execute')]"
+				tooltip = "[CourtWindow.GetMassPrisonerActionTooltip('execute')]"
+				using = tooltip_se
+			}
+		}
+
+		button_round = { # BQoL 2.0: Loesegeld-Automatik, oeffnet das Zahnrad-Fenster mit "Gefaengnis und Loesegeld" offen; zweiter Klick schliesst
+			name = "mbq_ransom_button"
+			onclick = "[GetVariableSystem.Toggle( 'mbq_settings_open' )]"
+			onclick = "[GetVariableSystem.Set( 'mbq_set_open', 'prison' )]"
+			onclick = "[GetVariableSystem.Clear( 'mbq_dd_open' )]"
+			onclick = "[GetScriptedGui( 'mbq_rs_preview' ).Execute( GuiScope.SetRoot( GetPlayer.MakeScope ).End )]"
+			onrightclick = "[GetScriptedGui( 'mbq_rs_toggle_auto' ).Execute( GuiScope.SetRoot( GetPlayer.MakeScope ).End )]" # Rechtsklick wie V gui/console.gui:213
+			button_ignore = none # Spieltest 2: ohne diese Zeile kommt der Rechtsklick nicht an (V gui/console.gui:214)
+			down = "[GetGlobalVariable( 'mbq_rs_auto' ).IsSet]" # sichtbar "an": gedrueckter Rundknopf wie V gui/window_holy_site.gui:247-253
+			tooltip = "[SelectLocalization( GetGlobalVariable( 'mbq_rs_auto' ).IsSet, 'MBQ_RS_BTN_TT_ON', 'MBQ_RS_BTN_TT' )]"
+			using = tooltip_se
+
+			button_icon = { # flach 30 x 30 wie die drei Vanilla-Knoepfe (shared/buttons_icons.gui:821-823)
+				alwaystransparent = yes
+				parentanchor = center
+				size = { 30 30 }
+				texture = "gfx/interface/icons/flat_icons/treasury.dds" # wie 1.1.0 (V window_ledger.gui:10213)
+			}
+			icon = { # Spieltest 3: gruener Haken = Automatik an, wie Better UI Ring-Knopf (BUI gui/window_court.gui:273-281)
+				visible = "[GetGlobalVariable( 'mbq_rs_auto' ).IsSet]"
+				parentanchor = bottom|right
+				position = { 4 4 }
+				size = { 16 16 }
+				texture = "gfx/interface/icons/symbols/icon_check.dds"
+				alwaystransparent = yes
+			}
+		}
+	}
+}

@@ -1,0 +1,7 @@
+﻿l_french:
+ MBQ_LOCK_DC: "#N Verrouillé : cochez d’abord '$MBQ_DC_AUTO$'.#!"
+ MBQ_LOCK_PRIO: "#N Verrouillé : cochez d’abord '$MBQ_GEN_CONV_ANSWER$'.#!"
+ MBQ_LOCK_AUTO: "#N Verrouillé : cochez d’abord '$MBQ_GR_AUTO$'.#!"
+ MBQ_LOCK_SILENT: "#N Verrouillé : cochez d’abord '$MBQ_VS_MASTER$'.#!"
+ MBQ_LOCK_TRIB: "#N Verrouillé : cochez d’abord '$MBQ_VS_AUTO_TB$' ou '$MBQ_VS_ACC_TB$'.#!"
+ MBQ_LOCK_TAKEN: "#N Verrouillé : déjà choisi ailleurs.#!"

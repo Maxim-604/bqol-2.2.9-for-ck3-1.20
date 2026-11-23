@@ -1,0 +1,35 @@
+﻿# Better Quality of Life 2.1.36: Hofaemter-Standard ohne Fenster. Quartalsweise (quarterly_playable_pulse, _on_actions.info:13) fuer Spieler mit
+# gewaehltem Standard eine Anforderung stellen (mbq_cp_request_effect); dann laeuft einmal ein HUD-Treiber gui/mbq_cp_driver.gui.
+quarterly_playable_pulse = {
+	on_actions = { mbq_cp_pulse }
+}
+
+mbq_cp_pulse = {
+	trigger = {
+		is_ai = no
+		OR = {
+			has_global_variable = mbq_cp_lvl_0
+			has_global_variable = mbq_cp_lvl_1
+			has_global_variable = mbq_cp_lvl_2
+			has_global_variable = mbq_cp_lvl_3
+			has_global_variable = mqol_cp_lvl_0
+			has_global_variable = mqol_cp_lvl_1
+			has_global_variable = mqol_cp_lvl_2
+			has_global_variable = mqol_cp_lvl_3
+		}
+	}
+	effect = {
+		mbq_cp_migrate_effect = yes  # 2.1.36: alte Flaggen des Vorgaengerstands uebernehmen, auch wenn das Fenster nie geoeffnet wird
+		if = {
+			limit = {
+				OR = {
+					has_global_variable = mbq_cp_lvl_0
+					has_global_variable = mbq_cp_lvl_1
+					has_global_variable = mbq_cp_lvl_2
+					has_global_variable = mbq_cp_lvl_3
+				}
+			}
+			mbq_cp_request_effect = yes
+		}
+	}
+}

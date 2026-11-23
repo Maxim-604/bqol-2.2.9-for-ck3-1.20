@@ -1,0 +1,147 @@
+﻿# Better Quality of Life 0.3.0: switches of the settings window (gui/mbq_settings.gui), one per checkbox.
+# Clicking a ticked box removes its state (= feature off). Conversion: Answer automatically and Mute letters are independent since 2.1.2; tribute: both modes independent (0.3.11).
+# Pattern: vanilla scripted gui with an effect block (common/scripted_guis/00_religion.txt:128-144); set_global_variable effects.log:2758-2761.
+mbq_toggle_divorce = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_auto_divorce } remove_global_variable = mbq_auto_divorce }
+		else = { set_global_variable = { name = mbq_auto_divorce value = yes } }
+	}
+}
+mbq_toggle_grant = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_auto_grant_vassals } remove_global_variable = mbq_auto_grant_vassals }
+		else = { set_global_variable = { name = mbq_auto_grant_vassals value = yes } }
+	}
+}
+mbq_toggle_conv_mute = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_silent_conversion_info_only } remove_global_variable = mbq_silent_conversion_info_only }
+		else = { set_global_variable = { name = mbq_silent_conversion_info_only value = yes } }
+	}
+}
+mbq_toggle_conv_auto = {
+	scope = character
+	effect = {
+		if = { limit = { has_global_variable = mbq_silent_conversion } remove_global_variable = mbq_silent_conversion }
+		else = { set_global_variable = { name = mbq_silent_conversion value = yes }
+			mbq_conv_prio_defaults_effect = yes # 0.3.22: first start and old saves: empty slots get weak hook, strong hook, favor, nothing
+		}
+	}
+}
+
+
+
+# 0.3.18 conversion priorities (dev/bau_v0315_prioritaeten.md 3): one flag per slot and value, mbq_p<slot>_is_<value>;
+# 0 nothing, 1 gold, 2 weak hook, 3 strong hook, 4 favor. Flags instead of a number so the window can show the choice with .IsSet.
+mbq_prio1_0 = {
+	scope = character
+	effect = { remove_global_variable = mbq_p1_is_1 remove_global_variable = mbq_p1_is_2 remove_global_variable = mbq_p1_is_3 remove_global_variable = mbq_p1_is_4 set_global_variable = { name = mbq_p1_is_0 value = yes } }
+}
+mbq_prio1_1 = {
+	scope = character
+	effect = { remove_global_variable = mbq_p1_is_0 remove_global_variable = mbq_p1_is_2 remove_global_variable = mbq_p1_is_3 remove_global_variable = mbq_p1_is_4 set_global_variable = { name = mbq_p1_is_1 value = yes } }
+}
+mbq_prio1_2 = {
+	scope = character
+	effect = { remove_global_variable = mbq_p1_is_0 remove_global_variable = mbq_p1_is_1 remove_global_variable = mbq_p1_is_3 remove_global_variable = mbq_p1_is_4 set_global_variable = { name = mbq_p1_is_2 value = yes } }
+}
+mbq_prio1_3 = {
+	scope = character
+	effect = { remove_global_variable = mbq_p1_is_0 remove_global_variable = mbq_p1_is_1 remove_global_variable = mbq_p1_is_2 remove_global_variable = mbq_p1_is_4 set_global_variable = { name = mbq_p1_is_3 value = yes } }
+}
+mbq_prio1_4 = {
+	scope = character
+	effect = { remove_global_variable = mbq_p1_is_0 remove_global_variable = mbq_p1_is_1 remove_global_variable = mbq_p1_is_2 remove_global_variable = mbq_p1_is_3 set_global_variable = { name = mbq_p1_is_4 value = yes } }
+}
+mbq_prio2_0 = {
+	scope = character
+	effect = { remove_global_variable = mbq_p2_is_1 remove_global_variable = mbq_p2_is_2 remove_global_variable = mbq_p2_is_3 remove_global_variable = mbq_p2_is_4 set_global_variable = { name = mbq_p2_is_0 value = yes } }
+}
+mbq_prio2_1 = {
+	scope = character
+	effect = { remove_global_variable = mbq_p2_is_0 remove_global_variable = mbq_p2_is_2 remove_global_variable = mbq_p2_is_3 remove_global_variable = mbq_p2_is_4 set_global_variable = { name = mbq_p2_is_1 value = yes } }
+}
+mbq_prio2_2 = {
+	scope = character
+	effect = { remove_global_variable = mbq_p2_is_0 remove_global_variable = mbq_p2_is_1 remove_global_variable = mbq_p2_is_3 remove_global_variable = mbq_p2_is_4 set_global_variable = { name = mbq_p2_is_2 value = yes } }
+}
+mbq_prio2_3 = {
+	scope = character
+	effect = { remove_global_variable = mbq_p2_is_0 remove_global_variable = mbq_p2_is_1 remove_global_variable = mbq_p2_is_2 remove_global_variable = mbq_p2_is_4 set_global_variable = { name = mbq_p2_is_3 value = yes } }
+}
+mbq_prio2_4 = {
+	scope = character
+	effect = { remove_global_variable = mbq_p2_is_0 remove_global_variable = mbq_p2_is_1 remove_global_variable = mbq_p2_is_2 remove_global_variable = mbq_p2_is_3 set_global_variable = { name = mbq_p2_is_4 value = yes } }
+}
+mbq_prio3_0 = {
+	scope = character
+	effect = { remove_global_variable = mbq_p3_is_1 remove_global_variable = mbq_p3_is_2 remove_global_variable = mbq_p3_is_3 remove_global_variable = mbq_p3_is_4 set_global_variable = { name = mbq_p3_is_0 value = yes } }
+}
+mbq_prio3_1 = {
+	scope = character
+	effect = { remove_global_variable = mbq_p3_is_0 remove_global_variable = mbq_p3_is_2 remove_global_variable = mbq_p3_is_3 remove_global_variable = mbq_p3_is_4 set_global_variable = { name = mbq_p3_is_1 value = yes } }
+}
+mbq_prio3_2 = {
+	scope = character
+	effect = { remove_global_variable = mbq_p3_is_0 remove_global_variable = mbq_p3_is_1 remove_global_variable = mbq_p3_is_3 remove_global_variable = mbq_p3_is_4 set_global_variable = { name = mbq_p3_is_2 value = yes } }
+}
+mbq_prio3_3 = {
+	scope = character
+	effect = { remove_global_variable = mbq_p3_is_0 remove_global_variable = mbq_p3_is_1 remove_global_variable = mbq_p3_is_2 remove_global_variable = mbq_p3_is_4 set_global_variable = { name = mbq_p3_is_3 value = yes } }
+}
+mbq_prio3_4 = {
+	scope = character
+	effect = { remove_global_variable = mbq_p3_is_0 remove_global_variable = mbq_p3_is_1 remove_global_variable = mbq_p3_is_2 remove_global_variable = mbq_p3_is_3 set_global_variable = { name = mbq_p3_is_4 value = yes } }
+}
+mbq_prio4_0 = {
+	scope = character
+	effect = { remove_global_variable = mbq_p4_is_1 remove_global_variable = mbq_p4_is_2 remove_global_variable = mbq_p4_is_3 remove_global_variable = mbq_p4_is_4 set_global_variable = { name = mbq_p4_is_0 value = yes } }
+}
+mbq_prio4_1 = {
+	scope = character
+	effect = { remove_global_variable = mbq_p4_is_0 remove_global_variable = mbq_p4_is_2 remove_global_variable = mbq_p4_is_3 remove_global_variable = mbq_p4_is_4 set_global_variable = { name = mbq_p4_is_1 value = yes } }
+}
+mbq_prio4_2 = {
+	scope = character
+	effect = { remove_global_variable = mbq_p4_is_0 remove_global_variable = mbq_p4_is_1 remove_global_variable = mbq_p4_is_3 remove_global_variable = mbq_p4_is_4 set_global_variable = { name = mbq_p4_is_2 value = yes } }
+}
+mbq_prio4_3 = {
+	scope = character
+	effect = { remove_global_variable = mbq_p4_is_0 remove_global_variable = mbq_p4_is_1 remove_global_variable = mbq_p4_is_2 remove_global_variable = mbq_p4_is_4 set_global_variable = { name = mbq_p4_is_3 value = yes } }
+}
+mbq_prio4_4 = {
+	scope = character
+	effect = { remove_global_variable = mbq_p4_is_0 remove_global_variable = mbq_p4_is_1 remove_global_variable = mbq_p4_is_2 remove_global_variable = mbq_p4_is_3 set_global_variable = { name = mbq_p4_is_4 value = yes } }
+}
+# Better Quality of Life 2.1.35 (Maxim 25-10-2026): Pfeile bei Bekehrung automatisch verlangen, Prioritaet 1 bis 4: mbq_prio_swap_N_M tauscht Prioritaet N mit M.
+# Nur wenn 'Automatisch antworten' (mbq_silent_conversion) an ist, sonst sind die Prioritaeten gesperrt (MBQ_LOCK_PRIO).
+mbq_prio_swap_1_2 = {
+	scope = character
+	effect = {
+		if = {
+			limit = { has_global_variable = mbq_silent_conversion }
+			mbq_prio_swap_effect = { A = 1 B = 2 }
+		}
+	}
+}
+mbq_prio_swap_2_3 = {
+	scope = character
+	effect = {
+		if = {
+			limit = { has_global_variable = mbq_silent_conversion }
+			mbq_prio_swap_effect = { A = 2 B = 3 }
+		}
+	}
+}
+mbq_prio_swap_3_4 = {
+	scope = character
+	effect = {
+		if = {
+			limit = { has_global_variable = mbq_silent_conversion }
+			mbq_prio_swap_effect = { A = 3 B = 4 }
+		}
+	}
+}
